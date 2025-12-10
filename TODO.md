@@ -1,0 +1,16 @@
+- [ ] Implement UI
+- [ ] Implement Networking
+    - [ ] P2P/Central
+- [ ] **Map Loading**
+    - [ ] Map creator
+    - [ ] Map format
+- [ ] **Collision**
+- [ ] **Animations**
+- [ ] ECS
+- [ ] Instancing
+- [ ] Webassembly transition
+- [ ] Loading subsystem
+    - [ ] Data saving serviceworker
+- [ ] **3D rendering**
+- [ ] Better shaders
+    - [ ] Dynamic shader loading

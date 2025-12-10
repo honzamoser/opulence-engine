@@ -1,9 +1,17 @@
-export class Component {
-    enabled: boolean;
+import { Entity } from "../entity";
 
-    constructor(enabled: boolean = true) {
+export abstract class Component {
+    enabled: boolean;
+    parent: Entity;
+
+    constructor(parent: Entity, enabled: boolean = true) {
         this.enabled = enabled;
+        this.parent = parent;
+
+        this.parent.components.push(this);
+        if(this.start) this.start();
     }
 
-    update(delta: number) {}
+    abstract start?(): void;
+    abstract update?(delta: number): void;
 }

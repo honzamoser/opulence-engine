@@ -1,3 +1,4 @@
+import { Entity } from "../entity";
 import { Component } from "../types/component";
 
 export class Texture extends Component {
@@ -8,18 +9,22 @@ export class Texture extends Component {
     sampler: GPUSampler | null = null;
     bindGroup: GPUBindGroup | null = null;
 
-    constructor(url: string) {
-        super();
+    public flip_x = false;
+
+    constructor(parent: Entity, url: string) {
+        super(parent);
         this.url = url;
     }
 
-    async load(device: GPUDevice) {
+    async load(device: GPUDevice, widthOverride?: number, heightOverride?: number) {
         const response = await fetch(this.url);
         const blob = await response.blob();
         this.image = await createImageBitmap(blob);
 
+        
+
         this.texture = device.createTexture({
-            size: [this.image.width, this.image.height, 1],
+            size: [widthOverride || this.image.width , heightOverride || this.image.height, 1],
             format: 'rgba8unorm',
             usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
         });
@@ -27,7 +32,7 @@ export class Texture extends Component {
         device.queue.copyExternalImageToTexture(
             { source: this.image },
             { texture: this.texture },
-            [this.image.width, this.image.height]
+            [widthOverride || this.image.width, this.image.height]
         );
 
         this.view = this.texture.createView();

@@ -1,4 +1,5 @@
 {
+	"name": "eureka",
 	"devDependencies": {
 		"@webgpu/types": "^0.1.67"
 	}

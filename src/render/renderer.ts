@@ -1,10 +1,14 @@
 
-import { Entity } from "./entity";
-import { Texture } from "./components/texture";
-import { Matrix4 } from "./types/matrix4";
-import { Vector2 } from "./types/vector2";
+import { Entity } from "../entity";
+import { Texture } from "../components/texture";
+import { Matrix4 } from "../types/matrix4";
+import { Vector2 } from "../types/vector2";
+import { Line, LineRenderer } from "./line";
+import { Animator } from "./animation";
 
 export class Renderer {
+    readonly modelBufferSize = 1000;
+
     adapter: GPUAdapter | null = null;
     device: GPUDevice | null = null;
     context: GPUCanvasContext | null = null;
@@ -17,6 +21,11 @@ export class Renderer {
     projectionMatrix: Matrix4 = Matrix4.identity();
     projectionBuffer: GPUBuffer | null = null;
     projectionBindGroup: GPUBindGroup | null = null;
+
+    modelBuffer: GPUBuffer | null = null;
+    modelBindGroup: GPUBindGroup | null = null;
+
+    lineRenderer: LineRenderer | null = null;
 
     public async initializeWebGpu(canvas: HTMLCanvasElement) {
         const adapter = await navigator.gpu.requestAdapter();
@@ -51,6 +60,9 @@ export class Renderer {
         this.context = context;
         this.canvasConfig = canvasConfig;
 
+        this.lineRenderer = new LineRenderer(device, canvasConfig.format);
+
+        await this.lineRenderer.initialize();
         await this.initializeSpriteSystem();
     }
 
@@ -100,6 +112,7 @@ export class Renderer {
             
             struct Model {
                 matrix: mat4x4<f32>,
+                uvTransform: vec4<f32>,
             }
 
             @group(0) @binding(0) var<uniform> global: Uniforms;
@@ -121,7 +134,7 @@ export class Renderer {
             fn vs_main(input: VertexInput) -> VertexOutput {
                 var out: VertexOutput;
                 out.position = global.projection * model.matrix * vec4<f32>(input.position, 0.0, 1.0);
-                out.uv = input.uv;
+                out.uv = input.uv * model.uvTransform.zw + model.uvTransform.xy;
                 return out;
             }
 
@@ -152,7 +165,7 @@ export class Renderer {
             entries: [{
                 binding: 0,
                 visibility: GPUShaderStage.VERTEX,
-                buffer: { type: 'uniform' }
+                buffer: { type: 'uniform', hasDynamicOffset: true }
             }]
         });
 
@@ -198,6 +211,24 @@ export class Renderer {
                 resource: { buffer: this.projectionBuffer }
             }]
         });
+
+        // Create Model Buffer (Capacity for e.g. 1000 sprites)
+        const alignedSize = 256; // minUniformBufferOffsetAlignment
+        this.modelBuffer = this.device.createBuffer({
+            size: this.modelBufferSize * alignedSize,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
+
+        this.modelBindGroup = this.device.createBindGroup({
+            layout: modelBindGroupLayout,
+            entries: [{
+                binding: 0,
+                resource: {
+                    buffer: this.modelBuffer,
+                    size: 80 // Size of one matrix (4x4 float32) + vec4 (4 float32)
+                }
+            }]
+        });
     }
 
     renderEntities(entities: Entity[], cameraPosition: Vector2 = new Vector2(0, 0)) {
@@ -208,10 +239,10 @@ export class Renderer {
         // Ortho: 0 to width, height to 0 (top-left origin)
         // To move camera, we shift the bounds by the camera position
         this.projectionMatrix = Matrix4.orthographic(
-            cameraPosition.x, 
-            cameraPosition.x + canvas.width, 
-            cameraPosition.y + canvas.height, 
-            cameraPosition.y, 
+            cameraPosition.x,
+            cameraPosition.x + canvas.width,
+            cameraPosition.y + canvas.height,
+            cameraPosition.y,
             -1, 1
         );
         this.device.queue.writeBuffer(this.projectionBuffer!, 0, this.projectionMatrix.values as unknown as BufferSource);
@@ -228,61 +259,96 @@ export class Renderer {
             }]
         };
 
+        // Prepare Model Matrices
+        const alignedSize = 256;
+        const floatsPerEntity = alignedSize / 4;
+
+        console.log(entities);
+
+
+        // Filter renderable entities first
+        const renderableEntities = entities.filter(e => {
+            const t = e.components.filter(c => c instanceof Texture) as Texture[];
+            return t.some(tex => tex.texture && tex.view && tex.sampler);
+        });
+
+        console.log(renderableEntities);
+
+
+        const modelData = new Float32Array(renderableEntities.length * floatsPerEntity);
+
+        for (let i = 0; i < renderableEntities.length; i++) {
+            const entity = renderableEntities[i];
+            const texture = entity.components.find(c => c instanceof Texture && c.enabled && c.texture && c.view && c.sampler) as Texture;
+            const flipX = texture ? texture.flip_x : false;
+
+            // Calculate Matrix
+            let modelMatrix = Matrix4.identity();
+            modelMatrix = modelMatrix.multiply(Matrix4.translation(entity.position.x, entity.position.y, 0));
+            modelMatrix = modelMatrix.multiply(Matrix4.rotationZ(entity.rotation));
+            modelMatrix = modelMatrix.multiply(Matrix4.scaling(entity.scale.x * (flipX ? -1 : 1), entity.scale.y, 1));
+
+            // Write to array
+            // Offset in floats = i * floatsPerEntity
+            modelData.set(modelMatrix.values, i * floatsPerEntity);
+
+            // Calculate UV Transform
+            const animator = entity.components.find(c => c instanceof Animator) as Animator;
+            console.log(animator);
+
+            let uvTransform = new Float32Array([0, 0, 1, 1]);
+            if (animator) {
+                const texture = entity.components.find(c => c instanceof Texture && c.enabled && c.texture && c.view && c.sampler) as Texture;
+                console.log(texture);
+
+                if (texture && texture.image) {
+                    uvTransform = animator.getUVTransform(texture.image.width, texture.image.height) as any;
+                }
+            }
+            modelData.set(uvTransform, i * floatsPerEntity + 16);
+        }
+
+        // Upload all matrices at once
+        if (this.modelBuffer && modelData.length > 0) {
+            this.device.queue.writeBuffer(this.modelBuffer, 0, modelData);
+        }
+
         const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
         passEncoder.setPipeline(this.spritePipeline);
         passEncoder.setBindGroup(0, this.projectionBindGroup);
         passEncoder.setVertexBuffer(0, this.quadBuffer);
         passEncoder.setIndexBuffer(this.indexBuffer!, 'uint16');
 
-        for (const entity of entities) {
-            const textureComponent = entity.components.find(c => c instanceof Texture) as Texture;
-            if (textureComponent && textureComponent.texture && textureComponent.view && textureComponent.sampler) {
+        for (let i = 0; i < renderableEntities.length; i++) {
+            const entity = renderableEntities[i];
+            const textureComponent = entity.components.find(c => c instanceof Texture && c.enabled && c.texture && c.view && c.sampler) as Texture;
 
-                // Create Texture Bind Group if not exists
-                if (!textureComponent.bindGroup) {
-                    textureComponent.bindGroup = this.device.createBindGroup({
-                        layout: this.spriteBindGroupLayout!,
-                        entries: [
-                            { binding: 0, resource: textureComponent.sampler },
-                            { binding: 1, resource: textureComponent.view }
-                        ]
-                    });
-                }
-
-                // Calculate Model Matrix
-                // Translate, Rotate, Scale
-                let modelMatrix = Matrix4.identity();
-                modelMatrix = modelMatrix.multiply(Matrix4.translation(entity.position.x, entity.position.y, 0));
-                modelMatrix = modelMatrix.multiply(Matrix4.rotationZ(entity.rotation));
-                modelMatrix = modelMatrix.multiply(Matrix4.scaling(entity.scale.x, entity.scale.y, 1));
-
-                // Create Model Buffer (Inefficient: creating buffer every frame per object)
-                // Optimization: Use a large buffer and dynamic offsets, or writeBuffer.
-                const modelBuffer = this.device.createBuffer({
-                    size: 64,
-                    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-                    mappedAtCreation: true
+            // Create Texture Bind Group if not exists
+            if (!textureComponent.bindGroup) {
+                textureComponent.bindGroup = this.device.createBindGroup({
+                    layout: this.spriteBindGroupLayout!,
+                    entries: [
+                        { binding: 0, resource: textureComponent.sampler! },
+                        { binding: 1, resource: textureComponent.view! }
+                    ]
                 });
-                new Float32Array(modelBuffer.getMappedRange()).set(modelMatrix.values);
-                modelBuffer.unmap();
+            }
 
-                const modelBindGroup = this.device.createBindGroup({
-                    layout: this.spritePipeline.getBindGroupLayout(2),
-                    entries: [{
-                        binding: 0,
-                        resource: { buffer: modelBuffer }
-                    }]
-                });
-
+            if (this.modelBindGroup) {
                 passEncoder.setBindGroup(1, textureComponent.bindGroup);
-                passEncoder.setBindGroup(2, modelBindGroup);
+                // Bind Model with Dynamic Offset
+                passEncoder.setBindGroup(2, this.modelBindGroup, [i * alignedSize]);
                 passEncoder.drawIndexed(6);
             }
         }
 
+        this.lineRenderer!.render(passEncoder, this.projectionBindGroup, this.lines);
+
         passEncoder.end();
         this.device.queue.submit([commandEncoder.finish()]);
     }
+
+    public lines: Line[] = [];
 
     createRenderTarget() {
         if (!this.context) {
@@ -405,6 +471,8 @@ export class Renderer {
         passEncoder.setVertexBuffer(0, positionBuffer);
         passEncoder.setVertexBuffer(1, colorBuffer);
         passEncoder.draw(vertexCount, instanceCount);
+
+
         passEncoder.end();
 
         this.device.queue.submit([commandEncoder.finish()]);

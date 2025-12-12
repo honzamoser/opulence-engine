@@ -9,6 +9,9 @@ import {
   HitResult,
   rayIntersectEntity,
 } from "./src/physics/raycast.js";
+import { RenderSystem } from "./src/ecs/systems/render.js";
+import { MeshComponent } from "./src/ecs/components/mesh.js";
+import { TransformComponent } from "./src/ecs/components/transform.js";
 
 const canvas: HTMLCanvasElement = document.getElementById(
   "main",
@@ -21,93 +24,83 @@ fetch("./resources/shaders/basic_lit.wgsl").then(async (res) => {
   const shader = await res.text();
   const engine = new Engine(canvas, shader);
 
-  engine.addEventListener("ready", () => {
-    let e: Entity = engine.createEntity(
-      vec3.fromValues(0, 0, 0),
-      vec3.fromValues(0, 0, 0),
-      vec3.fromValues(1, 1, 1),
-      createCube(engine.renderer.device!),
-    );
+  const renderSystem = new RenderSystem(canvas, shader);
 
-    let obstruction = engine.createEntity(
-      vec3.fromValues(10, 2, -2),
-      vec3.fromValues(0, 0, 0),
-      vec3.fromValues(5, 3, 1),
-      createCube(engine.renderer.device!),
-    );
+  engine.systems.push(renderSystem);
 
-    let floor = engine.createEntity(
-      vec3.fromValues(0, -2, 0),
-      vec3.fromValues(0, 0, 0),
-      vec3.fromValues(50, 0.1, 50),
-      createPlane(engine.renderer.device!),
-    );
+  await engine.start();
 
-    engine.on("update", () => {
-      e.rotation[0] += 0.01;
-      e.rotation[1] += 0.01;
-      e.computeTransform();
-    });
+  let e: Entity = engine.createEntity(
+    vec3.fromValues(0, 0, 0),
+    vec3.fromValues(0, 0, 0),
+    vec3.fromValues(1, 1, 1),
+  );
 
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "arrowleft" || e.key === "a") {
-        engine.cameraPosition[0] -= 1;
-      }
-      if (e.key === "arrowright" || e.key === "d") {
-        engine.cameraPosition[0] += 1;
-      }
-      if (e.key === "arrowup" || e.key === "w") {
-        engine.cameraPosition[2] -= 1;
-      }
-      if (e.key === "arrowdown" || e.key === "s") {
-        engine.cameraPosition[2] += 1;
-      }
+  e.components.push(new MeshComponent(renderSystem.renderer.device));
+  e.components.push(new TransformComponent());
 
-      if (e.key === "q") {
-        engine.cameraPosition[1] += 1;
-      }
-
-      if (e.key === "e") {
-        engine.cameraPosition[1] -= 1;
-      }
-    });
-
-    window.addEventListener("click", (ev) => {
-      const ray = createRayFromMouse(
-        window.event
-          ? vec2.fromValues(window.event.clientX, window.event.clientY)
-          : vec2.fromValues(0, 0),
-        vec2.fromValues(canvas.width, canvas.height),
-        engine.renderer.getViewProjectionMatrix(engine.cameraPosition),
-        engine.cameraPosition,
-      );
-
-      let closestHit: HitResult | null = null;
-      let closestEntity: Entity | null = null;
-
-      for (const entity of [floor, obstruction]) {
-        const hit = rayIntersectEntity(ray, entity);
-
-        if (hit) {
-          if (!closestHit || hit.distance < closestHit.distance) {
-            closestHit = hit;
-            closestEntity = entity;
-          }
-        }
-      }
-
-      if (closestHit && closestEntity == floor) {
-        console.log(
-          "Hit at: ",
-          closestHit.point,
-          " on entity: ",
-          closestEntity,
-        );
-      }
-    });
+  engine.on("update", () => {
+    e.rotation[0] += 0.01;
+    e.rotation[1] += 0.01;
+    e.computeTransform();
   });
 });
 
+/// window.addEventListener("keydown", (e) => {
+// if (e.key === "arrowleft" || e.key === "a") {
+//   engine.cameraPosition[0] -= 1;
+// }
+// if (e.key === "arrowright" || e.key === "d") {
+//   engine.cameraPosition[0] += 1;
+// }
+// if (e.key === "arrowup" || e.key === "w") {
+//   engine.cameraPosition[2] -= 1;
+// }
+// if (e.key === "arrowdown" || e.key === "s") {
+//   engine.cameraPosition[2] += 1;
+// }
+
+// if (e.key === "q") {
+//   engine.cameraPosition[1] += 1;
+// }
+
+// if (e.key === "e") {
+//   engine.cameraPosition[1] -= 1;
+// }
+
+// window.addEventListener("click", (ev) => {
+//   const ray = createRayFromMouse(
+//     window.event
+//       ? vec2.fromValues(window.event.clientX, window.event.clientY)
+//       : vec2.fromValues(0, 0),
+//     vec2.fromValues(canvas.width, canvas.height),
+//     engine.renderer.getViewProjectionMatrix(engine.cameraPosition),
+//     engine.cameraPosition,
+//   );
+
+//   let closestHit: HitResult | null = null;
+//   let closestEntity: Entity | null = null;
+
+//   for (const entity of [floor, obstruction]) {
+//     const hit = rayIntersectEntity(ray, entity);
+
+//     if (hit) {
+//       if (!closestHit || hit.distance < closestHit.distance) {
+//         closestHit = hit;
+//         closestEntity = entity;
+//       }
+//     }
+//   }
+
+//   if (closestHit && closestEntity == floor) {
+//     console.log(
+//       "Hit at: ",
+//       closestHit.point,
+//       " on entity: ",
+//       closestEntity,
+//     );
+//   }
+// });
 // let cubeMesh: Mesh;
 
 // const renderer = new Renderer(

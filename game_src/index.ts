@@ -1,41 +1,128 @@
-import { Texture } from "../src/components/texture";
-import { Engine } from "../src/engine";
-import { AnimationClip, Animator } from "../src/render/animation";
-import { Vector2 } from "../src/render/types/vector2";
-import { CharacterComponent } from "./components/character";
-import { MapMaker } from "./components/map_maker";
-import { loadGLTF } from "../src/assets/gltfLoader";
-import Model3D from "../src/components/model3d";
-import { load } from "@loaders.gl/core";
-import { GLTFLoader } from "@loaders.gl/gltf";
+import { vec2, vec3 } from "wgpu-matrix";
+import { Engine } from "../src/engine.js";
+import { Mesh } from "../src/renderer/mesh.js";
+import { createCube, createPlane } from "../src/renderer/primitive.js";
+import { Renderer } from "../src/renderer/renderer.js";
+import { Entity } from "../src/entity.js";
+import {
+  createRayFromMouse,
+  HitResult,
+  rayIntersectEntity,
+} from "../src/physics/raycast.js";
 
-const canvas = document.getElementById("main") as HTMLCanvasElement;
-console.log(canvas);
+const canvas: HTMLCanvasElement = document.getElementById(
+  "main",
+) as HTMLCanvasElement;
 
-const engine = new Engine(canvas);
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-engine.on("ready", async () => {
-  try {
-    const modelMesh = await load("resources/Cube.gltf", GLTFLoader, {});
+fetch("./resources/shaders/basic_lit.wgsl").then(async (res) => {
+  const shader = await res.text();
+  const engine = new Engine(canvas, shader);
 
-    const modelEntity = engine.createEntity(
-      new Vector2(500, 300),
-      0,
-      new Vector2(64, 64),
+  engine.addEventListener("ready", () => {
+    let e: Entity = engine.createEntity(
+      vec3.fromValues(0, 0, 0),
+      vec3.fromValues(0, 0, 0),
+      vec3.fromValues(1, 1, 1),
+      createCube(engine.renderer.device!),
     );
-    const modelComp = new Model3D(modelEntity, modelMesh as any);
-    modelEntity.components.push(modelComp);
 
-    // upload mesh buffers to GPU
-    await modelComp.uploadToDevice((engine.renderer as any).device!);
+    let obstruction = engine.createEntity(
+      vec3.fromValues(10, 2, -2),
+      vec3.fromValues(0, 0, 0),
+      vec3.fromValues(5, 3, 1),
+      createCube(engine.renderer.device!),
+    );
 
-    // if glTF provided a textureUri, create Texture component for it
-    if (modelMesh.textureUrl) {
-      const tex = new Texture(modelEntity, modelMesh.textureUrl);
-      await tex.load((engine.renderer as any).device!);
-      modelEntity.components.push(tex);
-    }
-  } catch (err) {
-    console.warn("Failed to load GLTF model:", err);
-  }
+    let floor = engine.createEntity(
+      vec3.fromValues(0, -2, 0),
+      vec3.fromValues(0, 0, 0),
+      vec3.fromValues(50, 0.1, 50),
+      createPlane(engine.renderer.device!),
+    );
+
+    engine.on("update", () => {
+      e.rotation[0] += 0.01;
+      e.rotation[1] += 0.01;
+      e.computeTransform();
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "arrowleft" || e.key === "a") {
+        engine.cameraPosition[0] -= 1;
+      }
+      if (e.key === "arrowright" || e.key === "d") {
+        engine.cameraPosition[0] += 1;
+      }
+      if (e.key === "arrowup" || e.key === "w") {
+        engine.cameraPosition[2] -= 1;
+      }
+      if (e.key === "arrowdown" || e.key === "s") {
+        engine.cameraPosition[2] += 1;
+      }
+
+      if (e.key === "q") {
+        engine.cameraPosition[1] += 1;
+      }
+
+      if (e.key === "e") {
+        engine.cameraPosition[1] -= 1;
+      }
+    });
+
+    window.addEventListener("click", (ev) => {
+      const ray = createRayFromMouse(
+        window.event
+          ? vec2.fromValues(window.event.clientX, window.event.clientY)
+          : vec2.fromValues(0, 0),
+        vec2.fromValues(canvas.width, canvas.height),
+        engine.renderer.getViewProjectionMatrix(engine.cameraPosition),
+        engine.cameraPosition,
+      );
+
+      let closestHit: HitResult | null = null;
+      let closestEntity: Entity | null = null;
+
+      for (const entity of [floor, obstruction]) {
+        const hit = rayIntersectEntity(ray, entity);
+
+        if (hit) {
+          if (!closestHit || hit.distance < closestHit.distance) {
+            closestHit = hit;
+            closestEntity = entity;
+          }
+        }
+      }
+
+      if (closestHit && closestEntity == floor) {
+        console.log(
+          "Hit at: ",
+          closestHit.point,
+          " on entity: ",
+          closestEntity,
+        );
+      }
+    });
+  });
 });
+
+// let cubeMesh: Mesh;
+
+// const renderer = new Renderer(
+//   canvas,
+//   document.getElementById("shader").textContent,
+// );
+// renderer.initialize().then(() => {
+//   if (renderer.device) {
+//     cubeMesh = createCube(renderer.device);
+//   }
+
+//   function frame(t) {
+//     renderer.render(cubeMesh, t);
+//     requestAnimationFrame(frame);
+//   }
+
+//   requestAnimationFrame(frame);
+// });

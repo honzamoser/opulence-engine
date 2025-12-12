@@ -11,6 +11,8 @@ import {
 import { Engine } from "./engine";
 // import { Component } from "./render/types/component";
 import { Mesh } from "./renderer/mesh";
+import { Component } from "./ecs/component";
+import { System } from "./ecs/system";
 
 export class Entity {
   position: Vec3;
@@ -18,22 +20,19 @@ export class Entity {
   scale: Vec3;
   transform: Mat4;
   world: Engine;
-  mesh: Mesh;
 
-  // components: Component[] = [];
+  components: Component[] = [];
 
   constructor(
     world: Engine,
     position: Vec3 = vec3.create(0, 0, 0),
     rotation: Vec3 = vec3.create(0, 0),
     scale: Vec3 = vec3.create(1, 1, 1),
-    mesh: Mesh,
   ) {
     this.position = position;
     this.rotation = rotation;
     this.scale = scale;
     this.world = world;
-    this.mesh = mesh;
     this.transform = mat4.identity();
     this.computeTransform();
   }
@@ -46,19 +45,4 @@ export class Entity {
     mat4.rotateZ(this.transform, this.rotation[2], this.transform);
     mat4.scale(this.transform, this.scale, this.transform);
   }
-
-  // update(delta: number) {
-  //   this.components.forEach((component) => {
-  //     component.update(delta);
-  //   });
-  // }
-
-  // destroy() {
-  //   this.components.forEach((component) => {
-  //     // If components had a destroy method, we would call it here
-  //     // component.destroy();
-  //   });
-
-  //   this.components = [];
-  // }
 }

@@ -180,7 +180,11 @@ export class Renderer {
     });
   }
 
-  async render(entities: Entity[], time: number, cameraPosition: Vec3) {
+  async render(
+    entities: { entity: Entity; mesh: Mesh }[],
+    time: number,
+    cameraPosition: Vec3,
+  ) {
     const viewProjection = this.getViewProjectionMatrix(cameraPosition);
 
     const sceneData = new Float32Array(16 + 4 + 4 + this.MAX_LIGHTS * 8);
@@ -205,8 +209,8 @@ export class Renderer {
       (entities.length * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT) / 4,
     );
     entities.forEach((entity, i) => {
-      const model = entity.transform;
-      const mvp = mat4.multiply(viewProjection, entity.transform);
+      const model = entity.entity.transform;
+      const mvp = mat4.multiply(viewProjection, entity.entity.transform);
       // projectionBuffer.set(
       //   mvp as Float32Array,
       //   (i * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT) / 4,

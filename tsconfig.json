@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "types": ["@webgpu/types", "wgpu-matrix"],
+    "target": "ES2024",
+    "moduleResolution": "bundler"
+  }
+}

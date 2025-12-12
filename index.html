@@ -1,36 +1,40 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Legends of League</title>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Legends of League</title>
+        <style>
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+            }
+        </style>
+    </head>
 
+    <body>
+        <canvas
+            id="main"
+            style="
+                width: 100%;
+                height: 100%;
+                display: block;
+                pointer-events: none;
+            "
+        >
+        </canvas>
+        <!--<script src="./game_src/index.ts" defer async type="module"></script>-->
 
-    <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-    </style>
-</head>
-
-<body>
-    <canvas id="main" style="
-    width: 100%;
-    height: 100%;
-    display: block;
-    pointer-events: none;
-
-"> </canvas>
-    <script src="./game_src/index.ts" defer async type="module"></script>
-
-    <script>document.addEventListener('contextmenu', event => event.preventDefault());</script>
-
-</body>
-
+        <script src="main.ts" type="module"></script>
+        <script>
+            document.addEventListener("contextmenu", (event) =>
+                event.preventDefault(),
+            );
+        </script>
+    </body>
 </html>

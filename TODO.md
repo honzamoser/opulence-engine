@@ -12,8 +12,23 @@
 - [ ] Loading subsystem
     - [ ] Data saving serviceworker
 - [ ] **3D rendering**
+  - [ ] [Shadows](https://gemini.google.com/share/3c8fdf0e0dda)
+    - [ ] Directional Shadows
+    - [ ] Point Shadows
+    - [ ] Shadow baking?
+  - [ ] [Material System](https://gemini.google.com/share/3c8fdf0e0dda)
+  - [x] Lighting System
+  - [ ] Dynamic buffer allocation (if they overflow)
 - [ ] Better shaders
     - [ ] Dynamic shader loading
 - [ ] Input handling
 - [ ] Launcher
 - [ ] Persistent data
+- [ ] Pathfinding
+- [ ] Physics
+  - [ ] Collision
+    - [ ] Raycasting
+    - [ ] Colliders 
+      - [ ] AABB
+      - [ ] Capsules
+      - [ ] OBB

@@ -4,6 +4,7 @@
 		"@webgpu/types": "^0.1.67"
 	},
 	"dependencies": {
-		"@loaders.gl/core": "^4.3.4"
+		"@loaders.gl/core": "^4.3.4",
+		"wgpu-matrix": "^3.4.0"
 	}
 }

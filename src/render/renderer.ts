@@ -6,7 +6,18 @@ import { Vector2 } from "../types/vector2";
 import { Line, LineRenderer } from "./line";
 import { Animator } from "./animation";
 
-export class Renderer {
+export abstract class BaseRenderer {
+    adapter: GPUAdapter | null = null;
+    device: GPUDevice | null = null;
+    context: GPUCanvasContext | null = null;
+    canvasConfig: GPUCanvasConfiguration | null = null;
+
+
+    abstract initialize(canvas: HTMLCanvasElement): Promise<void>;
+    abstract renderEntities(entities: Entity[], cameraPosition?: Vector2): void;
+}
+
+export class Renderer extends BaseRenderer {
     readonly modelBufferSize = 1000;
 
     adapter: GPUAdapter | null = null;
@@ -27,7 +38,7 @@ export class Renderer {
 
     lineRenderer: LineRenderer | null = null;
 
-    public async initializeWebGpu(canvas: HTMLCanvasElement) {
+    public async initialize(canvas: HTMLCanvasElement) {
         const adapter = await navigator.gpu.requestAdapter();
 
         if (!adapter) {

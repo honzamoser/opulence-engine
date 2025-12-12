@@ -14,3 +14,6 @@
 - [ ] **3D rendering**
 - [ ] Better shaders
     - [ ] Dynamic shader loading
+- [ ] Input handling
+- [ ] Launcher
+- [ ] Persistent data

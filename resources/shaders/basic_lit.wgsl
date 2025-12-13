@@ -14,6 +14,7 @@ struct SceneUniforms {
 
 
 struct ObjectUniforms {
+  color: vec4<f32>,
   modelMatrix: mat4x4<f32>,
 }
 
@@ -44,7 +45,7 @@ fn vs_main(@location(0) position : vec3<f32>, @location(1) normal : vec3<f32>, @
 fn fs_main(@location(0) normal : vec3<f32>, @location(1) fragPos : vec3<f32>, @location(2) color : vec4<f32>) -> @location(0) vec4<f32> {
   let N = normalize(normal);
   var totalLight = vec3<f32>(0.0);
-  let ambient = vec3<f32>(0.1, 0.1, 0.1);
+  let ambient = vec3<f32>(0.3, 0.3, 0.3);
 
   let count = scene.lightCount.x;
 
@@ -73,8 +74,8 @@ fn fs_main(@location(0) normal : vec3<f32>, @location(1) fragPos : vec3<f32>, @l
     totalLight += lightColor * diffuse * attenuation * intensity;
   }
 
-  let objectColor = vec3<f32>(1.0, 1.0, 1.0);
-  let finalColor = color.xyz * (ambient + totalLight);
+  let objectColor = object.color.rgb;
+  let finalColor = objectColor * color.xyz * (ambient + totalLight);
 
   return vec4<f32>(finalColor, color.a);
 }

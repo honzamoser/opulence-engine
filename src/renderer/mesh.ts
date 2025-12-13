@@ -1,9 +1,16 @@
 import { vec3, Vec3 } from "wgpu-matrix";
+import { Material } from "./material";
 
 export class Mesh {
   device: GPUDevice;
   vertexBuffer: GPUBuffer;
   indexBuffer: GPUBuffer;
+
+  vertices: Float32Array;
+  indices: Uint16Array;
+
+  material: Material;
+
   vertexCount: number;
   indexCount: number;
   AABB: {
@@ -14,10 +21,10 @@ export class Mesh {
     max: vec3.create(),
   };
 
-  constructor(device: GPUDevice, vertices: Float32Array, indices: Uint16Array) {
+  start(device: GPUDevice) {
     this.device = device;
-    this.indexCount = indices.length;
-    this.vertexCount = vertices.length;
+    const vertices = this.vertices;
+    const indices = this.indices;
 
     this.vertexBuffer = this.device.createBuffer({
       label: "Mesh Vertex Buffer",
@@ -26,9 +33,14 @@ export class Mesh {
     });
     this.device.queue.writeBuffer(this.vertexBuffer, 0, vertices);
 
+    // Index buffer size must be a multiple of 4 bytes
+    // Uint16Array elements are 2 bytes, so pad if needed
+    const indexByteLength = indices.byteLength;
+    const paddedSize = Math.ceil(indexByteLength / 4) * 4;
+
     this.indexBuffer = this.device.createBuffer({
       label: "Mesh Index Buffer",
-      size: indices.byteLength,
+      size: paddedSize,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
     });
     this.device.queue.writeBuffer(this.indexBuffer, 0, indices);
@@ -54,7 +66,18 @@ export class Mesh {
       vec3.min(this.AABB.min, [x, y, z], this.AABB.min);
       vec3.max(this.AABB.max, [x, y, z], this.AABB.max);
     }
+  }
 
-    console.log(this.AABB);
+  constructor(
+    vertices: Float32Array,
+    indices: Uint16Array,
+    material: Material,
+  ) {
+    this.indexCount = indices.length;
+    this.vertexCount = vertices.length;
+
+    this.vertices = vertices;
+    this.indices = indices;
+    this.material = material;
   }
 }

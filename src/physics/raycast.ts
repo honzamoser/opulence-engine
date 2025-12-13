@@ -1,5 +1,8 @@
 import { mat4, Mat4, Vec2, vec3, Vec3, vec4 } from "wgpu-matrix";
 import { Entity } from "../entity";
+import { TransformComponent } from "../ecs/components/transform";
+import { Mesh } from "../renderer/mesh";
+import { MeshComponent } from "../ecs/components/mesh";
 
 export class Ray {
   origin: Vec3;
@@ -43,14 +46,18 @@ export function createRayFromMouse(
   return new Ray(cameraPosition, dir);
 }
 
-export function rayIntersectEntity(ray: Ray, entity: Entity): HitResult | null {
+export function rayIntersectEntity(
+  ray: Ray,
+  transform: TransformComponent,
+  mesh: MeshComponent,
+): HitResult | null {
   // 1. Get World Bounds
 
-  const scaledMin = vec3.multiply(entity.mesh.AABB.min, entity.scale);
-  const scaledMax = vec3.multiply(entity.mesh.AABB.max, entity.scale);
+  const scaledMin = vec3.multiply(mesh.mesh.AABB.min, transform.scale);
+  const scaledMax = vec3.multiply(mesh.mesh.AABB.max, transform.scale);
 
-  const minWorld = vec3.add(scaledMin, entity.position);
-  const maxWorld = vec3.add(scaledMax, entity.position);
+  const minWorld = vec3.add(scaledMin, transform.position);
+  const maxWorld = vec3.add(scaledMax, transform.position);
 
   // 2. Slab Method (Distance Calculation)
   let tMin = (minWorld[0] - ray.origin[0]) / ray.direction[0];

@@ -11,6 +11,9 @@ importers:
       '@loaders.gl/core':
         specifier: ^4.3.4
         version: 4.3.4
+      '@loaders.gl/gltf':
+        specifier: ^4.3.4
+        version: 4.3.4(@loaders.gl/core@4.3.4)
       wgpu-matrix:
         specifier: ^3.4.0
         version: 3.4.0
@@ -24,6 +27,21 @@ packages:
   '@loaders.gl/core@4.3.4':
     resolution: {integrity: sha512-cG0C5fMZ1jyW6WCsf4LoHGvaIAJCEVA/ioqKoYRwoSfXkOf+17KupK1OUQyUCw5XoRn+oWA1FulJQOYlXnb9Gw==}
 
+  '@loaders.gl/draco@4.3.4':
+    resolution: {integrity: sha512-4Lx0rKmYENGspvcgV5XDpFD9o+NamXoazSSl9Oa3pjVVjo+HJuzCgrxTQYD/3JvRrolW/QRehZeWD/L/cEC6mw==}
+    peerDependencies:
+      '@loaders.gl/core': ^4.3.0
+
+  '@loaders.gl/gltf@4.3.4':
+    resolution: {integrity: sha512-EiUTiLGMfukLd9W98wMpKmw+hVRhQ0dJ37wdlXK98XPeGGB+zTQxCcQY+/BaMhsSpYt/OOJleHhTfwNr8RgzRg==}
+    peerDependencies:
+      '@loaders.gl/core': ^4.3.0
+
+  '@loaders.gl/images@4.3.4':
+    resolution: {integrity: sha512-qgc33BaNsqN9cWa/xvcGvQ50wGDONgQQdzHCKDDKhV2w/uptZoR5iofJfuG8UUV2vUMMd82Uk9zbopRx2rS4Ag==}
+    peerDependencies:
+      '@loaders.gl/core': ^4.3.0
+
   '@loaders.gl/loader-utils@4.3.4':
     resolution: {integrity: sha512-tjMZvlKQSaMl2qmYTAxg+ySR6zd6hQn5n3XaU8+Ehp90TD3WzxvDKOMNDqOa72fFmIV+KgPhcmIJTpq4lAdC4Q==}
     peerDependencies:
@@ -34,10 +52,21 @@ packages:
     peerDependencies:
       '@loaders.gl/core': ^4.3.0
 
+  '@loaders.gl/textures@4.3.4':
+    resolution: {integrity: sha512-arWIDjlE7JaDS6v9by7juLfxPGGnjT9JjleaXx3wq/PTp+psLOpGUywHXm38BNECos3MFEQK3/GFShWI+/dWPw==}
+    peerDependencies:
+      '@loaders.gl/core': ^4.3.0
+
   '@loaders.gl/worker-utils@4.3.4':
     resolution: {integrity: sha512-EbsszrASgT85GH3B7jkx7YXfQyIYo/rlobwMx6V3ewETapPUwdSAInv+89flnk5n2eu2Lpdeh+2zS6PvqbL2RA==}
     peerDependencies:
       '@loaders.gl/core': ^4.3.0
+
+  '@math.gl/core@4.1.0':
+    resolution: {integrity: sha512-FrdHBCVG3QdrworwrUSzXIaK+/9OCRLscxI2OUy6sLOHyHgBMyfnEGs99/m3KNvs+95BsnQLWklVfpKfQzfwKA==}
+
+  '@math.gl/types@4.1.0':
+    resolution: {integrity: sha512-clYZdHcmRvMzVK5fjeDkQlHUzXQSNdZ7s4xOqC3nJPgz4C/TZkUecTo9YS4PruZqtDda/ag4erndP0MIn40dGA==}
 
   '@probe.gl/env@4.1.0':
     resolution: {integrity: sha512-5ac2Jm2K72VCs4eSMsM7ykVRrV47w32xOGMvcgqn8vQdEMF9PRXyBGYEV9YbqRKWNKpNKmQJVi4AHM/fkCxs9w==}
@@ -54,6 +83,27 @@ packages:
   '@webgpu/types@0.1.67':
     resolution: {integrity: sha512-uk53+2ECGUkWoDFez/hymwpRfdgdIn6y1ref70fEecGMe5607f4sozNFgBk0oxlr7j2CRGWBEc3IBYMmFdGGTQ==}
 
+  argparse@1.0.10:
+    resolution: {integrity: sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==}
+
+  draco3d@1.5.7:
+    resolution: {integrity: sha512-m6WCKt/erDXcw+70IJXnG7M3awwQPAsZvJGX5zY7beBqpELw6RDGkYVU0W43AFxye4pDZ5i2Lbyc/NNGqwjUVQ==}
+
+  image-size@0.7.5:
+    resolution: {integrity: sha512-Hiyv+mXHfFEP7LzUL/llg9RwFxxY+o9N3JVLIeG5E7iFIFAalxvRU9UZthBdYDEVnzHMgjnKJPPpay5BWf1g9g==}
+    engines: {node: '>=6.9.0'}
+    hasBin: true
+
+  ktx-parse@0.7.1:
+    resolution: {integrity: sha512-FeA3g56ksdFNwjXJJsc1CCc7co+AJYDp6ipIp878zZ2bU8kWROatLYf39TQEd4/XRSUvBXovQ8gaVKWPXsCLEQ==}
+
+  sprintf-js@1.0.3:
+    resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
+
+  texture-compressor@1.0.2:
+    resolution: {integrity: sha512-dStVgoaQ11mA5htJ+RzZ51ZxIZqNOgWKAIvtjLrW1AliQQLCmrDqNzQZ8Jh91YealQ95DXt4MEduLzJmbs6lig==}
+    hasBin: true
+
   wgpu-matrix@3.4.0:
     resolution: {integrity: sha512-kXHrbAPKEn9A32Wf4wVldyx9MmnzwhuB5p8GCqoJP3ItU5+iDT4J3aTQwPZWkfb153hwGtqZtUwR2M+ipJKadg==}
 
@@ -65,6 +115,29 @@ snapshots:
       '@loaders.gl/schema': 4.3.4(@loaders.gl/core@4.3.4)
       '@loaders.gl/worker-utils': 4.3.4(@loaders.gl/core@4.3.4)
       '@probe.gl/log': 4.1.0
+
+  '@loaders.gl/draco@4.3.4(@loaders.gl/core@4.3.4)':
+    dependencies:
+      '@loaders.gl/core': 4.3.4
+      '@loaders.gl/loader-utils': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/schema': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/worker-utils': 4.3.4(@loaders.gl/core@4.3.4)
+      draco3d: 1.5.7
+
+  '@loaders.gl/gltf@4.3.4(@loaders.gl/core@4.3.4)':
+    dependencies:
+      '@loaders.gl/core': 4.3.4
+      '@loaders.gl/draco': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/images': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/loader-utils': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/schema': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/textures': 4.3.4(@loaders.gl/core@4.3.4)
+      '@math.gl/core': 4.1.0
+
+  '@loaders.gl/images@4.3.4(@loaders.gl/core@4.3.4)':
+    dependencies:
+      '@loaders.gl/core': 4.3.4
+      '@loaders.gl/loader-utils': 4.3.4(@loaders.gl/core@4.3.4)
 
   '@loaders.gl/loader-utils@4.3.4(@loaders.gl/core@4.3.4)':
     dependencies:
@@ -79,9 +152,26 @@ snapshots:
       '@loaders.gl/core': 4.3.4
       '@types/geojson': 7946.0.16
 
+  '@loaders.gl/textures@4.3.4(@loaders.gl/core@4.3.4)':
+    dependencies:
+      '@loaders.gl/core': 4.3.4
+      '@loaders.gl/images': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/loader-utils': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/schema': 4.3.4(@loaders.gl/core@4.3.4)
+      '@loaders.gl/worker-utils': 4.3.4(@loaders.gl/core@4.3.4)
+      '@math.gl/types': 4.1.0
+      ktx-parse: 0.7.1
+      texture-compressor: 1.0.2
+
   '@loaders.gl/worker-utils@4.3.4(@loaders.gl/core@4.3.4)':
     dependencies:
       '@loaders.gl/core': 4.3.4
+
+  '@math.gl/core@4.1.0':
+    dependencies:
+      '@math.gl/types': 4.1.0
+
+  '@math.gl/types@4.1.0': {}
 
   '@probe.gl/env@4.1.0': {}
 
@@ -94,5 +184,22 @@ snapshots:
   '@types/geojson@7946.0.16': {}
 
   '@webgpu/types@0.1.67': {}
+
+  argparse@1.0.10:
+    dependencies:
+      sprintf-js: 1.0.3
+
+  draco3d@1.5.7: {}
+
+  image-size@0.7.5: {}
+
+  ktx-parse@0.7.1: {}
+
+  sprintf-js@1.0.3: {}
+
+  texture-compressor@1.0.2:
+    dependencies:
+      argparse: 1.0.10
+      image-size: 0.7.5
 
   wgpu-matrix@3.4.0: {}

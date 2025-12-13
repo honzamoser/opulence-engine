@@ -1,33 +1,25 @@
-import { mat4, Vec3, vec3 } from "wgpu-matrix";
+import { Mat4, mat4, Vec3, vec3 } from "wgpu-matrix";
 import { Mesh } from "./mesh.js";
 import { Entity } from "../entity.js";
 import { Light } from "./light.js";
+import { TransformComponent } from "../ecs/components/transform.js";
+import { Material } from "./material.js";
 
 export class Renderer {
-  getViewProjectionMatrix(cameraPosition: Vec3): Float32Array<ArrayBufferLike> {
-    const aspect = this.canvas.width / this.canvas.height;
-    const projection = mat4.perspective(Math.PI / 2, aspect, 0.1, 100);
-    const view = mat4.lookAt(
-      cameraPosition,
-      vec3.create(0, 0, 0),
-      vec3.create(0, 1, 0),
-    );
-    const viewProjection = mat4.multiply(projection, view);
-    return viewProjection;
-  }
   canvas: HTMLCanvasElement;
-  shaderSource: string;
 
   adapter: GPUAdapter | null = null;
   device: GPUDevice | null = null;
   context: GPUCanvasContext | null = null;
   format: GPUTextureFormat | null = null;
-  pipeline: GPURenderPipeline | null = null;
 
   vertexBuffer: GPUBuffer | null = null;
   indexBuffer: GPUBuffer | null = null;
 
+  vertexLayout: GPUVertexBufferLayout | null = null;
+
   sceneBuffer: GPUBuffer | null = null;
+  sceneLayout: GPUBindGroupLayout | null = null;
   sceneBindGroup: GPUBindGroup | null = null;
 
   objectBuffer: GPUBuffer | null = null;
@@ -37,14 +29,15 @@ export class Renderer {
 
   lights: Light[] = [];
 
-  private readonly UNIFORM_COUNT = 128;
+  ready: boolean = false;
+
+  private readonly UNIFORM_COUNT = 1024;
   private readonly MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT = 256;
   private readonly SCENE_BUFFER_SIZE = 352;
   private readonly MAX_LIGHTS = 8;
 
-  constructor(canvas: HTMLCanvasElement, shaderSource: string) {
+  constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this.shaderSource = shaderSource;
   }
 
   async initialize() {
@@ -70,8 +63,8 @@ export class Renderer {
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    this.createAssets();
-    this.createPipeline();
+    await Promise.all([this.createAssets(), this.createPipeline()]);
+    this.ready = true;
   }
 
   private async createAssets() {
@@ -93,11 +86,7 @@ export class Renderer {
   private async createPipeline() {
     if (!this.device) return;
 
-    const shaderModule = this.device.createShaderModule({
-      code: this.shaderSource,
-    });
-
-    const vertexLayout: GPUVertexBufferLayout = {
+    this.vertexLayout = {
       arrayStride: 10 * 4,
       attributes: [
         { shaderLocation: 0, offset: 0, format: "float32x3" },
@@ -106,7 +95,7 @@ export class Renderer {
       ],
     };
 
-    const sceneLayout = this.device.createBindGroupLayout({
+    this.sceneLayout = this.device.createBindGroupLayout({
       entries: [
         {
           binding: 0,
@@ -130,33 +119,8 @@ export class Renderer {
       ],
     });
 
-    this.pipeline = this.device.createRenderPipeline({
-      layout: this.device.createPipelineLayout({
-        bindGroupLayouts: [sceneLayout, objectLayout],
-      }),
-      vertex: {
-        module: shaderModule,
-        entryPoint: "vs_main",
-        buffers: [vertexLayout],
-      },
-      fragment: {
-        module: shaderModule,
-        entryPoint: "fs_main",
-        targets: [{ format: this.format! }],
-      },
-      primitive: {
-        topology: "triangle-list",
-        cullMode: "back",
-      },
-      depthStencil: {
-        depthWriteEnabled: true,
-        depthCompare: "less",
-        format: "depth24plus",
-      },
-    });
-
     this.sceneBindGroup = this.device.createBindGroup({
-      layout: sceneLayout,
+      layout: this.sceneLayout,
       entries: [
         {
           binding: 0,
@@ -181,11 +145,17 @@ export class Renderer {
   }
 
   async render(
-    entities: { entity: Entity; mesh: Mesh }[],
+    entities: {
+      entity: Entity;
+      mesh: Mesh;
+      transform: TransformComponent;
+      material: Material;
+    }[],
     time: number,
     cameraPosition: Vec3,
+    projectionMatrix: Mat4,
   ) {
-    const viewProjection = this.getViewProjectionMatrix(cameraPosition);
+    const viewProjection = projectionMatrix;
 
     const sceneData = new Float32Array(16 + 4 + 4 + this.MAX_LIGHTS * 8);
 
@@ -205,30 +175,55 @@ export class Renderer {
 
     this.device!.queue.writeBuffer(this.sceneBuffer!, 0, sceneData);
 
-    const projectionBuffer = new Float32Array(
-      (entities.length * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT) / 4,
-    );
-    entities.forEach((entity, i) => {
-      const model = entity.entity.transform;
-      const mvp = mat4.multiply(viewProjection, entity.entity.transform);
-      // projectionBuffer.set(
-      //   mvp as Float32Array,
-      //   (i * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT) / 4,
-      // );
-
-      projectionBuffer.set(
-        model,
-        (i * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT) / 4,
-      );
+    // Sort entities by material to batch draw calls
+    entities.sort((a, b) => {
+      return a.material.id - b.material.id;
     });
 
-    this.device.queue.writeBuffer(
-      this.objectBuffer!,
-      0,
-      projectionBuffer,
-      0,
-      (entities.length * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT) / 4,
-    );
+    // Group entities by material and write their data to material buffers
+    const materialBatches = new Map<
+      number,
+      { material: Material; entities: typeof entities }
+    >();
+
+    entities.forEach((entity) => {
+      const materialId = entity.material.id;
+      if (!materialBatches.has(materialId)) {
+        materialBatches.set(materialId, {
+          material: entity.material,
+          entities: [],
+        });
+      }
+      materialBatches.get(materialId)!.entities.push(entity);
+    });
+
+    // Write object data to each material's buffer
+    materialBatches.forEach((batch) => {
+      const bufferData = new Float32Array(
+        (batch.entities.length * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT) /
+          4,
+      );
+
+      batch.entities.forEach((entity, i) => {
+        const model = entity.transform.matrix;
+        const color = batch.material.color;
+
+        const offsetInFloats =
+          (i * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT) / 4;
+
+        // Write color (vec4)
+        bufferData.set(color, offsetInFloats);
+
+        // Write model matrix (mat4)
+        bufferData.set(model, offsetInFloats + 4);
+      });
+
+      this.device.queue.writeBuffer(
+        batch.material.uniformBuffer!,
+        0,
+        bufferData,
+      );
+    });
 
     const commandEncoder = this.device!.createCommandEncoder();
     const textureView = this.context!.getCurrentTexture().createView();
@@ -251,17 +246,24 @@ export class Renderer {
       },
     });
 
-    renderPass.setPipeline(this.pipeline!);
-    renderPass.setBindGroup(0, this.sceneBindGroup!);
+    // Render each material batch
+    materialBatches.forEach((batch) => {
+      renderPass.setPipeline(batch.material.shader.pipeline!);
+      renderPass.setBindGroup(0, this.sceneBindGroup!);
 
-    for (const [i, entity] of entities.entries()) {
-      const offset = i * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
+      batch.entities.forEach((entity, index) => {
+        // Calculate dynamic offset for this object
+        const dynamicOffset =
+          index * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
 
-      renderPass.setBindGroup(1, this.objectBindGroup!, [offset]);
-      renderPass.setVertexBuffer(0, entity.mesh.vertexBuffer!);
-      renderPass.setIndexBuffer(entity.mesh.indexBuffer!, "uint16");
-      renderPass.drawIndexed(entity.mesh.indexCount);
-    }
+        // Set bind group with dynamic offset
+        renderPass.setBindGroup(1, batch.material.bindGroup, [dynamicOffset]);
+
+        renderPass.setVertexBuffer(0, entity.mesh.vertexBuffer!);
+        renderPass.setIndexBuffer(entity.mesh.indexBuffer!, "uint16");
+        renderPass.drawIndexed(entity.mesh.indexCount);
+      });
+    });
 
     renderPass.end();
     this.device!.queue.submit([commandEncoder.finish()]);

@@ -6,6 +6,7 @@ import { Renderer } from "./renderer/renderer";
 import { Mesh } from "./renderer/mesh";
 import { Light } from "./renderer/light";
 import { System } from "./ecs/system";
+import { Component } from "./ecs/component";
 
 export class Engine extends EventTarget {
   world: Entity[] = [];
@@ -17,6 +18,10 @@ export class Engine extends EventTarget {
 
   systems: System[] = [];
 
+  // Query cache to avoid re-scanning entities every frame
+  private queryCache: Map<string, Entity[]> = new Map();
+  private queryCacheDirty: boolean = true;
+
   constructor(canvas: HTMLCanvasElement, shaderSource: string) {
     super();
 
@@ -26,40 +31,70 @@ export class Engine extends EventTarget {
     this.canvas = canvas;
     this.input = new InputHandler(canvas);
 
-    // this.renderer = new Renderer(canvas, shaderSource);
-    // this.renderer.lights = [
-    //   // Light.createPoint([3, 2, 0], 10, [1, 0, 0], 2), // Red point light
-    //   // Light.createPoint([-3, 2, 0], 10, [0, 0, 1], 2), // Blue point light
-    //   // Light.createPoint([0, 4, 2], 15, [0, 1, 0], 1), // Green point light
-    //   Light.createDirectional([0, -1, 0], [1, 1, 0.9], 0.9), // Warm directional light (like sunlight)
-    // ];
-    // this.renderer.initialize().then(() => {
-    //   this.dispatchEvent(new Event("ready"));
-    // });
     startLifecycle(this.update.bind(this));
   }
 
   async start() {
-    await Promise.all(this.systems.map((system) => system.start(this)));
+    await Promise.all(
+      this.systems.map((system) =>
+        system.start ? system?.start(this) : Promise.resolve(),
+      ),
+    );
   }
 
-  update(delta: number) {
+  async update(delta: number) {
     this.dispatchEvent(new CustomEvent("update", { detail: delta }));
 
-    console.log(this.systems);
+    // Clear query cache at start of frame
+    if (this.queryCacheDirty) {
+      this.queryCache.clear();
+      this.queryCacheDirty = false;
+    }
 
-    this.systems.forEach((entity) => {
-      entity.update(this.world, delta, this);
+    this.systems.forEach((x) => {
+      if (x.update) {
+        x.update(this.world, delta, this);
+      }
     });
-
-    // this.renderer.render(this.world, delta, this.cameraPosition);
+    this.systems.forEach((x) => {
+      if (x.afterUpdate) {
+        x?.afterUpdate(this);
+      }
+    });
   }
 
-  createEntity(position: Vec3, rotation: Vec3, scale: Vec3): Entity {
-    const ent = new Entity(this, position, rotation, scale);
+  createEntity(): Entity {
+    const ent = new Entity(this);
     this.world.push(ent);
+    this.queryCacheDirty = true; // Invalidate cache when entities change
     return ent;
   }
 
   public on = this.addEventListener;
+
+  query(...componentTypes: (new (...args: any[]) => Component)[]): Entity[] {
+    // Create cache key from component type names
+    const cacheKey = componentTypes
+      .map((t) => t.name)
+      .sort()
+      .join(",");
+
+    // Check cache first
+    if (this.queryCache.has(cacheKey)) {
+      return this.queryCache.get(cacheKey)!;
+    }
+
+    // Perform query and cache result
+    const result = this.world.filter((entity) =>
+      componentTypes.every((type) => entity.hasComponent(type)),
+    );
+
+    this.queryCache.set(cacheKey, result);
+    return result;
+  }
+
+  // Call this when an entity's components are modified
+  invalidateQueryCache(): void {
+    this.queryCacheDirty = true;
+  }
 }

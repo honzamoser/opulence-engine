@@ -15,34 +15,37 @@ import { Component } from "./ecs/component";
 import { System } from "./ecs/system";
 
 export class Entity {
-  position: Vec3;
-  rotation: Vec3;
-  scale: Vec3;
-  transform: Mat4;
   world: Engine;
 
-  components: Component[] = [];
+  public components: Map<new (...args: any[]) => Component, Component> =
+    new Map();
 
-  constructor(
-    world: Engine,
-    position: Vec3 = vec3.create(0, 0, 0),
-    rotation: Vec3 = vec3.create(0, 0),
-    scale: Vec3 = vec3.create(1, 1, 1),
-  ) {
-    this.position = position;
-    this.rotation = rotation;
-    this.scale = scale;
+  constructor(world: Engine) {
     this.world = world;
-    this.transform = mat4.identity();
-    this.computeTransform();
   }
 
-  computeTransform() {
-    mat4.identity(this.transform);
-    mat4.translate(this.transform, this.position, this.transform);
-    mat4.rotateX(this.transform, this.rotation[0], this.transform);
-    mat4.rotateY(this.transform, this.rotation[1], this.transform);
-    mat4.rotateZ(this.transform, this.rotation[2], this.transform);
-    mat4.scale(this.transform, this.scale, this.transform);
+  addComponent<C extends new (...args: any[]) => Component>(
+    ComponentClass: C,
+    ...args: ConstructorParameters<C>
+  ): InstanceType<C> {
+    const component = new ComponentClass(...args);
+    this.components.set(ComponentClass, component);
+    this.world.invalidateQueryCache(); // Invalidate cache when components change
+    return component as InstanceType<C>;
+  }
+
+  getComponent<T extends Component>(
+    type: new (...args: any[]) => T,
+  ): T | undefined {
+    return this.components.get(type) as T | undefined;
+  }
+
+  hasComponent<T extends Component>(type: new (...args: any[]) => T): boolean {
+    return this.components.has(type);
+  }
+
+  removeComponent<T extends Component>(type: new (...args: any[]) => T): void {
+    this.components.delete(type);
+    this.world.invalidateQueryCache(); // Invalidate cache when components change
   }
 }

@@ -1,30 +1,31 @@
+import { Material } from "./material";
 import { Mesh } from "./mesh";
 
-export function createCube(device: GPUDevice): Mesh {
+export function createCube(material: Material): Mesh {
   const vertices = new Float32Array([
     // Front face (Normal: 0, 0, 1)
-    -1, -1, 1, 0, 0, 1, 1, 0, 0, 1, 1, -1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 0,
-    0, 1, 1, 0, 0, 1, -1, 1, 1, 0, 0, 1, 1, 0, 0, 1,
+    -1, -1, 1, 0, 0, 1, 1, 1, 1, 1, 1, -1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    0, 1, 1, 1, 1, 1, -1, 1, 1, 0, 0, 1, 1, 1, 1, 1,
 
     // Back face (Normal: 0, 0, -1)
-    -1, -1, -1, 0, 0, -1, 0, 1, 0, 1, -1, 1, -1, 0, 0, -1, 0, 1, 0, 1, 1, 1, -1,
-    0, 0, -1, 0, 1, 0, 1, 1, -1, -1, 0, 0, -1, 0, 1, 0, 1,
+    -1, -1, -1, 0, 0, -1, 1, 1, 1, 1, -1, 1, -1, 0, 0, -1, 1, 1, 1, 1, 1, 1, -1,
+    0, 0, -1, 1, 1, 1, 1, 1, -1, -1, 0, 0, -1, 1, 1, 1, 1,
 
     // Top face (Normal: 0, 1, 0)
-    -1, 1, -1, 0, 1, 0, 0, 0, 1, 1, -1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0,
-    1, 0, 0, 0, 1, 1, 1, 1, -1, 0, 1, 0, 0, 0, 1, 1,
+    -1, 1, -1, 0, 1, 0, 1, 1, 1, 1, -1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0,
+    1, 0, 1, 1, 1, 1, 1, 1, -1, 0, 1, 0, 1, 1, 1, 1,
 
     // Bottom face (Normal: 0, -1, 0)
-    -1, -1, -1, 0, -1, 0, 1, 1, 0, 1, 1, -1, -1, 0, -1, 0, 1, 1, 0, 1, 1, -1, 1,
-    0, -1, 0, 1, 1, 0, 1, -1, -1, 1, 0, -1, 0, 1, 1, 0, 1,
+    -1, -1, -1, 0, -1, 0, 1, 1, 1, 1, 1, -1, -1, 0, -1, 0, 1, 1, 1, 1, 1, -1, 1,
+    0, -1, 0, 1, 1, 1, 1, -1, -1, 1, 0, -1, 0, 1, 1, 1, 1,
 
     // Right face (Normal: 1, 0, 0)
-    1, -1, -1, 1, 0, 0, 1, 0, 1, 1, 1, 1, -1, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1,
-    0, 0, 1, 0, 1, 1, 1, -1, 1, 1, 0, 0, 1, 0, 1, 1,
+    1, -1, -1, 1, 0, 0, 1, 1, 1, 1, 1, 1, -1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+    0, 0, 1, 1, 1, 1, 1, -1, 1, 1, 0, 0, 1, 1, 1, 1,
 
     // Left face (Normal: -1, 0, 0)
-    -1, -1, -1, -1, 0, 0, 0, 1, 1, 1, -1, -1, 1, -1, 0, 0, 0, 1, 1, 1, -1, 1, 1,
-    -1, 0, 0, 0, 1, 1, 1, -1, 1, -1, -1, 0, 0, 0, 1, 1, 1,
+    -1, -1, -1, -1, 0, 0, 1, 1, 1, 1, -1, -1, 1, -1, 0, 0, 1, 1, 1, 1, -1, 1, 1,
+    -1, 0, 0, 1, 1, 1, 1, -1, 1, -1, -1, 0, 0, 1, 1, 1, 1,
   ]);
 
   const indices = new Uint16Array([
@@ -66,10 +67,10 @@ export function createCube(device: GPUDevice): Mesh {
     23, // Left
   ]);
 
-  return new Mesh(device, vertices, indices);
+  return new Mesh(vertices, indices, material);
 }
 
-export function createPlane(device: GPUDevice) {
+export function createPlane(material: Material) {
   const vertices = new Float32Array([
     // Vertex 0: Position(-1, 0, -1), Normal(0, 1, 0), Color(0.5, 0.5, 0.5, 1)
     -1, 0, -1, 0, 1, 0, 0.5, 0.5, 0.5, 1,
@@ -83,5 +84,5 @@ export function createPlane(device: GPUDevice) {
 
   const indices = new Uint16Array([0, 2, 1, 0, 3, 2]);
 
-  return new Mesh(device, vertices, indices);
+  return new Mesh(vertices, indices, material);
 }

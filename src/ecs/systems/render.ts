@@ -6,37 +6,54 @@ import { TransformComponent } from "../components/transform";
 import { System } from "../system";
 import { Engine } from "../../engine";
 import { Renderer } from "../../renderer/renderer";
+import { CameraComponent } from "../components/camera";
+import { Material } from "../../renderer/material";
 
 export class RenderSystem extends System {
+  materials: Material[] = [];
+
+  registerMaterial(defaultMaterial: Material) {
+    this.materials.push(defaultMaterial);
+  }
   renderer: Renderer;
 
   public async update(entities: Entity[], delta: number, engine: Engine) {
+    if (!this.renderer.ready) return;
+    const camera = engine.query(CameraComponent)[0];
+
+    const cameraComponent = camera.getComponent(CameraComponent);
+    const transformComponent = camera.getComponent(TransformComponent);
+
     this.renderer.render(
-      entities
-        .filter(
-          (x) =>
-            x.components.find((x) => x instanceof MeshComponent) &&
-            x.components.find((x) => x instanceof TransformComponent),
-        )
-        .map((entity) => {
-          const meshComp = entity.components.find(
-            (x) => x instanceof MeshComponent,
-          ) as MeshComponent;
-          return { entity, mesh: meshComp.mesh };
-        }),
+      engine.query(MeshComponent, TransformComponent).map((entity) => {
+        const meshComp = entity.getComponent(MeshComponent)!;
+        const transformComp = entity.getComponent(TransformComponent)!;
+        return {
+          entity,
+          mesh: meshComp.mesh,
+          transform: transformComp,
+          material: meshComp.mesh.material,
+        };
+      }),
       delta,
-      engine.cameraPosition,
+      transformComponent.position,
+      cameraComponent.projectionMatrix,
     );
   }
 
   public async start(engine: Engine) {
     await this.renderer.initialize();
 
-    console.log(this.renderer);
+    this.materials.forEach((x) => x.start());
+
+    engine.query(MeshComponent, TransformComponent).forEach((entity) => {
+      const meshComp = entity.getComponent(MeshComponent)!;
+      meshComp.mesh.start(this.renderer.device);
+    });
   }
 
-  constructor(canvas: HTMLCanvasElement, shaderSource: string) {
+  constructor(canvas: HTMLCanvasElement, Material) {
     super();
-    this.renderer = new Renderer(canvas, shaderSource);
+    this.renderer = new Renderer(canvas);
   }
 }

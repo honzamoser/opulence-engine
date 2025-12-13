@@ -5,8 +5,8 @@ import { Component } from "../component";
 export class MeshComponent extends Component {
   mesh: Mesh;
 
-  constructor(device: GPUDevice) {
+  constructor(mesh: Mesh) {
     super();
-    this.mesh = createCube(device);
+    this.mesh = mesh;
   }
 }

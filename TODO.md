@@ -6,7 +6,7 @@
     - [ ] Map format
 - [ ] **Collision**
 - [ ] **Animations**
-- [ ] ECS
+- [x] ECS
 - [ ] Instancing
 - [ ] Webassembly transition
 - [ ] Loading subsystem
@@ -27,8 +27,9 @@
 - [ ] Pathfinding
 - [ ] Physics
   - [ ] Collision
-    - [ ] Raycasting
+    - [x] Raycasting
     - [ ] Colliders 
       - [ ] AABB
       - [ ] Capsules
       - [ ] OBB
+- [ ] Editor

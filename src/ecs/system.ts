@@ -6,6 +6,7 @@ export abstract class System {
     entities: Entity[],
     delta: number,
     engine: Engine,
-  ): Promise<void>;
-  public abstract start?(engine: Engine): Promise<void>;
+  ): void;
+  public abstract start?(engine: Engine): void;
+  public abstract afterUpdate?(engine: Engine): void;
 }

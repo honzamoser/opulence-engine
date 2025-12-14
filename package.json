@@ -1,9 +1,15 @@
 {
 	"name": "eureka",
 	"devDependencies": {
-		"@webgpu/types": "^0.1.67"
+		"@deepkit/type-compiler": "^1.0.19",
+		"@deepkit/vite": "^1.0.19",
+		"@webgpu/types": "^0.1.67",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.9.3",
+		"vite": "^7.2.7"
 	},
 	"dependencies": {
+		"@deepkit/type": "^1.0.19",
 		"@loaders.gl/core": "^4.3.4",
 		"@loaders.gl/gltf": "^4.3.4",
 		"wgpu-matrix": "^3.4.0"

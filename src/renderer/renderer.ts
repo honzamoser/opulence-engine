@@ -261,7 +261,7 @@ export class Renderer {
 
         renderPass.setVertexBuffer(0, entity.mesh.vertexBuffer!);
         renderPass.setIndexBuffer(entity.mesh.indexBuffer!, "uint16");
-        renderPass.drawIndexed(entity.mesh.indexCount);
+        renderPass.drawIndexed(entity.mesh.indices.length);
       });
     });
 

@@ -53,7 +53,6 @@ export class PlayerSystem extends System {
       );
 
       const castingEntities = engine.query(MeshComponent, TransformComponent);
-      console.log(castingEntities);
       for (let entity of castingEntities) {
         if (entity === player) continue; // Skip self
 
@@ -111,15 +110,6 @@ export class PlayerSystem extends System {
     if (playerComp.destination) {
       let distance = vec3.distance(
         playerComp.destination,
-        playerTransform.position,
-      );
-
-      console.log(
-        "moving player to ",
-        playerComp.destination,
-        " distance: ",
-        distance,
-        "current: ",
         playerTransform.position,
       );
 

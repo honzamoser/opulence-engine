@@ -2,7 +2,6 @@ import { vec3, Vec3 } from "wgpu-matrix";
 import { Material } from "./material";
 
 export class Mesh {
-  device: GPUDevice;
   vertexBuffer: GPUBuffer;
   indexBuffer: GPUBuffer;
 
@@ -11,8 +10,6 @@ export class Mesh {
 
   material: Material;
 
-  vertexCount: number;
-  indexCount: number;
   AABB: {
     min: Vec3;
     max: Vec3;
@@ -22,28 +19,27 @@ export class Mesh {
   };
 
   start(device: GPUDevice) {
-    this.device = device;
     const vertices = this.vertices;
     const indices = this.indices;
 
-    this.vertexBuffer = this.device.createBuffer({
+    this.vertexBuffer = device.createBuffer({
       label: "Mesh Vertex Buffer",
       size: vertices.byteLength,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     });
-    this.device.queue.writeBuffer(this.vertexBuffer, 0, vertices);
+    device.queue.writeBuffer(this.vertexBuffer, 0, vertices);
 
     // Index buffer size must be a multiple of 4 bytes
     // Uint16Array elements are 2 bytes, so pad if needed
     const indexByteLength = indices.byteLength;
     const paddedSize = Math.ceil(indexByteLength / 4) * 4;
 
-    this.indexBuffer = this.device.createBuffer({
+    this.indexBuffer = device.createBuffer({
       label: "Mesh Index Buffer",
       size: paddedSize,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
     });
-    this.device.queue.writeBuffer(this.indexBuffer, 0, indices);
+    device.queue.writeBuffer(this.indexBuffer, 0, indices);
 
     this.AABB.min = vec3.create(
       Number.POSITIVE_INFINITY,
@@ -73,9 +69,6 @@ export class Mesh {
     indices: Uint16Array,
     material: Material,
   ) {
-    this.indexCount = indices.length;
-    this.vertexCount = vertices.length;
-
     this.vertices = vertices;
     this.indices = indices;
     this.material = material;

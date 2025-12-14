@@ -7,16 +7,21 @@ import { Mesh } from "./renderer/mesh";
 import { Light } from "./renderer/light";
 import { System } from "./ecs/system";
 import { Component } from "./ecs/component";
+import { PointerManager } from "./data/arrayBufferPointer";
 
 export class Engine extends EventTarget {
   world: Entity[] = [];
   input: InputHandler;
   cameraPosition = vec3.create(0, 10, 20);
   renderer: Renderer;
+  pointerManager: PointerManager;
 
   canvas: HTMLCanvasElement;
 
   systems: System[] = [];
+
+  componentStore: Map<new (...args: any[]) => Component, ArrayBuffer> =
+    new Map();
 
   // Query cache to avoid re-scanning entities every frame
   private queryCache: Map<string, Entity[]> = new Map();
@@ -24,6 +29,8 @@ export class Engine extends EventTarget {
 
   constructor(canvas: HTMLCanvasElement, shaderSource: string) {
     super();
+
+    this.pointerManager = new PointerManager();
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;

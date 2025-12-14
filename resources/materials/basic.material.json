@@ -1,0 +1,10 @@
+{
+  "name": "Basic lit",
+  "shader": "resources/shaders/basic_lit.wgsl",
+  "properties": {
+    "base_color": {
+      "type": "color",
+      "default": [1.0, 1.0, 1.0, 1.0]
+    }
+  }
+}

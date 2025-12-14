@@ -7,6 +7,7 @@
 - [ ] **Collision**
 - [ ] **Animations**
 - [x] ECS
+  - [ ] Data-oriented ECS
 - [ ] Instancing
 - [ ] Webassembly transition
 - [ ] Loading subsystem
@@ -16,7 +17,7 @@
     - [ ] Directional Shadows
     - [ ] Point Shadows
     - [ ] Shadow baking?
-  - [ ] [Material System](https://gemini.google.com/share/3c8fdf0e0dda)
+  - [x] [Material System](https://gemini.google.com/share/3c8fdf0e0dda)
   - [x] Lighting System
   - [ ] Dynamic buffer allocation (if they overflow)
 - [ ] Better shaders

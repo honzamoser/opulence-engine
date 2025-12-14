@@ -1,18 +1,6 @@
-import {
-  vec2,
-  Mat4,
-  Quat,
-  Vec2,
-  Vec2Type,
-  Vec3,
-  vec3,
-  mat4,
-} from "wgpu-matrix";
 import { Engine } from "./engine";
 // import { Component } from "./render/types/component";
-import { Mesh } from "./renderer/mesh";
 import { Component } from "./ecs/component";
-import { System } from "./ecs/system";
 
 export class Entity {
   world: Engine;

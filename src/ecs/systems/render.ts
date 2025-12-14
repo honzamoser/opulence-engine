@@ -8,6 +8,7 @@ import { Engine } from "../../engine";
 import { Renderer } from "../../renderer/renderer";
 import { CameraComponent } from "../components/camera";
 import { Material } from "../../renderer/material";
+import { MaterialComponent } from "../components/material";
 
 export class RenderSystem extends System {
   materials: Material[] = [];
@@ -46,9 +47,14 @@ export class RenderSystem extends System {
 
     this.materials.forEach((x) => x.start());
 
-    engine.query(MeshComponent, TransformComponent).forEach((entity) => {
+    engine.query(MeshComponent).forEach((entity) => {
       const meshComp = entity.getComponent(MeshComponent)!;
       meshComp.mesh.start(this.renderer.device);
+    });
+
+    engine.query(MaterialComponent).forEach((entity) => {
+      const materialComp = entity.getComponent(MaterialComponent)!;
+      materialComp.material.start();
     });
   }
 

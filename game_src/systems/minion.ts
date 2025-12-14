@@ -29,7 +29,6 @@ export class MinionSystem extends System {
       );
       const length = vec3.length(direction);
       if (length > 0.1) {
-        // Avoid jittering when close
         direction[0] /= length;
         direction[1] /= length;
         direction[2] /= length;

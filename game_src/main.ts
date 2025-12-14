@@ -22,9 +22,12 @@ import { CameraSystem } from "../src/ecs/systems/camera.js";
 import { MinionComponent } from "./components/minion.js";
 import { MinionSystem } from "./systems/minion.js";
 import { loadglb } from "../src/files/gltf-loader.js";
-import { GLTFScene } from "../src/files/gltf-scene.js";
 import { Material } from "../src/renderer/material.js";
 import { Shader } from "../src/renderer/shader.js";
+import { SerDe } from "../src/data/serde.js";
+import { test, TestComponent } from "./components/testComponent.js";
+import { Pointer, PointerManager } from "../src/data/arrayBufferPointer.js";
+import { typeOf } from "@deepkit/type";
 
 const canvas: HTMLCanvasElement = document.getElementById(
   "main",
@@ -43,7 +46,8 @@ fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
   const cameraSystem = new CameraSystem();
   renderSystem.renderer.lights.push(
     // direction, color, intenstiy, use number arrays
-    Light.createDirectional([0, -1, 0], [1, 1, 1], 1),
+    Light.createDirectional([0, -1, 0], [1, 1, 1], 0.5),
+    Light.createPoint([0, 2, 0], 100, [0, 0, 1], 1),
   );
   engine.systems.push(renderSystem);
   engine.systems.push(playerSystem);
@@ -71,6 +75,8 @@ fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
   renderSystem.registerMaterial(defaultMaterial);
   renderSystem.registerMaterial(enemyMaterial);
 
+  const serde = new SerDe();
+
   let cameraEntity = engine.createEntity();
   cameraEntity.addComponent(CameraComponent);
   cameraEntity.addComponent(
@@ -80,6 +86,8 @@ fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
     vec3.fromValues(-Math.PI / 3, 0, 0),
     vec3.fromValues(1, 1, 1),
   );
+
+  PointerManager.instance.createStringPointerTo("Hello, Pointer!");
 
   let e: Entity = engine.createEntity();
   e.addComponent(MeshComponent, createCube(defaultMaterial));
@@ -91,6 +99,9 @@ fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
   );
   e.addComponent(PlayerComponent);
   e.addComponent(InputComponent);
+  e.addComponent(TestComponent);
+
+  console.log(typeOf<TransformComponent>());
 
   let minion = engine.createEntity();
   minion.addComponent(MeshComponent, createCube(enemyMaterial));
@@ -111,36 +122,36 @@ fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
     vec3.fromValues(20, 0.1, 20),
   );
 
-  const gltfInstances = await loadglb("../resources/summoner_single.glb", {
-    preserveTransforms: true,
-  });
+  // const gltfInstances = await loadglb("../resources/summoner_single.glb", {
+  //   preserveTransforms: true,
+  // });
 
-  console.log(`Loaded ${gltfInstances.length} GLTF mesh instances`);
+  // console.log(`Loaded ${gltfInstances.length} GLTF mesh instances`);
 
-  for (const gltfEntity of gltfInstances) {
-    const e = engine.createEntity();
-    gltfEntity.mesh.material = enemyMaterial;
-    e.addComponent(MeshComponent, gltfEntity.mesh);
-    e.addComponent(
-      TransformComponent,
-      vec3.create(gltfEntity.position[0], -87, gltfEntity.position[2]),
-      vec3.clone(gltfEntity.rotation),
-      vec3.create(
-        gltfEntity.scale[0] * 5,
-        gltfEntity.scale[1] * 5,
-        gltfEntity.scale[2] * 5,
-      ),
-    );
+  // for (const gltfEntity of gltfInstances) {
+  //   const e = engine.createEntity();
+  //   gltfEntity.mesh.material = enemyMaterial;
+  //   e.addComponent(MeshComponent, gltfEntity.mesh);
+  //   e.addComponent(
+  //     TransformComponent,
+  //     vec3.create(gltfEntity.position[0], -87, gltfEntity.position[2]),
+  //     vec3.clone(gltfEntity.rotation),
+  //     vec3.create(
+  //       gltfEntity.scale[0] * 5,
+  //       gltfEntity.scale[1] * 5,
+  //       gltfEntity.scale[2] * 5,
+  //     ),
+  //   );
 
-    console.log(
-      `Mesh instance "${gltfEntity.name}" at position:`,
-      gltfEntity.position,
-      "rotation:",
-      gltfEntity.rotation,
-      "scale:",
-      gltfEntity.scale,
-    );
-  }
+  //   console.log(
+  //     `Mesh instance "${gltfEntity.name}" at position:`,
+  //     gltfEntity.position,
+  //     "rotation:",
+  //     gltfEntity.rotation,
+  //     "scale:",
+  //     gltfEntity.scale,
+  //   );
+  // }
 
   await engine.start();
 });

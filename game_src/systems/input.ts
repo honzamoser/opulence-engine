@@ -9,8 +9,6 @@ export class InputSystem extends System {
       .query(InputComponent)
       .map((x) => x.getComponent(InputComponent));
 
-    console.log(components);
-
     window.addEventListener("mousemove", (ev) => {
       components.forEach((x) => {
         x.mousePosition = { x: ev.clientX, y: ev.clientY };
@@ -41,8 +39,6 @@ export class InputSystem extends System {
 
         x.mousePosition = { x: ev.clientX, y: ev.clientY };
       });
-
-      console.log(ev);
     });
 
     window.addEventListener("wheel", (ev) => {
@@ -59,8 +55,6 @@ export class InputSystem extends System {
 
         x.mousePosition = { x: ev.clientX, y: ev.clientY };
       });
-
-      console.log(ev);
     });
   }
 

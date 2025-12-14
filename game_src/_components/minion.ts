@@ -1,7 +1,7 @@
 import { Vec3 } from "wgpu-matrix";
 import { Component } from "../../src/ecs/component";
 
-export class MinionComponent extends Component {
+export default class MinionComponent extends Component {
   targetLocation: Vec3 | null = null;
   speed: number = 0.005;
 }

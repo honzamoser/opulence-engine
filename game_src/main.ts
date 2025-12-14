@@ -9,23 +9,23 @@ import {
   HitResult,
   rayIntersectEntity,
 } from "../src/physics/raycast.js";
-import { RenderSystem } from "../src/ecs/systems/render.js";
-import { MeshComponent } from "../src/ecs/components/mesh.js";
-import { TransformComponent } from "../src/ecs/components/transform.js";
-import { Light } from "../src/renderer/light.js";
-import { PlayerComponent } from "./components/player.js";
-import { PlayerSystem } from "./systems/player.js";
-import { InputSystem } from "./systems/input.js";
-import { InputComponent } from "./components/input.js";
-import { CameraComponent } from "../src/ecs/components/camera.js";
-import { CameraSystem } from "../src/ecs/systems/camera.js";
-import { MinionComponent } from "./components/minion.js";
-import { MinionSystem } from "./systems/minion.js";
+// import { RenderSystem } from "../src/ecs/systems/render.js";
+// import { MeshComponent } from "../src/ecs/components/mesh.js";
+// import { TransformComponent } from "../src/ecs/components/transform.js";
+// import { Light } from "../src/renderer/light.js";
+// import { PlayerComponent } from "./components/player.js";
+// import { PlayerSystem } from "./systems/player.js";
+// import { InputSystem } from "./systems/input.js";
+// import { InputComponent } from "./components/input.js";
+// import { CameraComponent } from "../src/ecs/components/camera.js";
+// import { CameraSystem } from "../src/ecs/systems/camera.js";
+// import { MinionComponent } from "./components/minion.js";
+// import { MinionSystem } from "./systems/minion.js";
 import { loadglb } from "../src/files/gltf-loader.js";
 import { Material } from "../src/renderer/material.js";
 import { Shader } from "../src/renderer/shader.js";
 import { SerDe } from "../src/data/serde.js";
-import { test, TestComponent } from "./components/testComponent.js";
+// import { test, TestComponent } from "./components/testComponent.js";
 import { Pointer, PointerManager } from "../src/data/arrayBufferPointer.js";
 import { typeOf } from "@deepkit/type";
 
@@ -39,6 +39,8 @@ canvas.height = window.innerHeight;
 fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
   const shader = await res.text();
   const engine = new Engine(canvas, shader);
+
+  return;
 
   const renderSystem = new RenderSystem(canvas, shader);
   const playerSystem = new PlayerSystem();

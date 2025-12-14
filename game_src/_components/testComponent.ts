@@ -1,7 +1,7 @@
 import { int32 } from "@deepkit/type";
 import { Component } from "../../src/ecs/component";
 
-export class TestComponent extends Component {
+export default class TestComponent extends Component {
   number_value: int32 = -15;
   text_value: string = "Hello, World!";
   bool_value: boolean = true;

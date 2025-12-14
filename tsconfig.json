@@ -1,9 +1,11 @@
 {
   "compilerOptions": {
-    "types": ["@webgpu/types", "wgpu-matrix"],
-    "target": "ES2024",
+    "types": ["@webgpu/types", "wgpu-matrix", "vite/client"],
+    "target": "ESNext",
     "moduleResolution": "bundler",
-    "experimentalDecorators": true
+    "module": "Preserve",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "reflection": true
 }

@@ -1,6 +1,6 @@
 import { Component } from "../../src/ecs/component";
 
-export class InputComponent extends Component {
+export default class InputComponent extends Component {
   LMB: boolean = false;
   RMB: boolean = false;
   MMB: boolean = false;

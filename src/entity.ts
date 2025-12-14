@@ -10,6 +10,7 @@ export class Entity {
 
   constructor(world: Engine) {
     this.world = world;
+    import("./opulence-ecs/ecs.ts");
   }
 
   addComponent<C extends new (...args: any[]) => Component>(

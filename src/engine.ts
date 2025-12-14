@@ -8,6 +8,7 @@ import { Light } from "./renderer/light";
 import { System } from "./ecs/system";
 import { Component } from "./ecs/component";
 import { PointerManager } from "./data/arrayBufferPointer";
+import { ECS } from "./opulence-ecs/ecs";
 
 export class Engine extends EventTarget {
   world: Entity[] = [];
@@ -37,6 +38,8 @@ export class Engine extends EventTarget {
 
     this.canvas = canvas;
     this.input = new InputHandler(canvas);
+
+    const ecs = new ECS();
 
     startLifecycle(this.update.bind(this));
   }

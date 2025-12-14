@@ -177,7 +177,8 @@ class BenchmarkRunner {
     // Prevent optimization
     if (sum === -999999999) console.log(sum);
 
-    return end - start;
+    // Ensure we return at least a small value to avoid division by zero
+    return Math.max(end - start, 0.001);
   }
 
   /**
@@ -347,7 +348,8 @@ class BenchmarkRunner {
     // Prevent optimization
     if (sum === -999999999) console.log(sum);
 
-    return end - start;
+    // Ensure we return at least a small value to avoid division by zero
+    return Math.max(end - start, 0.001);
   }
 
   /**
@@ -476,19 +478,36 @@ class BenchmarkRunner {
    * Print summary statistics
    */
   private printSummary(): void {
-    const typedArrayWins = this.results.filter(
+    // Filter out invalid results (where times are too small or invalid)
+    const validResults = this.results.filter(
+      (r) =>
+        isFinite(r.speedup) &&
+        !isNaN(r.speedup) &&
+        r.typedArrayTime > 0 &&
+        r.dataViewTime > 0,
+    );
+
+    if (validResults.length === 0) {
+      console.log("\nNo valid results to summarize.");
+      return;
+    }
+
+    const typedArrayWins = validResults.filter(
       (r) => r.winner === "TypedArray",
     ).length;
-    const dataViewWins = this.results.filter(
+    const dataViewWins = validResults.filter(
       (r) => r.winner === "DataView",
     ).length;
 
     console.log(`\nOverall Winner Distribution:`);
     console.log(
-      `  TypedArray wins: ${typedArrayWins} (${((typedArrayWins / this.results.length) * 100).toFixed(1)}%)`,
+      `  TypedArray wins: ${typedArrayWins} (${((typedArrayWins / validResults.length) * 100).toFixed(1)}%)`,
     );
     console.log(
-      `  DataView wins: ${dataViewWins} (${((dataViewWins / this.results.length) * 100).toFixed(1)}%)`,
+      `  DataView wins: ${dataViewWins} (${((dataViewWins / validResults.length) * 100).toFixed(1)}%)`,
+    );
+    console.log(
+      `  Valid results: ${validResults.length} / ${this.results.length}`,
     );
 
     // Average speedup by data type
@@ -504,9 +523,10 @@ class BenchmarkRunner {
       "Float64",
     ];
     for (const dataType of dataTypes) {
-      const filtered = this.results.filter(
+      const filtered = validResults.filter(
         (r) => r.config.dataType === dataType,
       );
+      if (filtered.length === 0) continue;
       const avgSpeedup =
         filtered.reduce((sum, r) => sum + r.speedup, 0) / filtered.length;
       console.log(`  ${dataType.padEnd(10)}: ${avgSpeedup.toFixed(2)}x`);
@@ -516,9 +536,10 @@ class BenchmarkRunner {
     console.log(`\nAverage Speedup by Access Pattern (TA/DV):`);
     const patterns: AccessPattern[] = ["sequential", "random", "stride"];
     for (const pattern of patterns) {
-      const filtered = this.results.filter(
+      const filtered = validResults.filter(
         (r) => r.config.accessPattern === pattern,
       );
+      if (filtered.length === 0) continue;
       const avgSpeedup =
         filtered.reduce((sum, r) => sum + r.speedup, 0) / filtered.length;
       console.log(`  ${pattern.padEnd(12)}: ${avgSpeedup.toFixed(2)}x`);
@@ -528,16 +549,18 @@ class BenchmarkRunner {
     console.log(`\nAverage Speedup by Operation (TA/DV):`);
     const operations: Operation[] = ["read", "write", "readWrite"];
     for (const operation of operations) {
-      const filtered = this.results.filter(
+      const filtered = validResults.filter(
         (r) => r.config.operation === operation,
       );
+      if (filtered.length === 0) continue;
       const avgSpeedup =
         filtered.reduce((sum, r) => sum + r.speedup, 0) / filtered.length;
       console.log(`  ${operation.padEnd(10)}: ${avgSpeedup.toFixed(2)}x`);
     }
 
     // Best and worst cases
-    const sorted = [...this.results].sort((a, b) => b.speedup - a.speedup);
+    const sorted = [...validResults].sort((a, b) => b.speedup - a.speedup);
+    if (sorted.length === 0) return;
     const best = sorted[0];
     const worst = sorted[sorted.length - 1];
 
@@ -553,15 +576,103 @@ class BenchmarkRunner {
   }
 
   /**
+   * Export results to CSV
+   */
+  public exportToCSV(): string {
+    const headers = [
+      "Size",
+      "DataType",
+      "AccessPattern",
+      "Operation",
+      "LittleEndian",
+      "TypedArrayTime(ms)",
+      "DataViewTime(ms)",
+      "Speedup",
+      "Winner",
+    ];
+
+    const rows = this.results.map((r) => [
+      r.config.size.toString(),
+      r.config.dataType,
+      r.config.accessPattern,
+      r.config.operation,
+      r.config.littleEndian.toString(),
+      r.typedArrayTime.toFixed(6),
+      r.dataViewTime.toFixed(6),
+      r.speedup.toFixed(6),
+      r.winner,
+    ]);
+
+    const csv = [headers.join(","), ...rows.map((row) => row.join(","))].join(
+      "\n",
+    );
+
+    return csv;
+  }
+
+  /**
+   * Print CSV to console
+   */
+  public printCSV(): void {
+    console.log("\n" + "=".repeat(80));
+    console.log("CSV EXPORT");
+    console.log("=".repeat(80));
+    console.log(this.exportToCSV());
+  }
+
+  /**
    * Export results to JSON
    */
-  public exportResults(filename: string = "benchmark_results.json"): void {
-    const data = JSON.stringify(this.results, null, 2);
-    console.log(`\nResults would be exported to: ${filename}`);
-    // In a Node.js environment, you would use fs.writeFileSync here
+  public exportToJSON(): string {
+    return JSON.stringify(this.results, null, 2);
+  }
+
+  /**
+   * Download results as files in the browser
+   */
+  public downloadResults(): void {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+
+    // Download CSV
+    this.downloadFile(
+      this.exportToCSV(),
+      `benchmark_results_${timestamp}.csv`,
+      "text/csv",
+    );
+
+    // Download JSON
+    this.downloadFile(
+      this.exportToJSON(),
+      `benchmark_results_${timestamp}.json`,
+      "application/json",
+    );
+
+    console.log("\n✓ Download links created for CSV and JSON files");
+  }
+
+  /**
+   * Helper function to trigger file download in browser
+   */
+  private downloadFile(
+    content: string,
+    filename: string,
+    mimeType: string,
+  ): void {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 }
 
 // Run the benchmark
 const runner = new BenchmarkRunner();
 runner.runSuite();
+runner.printCSV();
+runner.downloadResults();

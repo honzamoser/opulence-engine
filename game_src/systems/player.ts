@@ -8,8 +8,8 @@ import {
   createRayFromMouse,
   rayIntersectEntity,
 } from "../../src/physics/raycast";
-import { InputComponent } from "../components/input";
-import { PlayerComponent } from "../components/player";
+import InputComponent from "../components/input";
+import PlayerComponent from "../components/player";
 import { TransformComponent } from "../../src/ecs/components/transform";
 
 export class PlayerSystem extends System {

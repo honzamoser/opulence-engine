@@ -3,9 +3,7 @@
     "types": ["@webgpu/types", "wgpu-matrix", "vite/client"],
     "target": "ESNext",
     "moduleResolution": "bundler",
-    "module": "Preserve",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "module": "Preserve"
   },
   "reflection": true
 }

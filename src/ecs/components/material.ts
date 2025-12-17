@@ -1,6 +1,8 @@
+import { hot } from "../../opulence-ecs/component-gen";
 import { Material } from "../../renderer/material";
 import { Component } from "../component";
 
-export class MaterialComponent implements Component {
-  material: Material;
+export default class MaterialComponent implements Component {
+  @hot.int32
+  materialId: number;
 }

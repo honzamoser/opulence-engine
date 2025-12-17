@@ -1,7 +1,7 @@
 import { System } from "../../src/ecs/system";
 import { Engine } from "../../src/engine";
 import { Entity } from "../../src/entity";
-import { InputComponent } from "../components/input";
+import InputComponent from "../components/input";
 
 export class InputSystem extends System {
   public start(engine: Engine): Promise<void> {

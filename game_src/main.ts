@@ -9,25 +9,24 @@ import {
   HitResult,
   rayIntersectEntity,
 } from "../src/physics/raycast.js";
-// import { RenderSystem } from "../src/ecs/systems/render.js";
-// import { MeshComponent } from "../src/ecs/components/mesh.js";
-// import { TransformComponent } from "../src/ecs/components/transform.js";
-// import { Light } from "../src/renderer/light.js";
-// import { PlayerComponent } from "./components/player.js";
-// import { PlayerSystem } from "./systems/player.js";
-// import { InputSystem } from "./systems/input.js";
-// import { InputComponent } from "./components/input.js";
-// import { CameraComponent } from "../src/ecs/components/camera.js";
-// import { CameraSystem } from "../src/ecs/systems/camera.js";
-// import { MinionComponent } from "./components/minion.js";
-// import { MinionSystem } from "./systems/minion.js";
+import { RenderSystem } from "../src/ecs/systems/render.js";
+import { MeshComponent } from "../src/ecs/components/mesh.js";
+import { TransformComponent } from "../src/ecs/components/transform.js";
+import { Light } from "../src/renderer/light.js";
+import PlayerComponent from "./components/player.js";
+import { PlayerSystem } from "./systems/player.js";
+import { InputSystem } from "./systems/input.js";
+import InputComponent from "./components/input.js";
+import CameraComponent from "../src/ecs/components/camera.js";
+import { CameraSystem } from "../src/ecs/systems/camera.js";
+import MinionComponent from "./components/minion.js";
+import { MinionSystem } from "./systems/minion.js";
 import { loadglb } from "../src/files/gltf-loader.js";
 import { Material } from "../src/renderer/material.js";
 import { Shader } from "../src/renderer/shader.js";
 import { SerDe } from "../src/data/serde.js";
 // import { test, TestComponent } from "./components/testComponent.js";
 import { Pointer, PointerManager } from "../src/data/arrayBufferPointer.js";
-import { typeOf } from "@deepkit/type";
 
 const canvas: HTMLCanvasElement = document.getElementById(
   "main",
@@ -40,89 +39,94 @@ fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
   const shader = await res.text();
   const engine = new Engine(canvas, shader);
 
-  return;
+  await engine.load();
 
   const renderSystem = new RenderSystem(canvas, shader);
-  const playerSystem = new PlayerSystem();
-  const inputSystem = new InputSystem();
-  const cameraSystem = new CameraSystem();
-  renderSystem.renderer.lights.push(
-    // direction, color, intenstiy, use number arrays
-    Light.createDirectional([0, -1, 0], [1, 1, 1], 0.5),
-    Light.createPoint([0, 2, 0], 100, [0, 0, 1], 1),
-  );
+
   engine.systems.push(renderSystem);
-  engine.systems.push(playerSystem);
-  engine.systems.push(inputSystem);
-  engine.systems.push(cameraSystem);
-  engine.systems.push(new MinionSystem());
-  //
 
-  const litShader = new Shader(renderSystem.renderer, shader, "default");
+  const camera = engine.createEntity();
+  engine.addComponent(camera, CameraComponent, []);
 
-  const defaultMaterial = new Material(
-    renderSystem.renderer,
-    litShader,
-    0,
-    [1, 1, 0, 1],
-  );
+  // const renderSystem = new RenderSystem(canvas, shader);
+  // const playerSystem = new PlayerSystem();
+  // const inputSystem = new InputSystem();
+  // const cameraSystem = new CameraSystem();
+  // renderSystem.renderer.lights.push(
+  //   // direction, color, intenstiy, use number arrays
+  //   Light.createDirectional([0, -1, 0], [1, 1, 1], 0.5),
+  //   Light.createPoint([0, 2, 0], 100, [0, 0, 1], 1),
+  // );
+  // engine.systems.push(renderSystem);
+  // engine.systems.push(playerSystem);
+  // engine.systems.push(inputSystem);
+  // engine.systems.push(cameraSystem);
+  // engine.systems.push(new MinionSystem());
+  // //
 
-  const enemyMaterial = new Material(
-    renderSystem.renderer,
-    litShader,
-    1,
-    [1, 0, 0, 1],
-  );
+  // const litShader = new Shader(renderSystem.renderer, shader, "default");
 
-  renderSystem.registerMaterial(defaultMaterial);
-  renderSystem.registerMaterial(enemyMaterial);
+  // const defaultMaterial = new Material(
+  //   renderSystem.renderer,
+  //   litShader,
+  //   0,
+  //   [1, 1, 0, 1],
+  // );
 
-  const serde = new SerDe();
+  // const enemyMaterial = new Material(
+  //   renderSystem.renderer,
+  //   litShader,
+  //   1,
+  //   [1, 0, 0, 1],
+  // );
 
-  let cameraEntity = engine.createEntity();
-  cameraEntity.addComponent(CameraComponent);
-  cameraEntity.addComponent(
-    TransformComponent,
-    vec3.fromValues(0, 5, 15),
-    // top down view
-    vec3.fromValues(-Math.PI / 3, 0, 0),
-    vec3.fromValues(1, 1, 1),
-  );
+  // renderSystem.registerMaterial(defaultMaterial);
+  // renderSystem.registerMaterial(enemyMaterial);
 
-  PointerManager.instance.createStringPointerTo("Hello, Pointer!");
+  // let cameraEntity = engine.createEntity();
+  // cameraEntity.addComponent(CameraComponent);
+  // cameraEntity.addComponent(
+  //   TransformComponent,
+  //   vec3.fromValues(0, 5, 15),
+  //   // top down view
+  //   vec3.fromValues(-Math.PI / 3, 0, 0),
+  //   vec3.fromValues(1, 1, 1),
+  // );
 
-  let e: Entity = engine.createEntity();
-  e.addComponent(MeshComponent, createCube(defaultMaterial));
-  e.addComponent(
-    TransformComponent,
-    vec3.fromValues(0, 0, 0),
-    vec3.fromValues(0, 0, 0),
-    vec3.fromValues(1, 1, 1),
-  );
-  e.addComponent(PlayerComponent);
-  e.addComponent(InputComponent);
-  e.addComponent(TestComponent);
+  // PointerManager.instance.createStringPointerTo("Hello, Pointer!");
 
-  console.log(typeOf<TransformComponent>());
+  // let e: Entity = engine.createEntity();
+  // e.addComponent(MeshComponent, createCube(defaultMaterial));
+  // e.addComponent(
+  //   TransformComponent,
+  //   vec3.fromValues(0, 0, 0),
+  //   vec3.fromValues(0, 0, 0),
+  //   vec3.fromValues(1, 1, 1),
+  // );
+  // e.addComponent(PlayerComponent);
+  // e.addComponent(InputComponent);
+  // e.addComponent(TestComponent);
 
-  let minion = engine.createEntity();
-  minion.addComponent(MeshComponent, createCube(enemyMaterial));
-  minion.addComponent(
-    TransformComponent,
-    vec3.fromValues(5, 0, 0),
-    vec3.fromValues(0, 0, 0),
-    vec3.fromValues(1, 2, 1),
-  );
-  minion.addComponent(MinionComponent);
+  // console.log(typeOf<TransformComponent>());
 
-  let floor = engine.createEntity();
-  floor.addComponent(MeshComponent, createPlane(defaultMaterial));
-  floor.addComponent(
-    TransformComponent,
-    vec3.fromValues(0, -2, 0),
-    vec3.fromValues(0, 0, 0),
-    vec3.fromValues(20, 0.1, 20),
-  );
+  // let minion = engine.createEntity();
+  // minion.addComponent(MeshComponent, createCube(enemyMaterial));
+  // minion.addComponent(
+  //   TransformComponent,
+  //   vec3.fromValues(5, 0, 0),
+  //   vec3.fromValues(0, 0, 0),
+  //   vec3.fromValues(1, 2, 1),
+  // );
+  // minion.addComponent(MinionComponent);
+
+  // let floor = engine.createEntity();
+  // floor.addComponent(MeshComponent, createPlane(defaultMaterial));
+  // floor.addComponent(
+  //   TransformComponent,
+  //   vec3.fromValues(0, -2, 0),
+  //   vec3.fromValues(0, 0, 0),
+  //   vec3.fromValues(20, 0.1, 20),
+  // );
 
   // const gltfInstances = await loadglb("../resources/summoner_single.glb", {
   //   preserveTransforms: true,

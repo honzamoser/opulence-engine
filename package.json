@@ -1,20 +1,15 @@
 {
 	"name": "eureka",
 	"devDependencies": {
-		"@deepkit/type-compiler": "^1.0.19",
-		"@deepkit/vite": "^1.0.19",
 		"@webgpu/types": "^0.1.67",
-		"ts-node": "^10.9.2",
-		"typescript": "^5.9.3",
-		"unplugin-swc": "^1.5.9",
 		"vite": "^7.2.7"
 	},
 	"dependencies": {
-		"@deepkit/type": "^1.0.19",
 		"@loaders.gl/core": "^4.3.4",
 		"@loaders.gl/gltf": "^4.3.4",
+		"@swc/core": "^1.15.5",
 		"reflect-metadata": "^0.2.2",
-		"vite-plugin-swc-transform": "^1.1.1",
+		"rollup-plugin-swc3": "^0.12.1",
 		"wgpu-matrix": "^3.4.0"
 	}
 }

@@ -1,14 +1,14 @@
 import { Vec3, mat4, vec3 } from "wgpu-matrix";
 import { Entity } from "../../entity";
 import { Light } from "../../renderer/light";
-import { MeshComponent } from "../components/mesh";
-import { TransformComponent } from "../components/transform";
+import MeshComponent from "../components/mesh";
+import TransformComponent from "../components/transform";
 import { System } from "../system";
 import { Engine } from "../../engine";
 import { Renderer } from "../../renderer/renderer";
-import { CameraComponent } from "../components/camera";
+import CameraComponent from "../components/camera";
 import { Material } from "../../renderer/material";
-import { MaterialComponent } from "../components/material";
+import MaterialComponent from "../components/material";
 
 export class RenderSystem extends System {
   materials: Material[] = [];

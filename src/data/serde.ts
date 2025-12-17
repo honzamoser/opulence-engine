@@ -1,11 +1,5 @@
 import { Component } from "../ecs/component";
-import {
-  integer,
-  is,
-  ReflectionClass,
-  ReflectionKind,
-  typeOf,
-} from "@deepkit/type";
+
 import { PointerManager } from "./arrayBufferPointer";
 import { TestComponent } from "../../game_src/components/testComponent";
 

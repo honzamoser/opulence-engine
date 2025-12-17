@@ -1,15 +1,9 @@
-import {
-  component,
-  dataType,
-  dynamic,
-  frequent,
-  infrequent,
-} from "../../src/opulence-ecs/component-gen";
-
-import "reflect-metadata";
+import { cold, hot } from "../../src/opulence-ecs/component-gen";
 
 export default class MeshComponent {
-  @dynamic(dataType.float32Array, 1024)
-  @infrequent
+  @cold.float32Array
   vertices: Float32Array;
+
+  @hot.float32Array(64)
+  texture: Float32Array;
 }

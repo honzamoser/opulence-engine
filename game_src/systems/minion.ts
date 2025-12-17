@@ -3,8 +3,8 @@ import { TransformComponent } from "../../src/ecs/components/transform";
 import { System } from "../../src/ecs/system";
 import { Engine } from "../../src/engine";
 import { Entity } from "../../src/entity";
-import { MinionComponent } from "../components/minion";
-import { PlayerComponent } from "../components/player";
+import MinionComponent from "../components/minion";
+import PlayerComponent from "../components/player";
 
 export class MinionSystem extends System {
   player: Entity | null = null;

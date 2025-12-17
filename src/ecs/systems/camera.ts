@@ -1,9 +1,9 @@
 import { mat4, vec3, Vec3 } from "wgpu-matrix";
 import { Engine } from "../../engine";
 import { Entity } from "../../entity";
-import { CameraComponent } from "../components/camera";
+import CameraComponent from "../components/camera";
 import { System } from "../system";
-import { TransformComponent } from "../components/transform";
+import TransformComponent from "../components/transform";
 
 export class CameraSystem extends System {
   public update(

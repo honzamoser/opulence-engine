@@ -5,28 +5,25 @@ import { Component } from "./ecs/component";
 export class Entity {
   world: Engine;
 
-  public components: Map<new (...args: any[]) => Component, Component> =
-    new Map();
+  public components: Map<new (...args: any[]) => Component, number> = new Map();
 
   constructor(world: Engine) {
     this.world = world;
-    import("./opulence-ecs/ecs.ts");
   }
 
   addComponent<C extends new (...args: any[]) => Component>(
     ComponentClass: C,
     ...args: ConstructorParameters<C>
   ): InstanceType<C> {
-    const component = new ComponentClass(...args);
-    this.components.set(ComponentClass, component);
-    this.world.invalidateQueryCache(); // Invalidate cache when components change
-    return component as InstanceType<C>;
+    const componentId = this.world.ecs.createComponent(ComponentClass);
+    this.components.set(ComponentClass, componentId);
   }
 
   getComponent<T extends Component>(
     type: new (...args: any[]) => T,
   ): T | undefined {
-    return this.components.get(type) as T | undefined;
+    console.log(this.components);
+    return this.world.ecs.getComponent(type, this.components.get(type));
   }
 
   hasComponent<T extends Component>(type: new (...args: any[]) => T): boolean {

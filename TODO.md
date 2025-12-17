@@ -8,6 +8,9 @@
 - [ ] **Animations**
 - [x] ECS
   - [ ] Data-oriented ECS
+    - [ ] Constructors
+    - [ ] Defragmentation
+    - [ ] Cold storage allocation
 - [ ] Instancing
 - [ ] Webassembly transition
 - [ ] Loading subsystem

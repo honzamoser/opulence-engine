@@ -1,26 +1,20 @@
 import {
-  component,
   dataType,
   dynamic,
-  frequent,
+  hot,
+  cold,
 } from "../../src/opulence-ecs/component-gen";
 
-import "reflect-metadata";
-
 export default class TransformComponent {
-  @dynamic(dataType.float32Array, 3)
-  @frequent
+  @hot.float32Array(3)
   position: Float32Array;
 
-  @dynamic(dataType.float32Array, 4)
-  @frequent
+  @hot.float32Array(4)
   rotation: Float32Array;
 
-  @dynamic(dataType.float32Array, 3)
-  @frequent
+  @hot.float32Array(3)
   scale: Float32Array;
 
-  @dynamic(dataType.float32Array, 16)
-  @frequent
+  @hot.float32Array(16)
   matrix: Float32Array;
 }

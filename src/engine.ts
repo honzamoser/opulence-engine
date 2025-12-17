@@ -11,7 +11,7 @@ import { PointerManager } from "./data/arrayBufferPointer";
 import { ECS } from "./opulence-ecs/ecs";
 
 export class Engine extends EventTarget {
-  world: Entity[] = [];
+  world: [][] = [];
   input: InputHandler;
   cameraPosition = vec3.create(0, 10, 20);
   renderer: Renderer;
@@ -19,10 +19,9 @@ export class Engine extends EventTarget {
 
   canvas: HTMLCanvasElement;
 
-  systems: System[] = [];
+  ecs: ECS;
 
-  componentStore: Map<new (...args: any[]) => Component, ArrayBuffer> =
-    new Map();
+  systems: System[] = [];
 
   // Query cache to avoid re-scanning entities every frame
   private queryCache: Map<string, Entity[]> = new Map();
@@ -39,9 +38,12 @@ export class Engine extends EventTarget {
     this.canvas = canvas;
     this.input = new InputHandler(canvas);
 
-    const ecs = new ECS();
+    this.ecs = new ECS();
+  }
 
-    startLifecycle(this.update.bind(this));
+  async load() {
+    await this.ecs.loadNativeComponents();
+    await this.ecs.loadComponents();
   }
 
   async start() {
@@ -50,6 +52,8 @@ export class Engine extends EventTarget {
         system.start ? system?.start(this) : Promise.resolve(),
       ),
     );
+
+    startLifecycle(this.update.bind(this));
   }
 
   async update(delta: number) {
@@ -73,38 +77,37 @@ export class Engine extends EventTarget {
     });
   }
 
-  createEntity(): Entity {
-    const ent = new Entity(this);
-    this.world.push(ent);
-    this.queryCacheDirty = true; // Invalidate cache when entities change
-    return ent;
+  createEntity(): number {
+    return this.world.push([]);
   }
 
   public on = this.addEventListener;
 
-  query(...componentTypes: (new (...args: any[]) => Component)[]): Entity[] {
+  query(...componentTypes: (new (...args: any[]) => Component)[]): number[] {
+    const ids = this.ecs.getComponentID(componentTypes);
     // Create cache key from component type names
-    const cacheKey = componentTypes
-      .map((t) => t.name)
-      .sort()
-      .join(",");
+    //
+    console.log(ids);
 
-    // Check cache first
-    if (this.queryCache.has(cacheKey)) {
-      return this.queryCache.get(cacheKey)!;
-    }
+    console.log(this.world);
 
-    // Perform query and cache result
-    const result = this.world.filter((entity) =>
-      componentTypes.every((type) => entity.hasComponent(type)),
-    );
-
-    this.queryCache.set(cacheKey, result);
-    return result;
+    return this.world
+      .find((entity, entityId) => {
+        for (let id of ids) {
+          if (entity[id] !== undefined && entity[id].length > 0) {
+            return true;
+          } else return false;
+        }
+      })
+      .map((entityData, entityId) => {
+        return entityId;
+      });
   }
 
-  // Call this when an entity's components are modified
-  invalidateQueryCache(): void {
-    this.queryCacheDirty = true;
+  addComponent(entityId: number, component: () => Component, args: any[]) {
+    const componentTypeid = this.ecs.getComponentID([component])[0];
+    const componentId = this.ecs.pushComponent<Component>(component, args);
+
+    this.world[id][componentTypeid] = componentId;
   }
 }

@@ -8,14 +8,15 @@
 - [ ] **Animations**
 - [x] ECS
   - [ ] Data-oriented ECS
-    - [ ] Constructors
+    - [X] Constructors
     - [ ] Defragmentation
     - [ ] Cold storage allocation
+    - [ ] Add checking that a component of the same name doesnt exist
 - [ ] Instancing
 - [ ] Webassembly transition
 - [ ] Loading subsystem
     - [ ] Data saving serviceworker
-- [ ] **3D rendering**
+- [X] **3D rendering**
   - [ ] [Shadows](https://gemini.google.com/share/3c8fdf0e0dda)
     - [ ] Directional Shadows
     - [ ] Point Shadows

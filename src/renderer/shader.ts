@@ -62,5 +62,7 @@ export class Shader {
         format: "depth24plus",
       },
     });
+
+    this.initialized = true;
   }
 }

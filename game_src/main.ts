@@ -10,8 +10,8 @@ import {
   rayIntersectEntity,
 } from "../src/physics/raycast.js";
 import { RenderSystem } from "../src/ecs/systems/render.js";
-import { MeshComponent } from "../src/ecs/components/mesh.js";
-import { TransformComponent } from "../src/ecs/components/transform.js";
+import MeshComponent from "../src/ecs/components/mesh.js";
+import TransformComponent from "../src/ecs/components/transform.js";
 import { Light } from "../src/renderer/light.js";
 import PlayerComponent from "./components/player.js";
 import { PlayerSystem } from "./systems/player.js";
@@ -27,6 +27,7 @@ import { Shader } from "../src/renderer/shader.js";
 import { SerDe } from "../src/data/serde.js";
 // import { test, TestComponent } from "./components/testComponent.js";
 import { Pointer, PointerManager } from "../src/data/arrayBufferPointer.js";
+import { log_entity, log_component } from "../src/debug/ecs_debug.js";
 
 const canvas: HTMLCanvasElement = document.getElementById(
   "main",
@@ -42,11 +43,48 @@ fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
   await engine.load();
 
   const renderSystem = new RenderSystem(canvas, shader);
+  const cameraSystem = new CameraSystem();
 
+  renderSystem.renderer.lights.push(
+    // direction, color, intenstiy, use number arrays
+    Light.createDirectional([0, -1, 0], [1, 1, 1], 0.5),
+    Light.createPoint([0, 2, 0], 100, [0, 0, 1], 1),
+  );
+
+  engine.systems.push(cameraSystem);
   engine.systems.push(renderSystem);
 
   const camera = engine.createEntity();
   engine.addComponent(camera, CameraComponent, []);
+  engine.addComponent(camera, TransformComponent, [
+    new Float32Array([0, 0, 5]),
+    new Float32Array([0, 0, 0]),
+    new Float32Array([1, 1, 1]),
+  ]);
+
+  const meshEntity = engine.createEntity();
+  engine.addComponent(meshEntity, MeshComponent, ["primitive:cube"]);
+  engine.addComponent(meshEntity, TransformComponent, [
+    new Float32Array([0, 0, 0]),
+    new Float32Array([0, 0, 0]),
+    new Float32Array([1, 1, 1]),
+  ]);
+
+  const litShader = new Shader(renderSystem.renderer, shader, "default");
+
+  const defaultMaterial = new Material(
+    renderSystem.renderer,
+    litShader,
+    0,
+    [1, 1, 0, 1],
+  );
+
+  renderSystem.registerMaterial(defaultMaterial);
+
+  log_entity(engine, meshEntity);
+  log_entity(engine, camera);
+
+  log_component(engine, meshEntity, MeshComponent);
 
   // const renderSystem = new RenderSystem(canvas, shader);
   // const playerSystem = new PlayerSystem();
@@ -63,15 +101,6 @@ fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
   // engine.systems.push(cameraSystem);
   // engine.systems.push(new MinionSystem());
   // //
-
-  // const litShader = new Shader(renderSystem.renderer, shader, "default");
-
-  // const defaultMaterial = new Material(
-  //   renderSystem.renderer,
-  //   litShader,
-  //   0,
-  //   [1, 1, 0, 1],
-  // );
 
   // const enemyMaterial = new Material(
   //   renderSystem.renderer,

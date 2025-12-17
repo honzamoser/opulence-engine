@@ -6,20 +6,33 @@ import { System } from "../system";
 import TransformComponent from "../components/transform";
 
 export class CameraSystem extends System {
-  public update(
+  deb = document.getElementById("rotation");
+
+  public async update(
     entities: Entity[],
     delta: number,
     engine: Engine,
   ): Promise<void> {
-    const camera = engine.query(CameraComponent, TransformComponent)[0];
+    const cameraEntity = engine.query(CameraComponent, TransformComponent)[0];
 
-    const cameraComponent = camera.getComponent(CameraComponent)!;
-    const transformComponent = camera.getComponent(TransformComponent)!;
+    const cameraComponent = engine.ecs.getComponentValues(
+      cameraEntity,
+      CameraComponent,
+    )!;
+    const transformComponent = engine.ecs.getComponentValues(
+      cameraEntity,
+      TransformComponent,
+    )!;
 
-    cameraComponent.projectionMatrix = this.getViewProjectionMatrix(
-      cameraComponent,
-      transformComponent,
-      engine,
+    engine.ecs.setComponentValue(
+      cameraEntity,
+      TransformComponent,
+      "rotation",
+      new Float32Array([0, this.deb.value, 0]),
+    );
+
+    cameraComponent.projectionMatrix.set(
+      this.getViewProjectionMatrix(cameraComponent, transformComponent, engine),
     );
   }
 
@@ -48,7 +61,14 @@ export class CameraSystem extends System {
     // Then translate to camera position (negated because we're moving the world)
     mat4.translate(view, vec3.negate(transform.position), view);
 
-    const viewProjection = mat4.multiply(projection, view);
-    return viewProjection;
+    return mat4.multiply(projection, view);
+  }
+
+  public async start(engine: Engine): Promise<void> {
+    // No initialization needed for camera system
+  }
+
+  public afterUpdate(engine: Engine): void {
+    // No cleanup needed
   }
 }

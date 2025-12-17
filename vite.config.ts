@@ -4,6 +4,7 @@ import { swc } from "rollup-plugin-swc3";
 export default defineConfig({
   plugins: [
     swc({
+      sourceMaps: true,
       jsc: {
         parser: {
           syntax: "typescript",

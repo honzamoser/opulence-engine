@@ -26,10 +26,8 @@ export function constructor(order: number) {
     context: ClassFieldDecoratorContext<This, Value>,
   ) {
     const properties: any[] = (context.metadata["constructors"] as any[]) || [];
-    properties.findIndex((p) => p.name === context.name);
-    properties[order] = {
-      name: context.name,
-    };
+
+    properties[order] = context.name;
     context.metadata["constructors"] = properties;
   };
 }

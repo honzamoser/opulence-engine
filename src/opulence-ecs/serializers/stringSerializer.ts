@@ -2,6 +2,8 @@ import { Serializable } from "../component-gen";
 import { ComponentBufferViews } from "../ecs";
 
 export default class StringSerializer extends Serializable<string, Uint8Array> {
+  decoder = new TextDecoder();
+
   serialize(v: string): Uint8Array | Float32Array | Int32Array | ArrayBuffer {
     const encoder = new TextEncoder();
     const encoded = encoder.encode(v);
@@ -14,9 +16,11 @@ export default class StringSerializer extends Serializable<string, Uint8Array> {
     offset: number,
     byteLength: number,
   ): string {
-    const slice = views.Uint8View.slice(offset, offset + byteLength);
-    const decoder = new TextDecoder();
-    return decoder.decode(slice);
+    const slice = views.Uint8View.subarray(offset, offset + byteLength);
+    const decoded = this.decoder.decode(slice);
+
+    const nullIndex = decoded.indexOf("\0");
+    return nullIndex === -1 ? decoded : decoded.substring(0, nullIndex);
   }
 
   serializeTo(

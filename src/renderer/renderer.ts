@@ -2,7 +2,7 @@ import { Mat4, mat4, Vec3, vec3 } from "wgpu-matrix";
 import { Mesh } from "./mesh.js";
 import { Entity } from "../entity.js";
 import { Light } from "./light.js";
-import { TransformComponent } from "../ecs/components/transform.js";
+import TransformComponent from "../ecs/components/transform.js";
 import { Material } from "./material.js";
 
 export class Renderer {
@@ -29,6 +29,12 @@ export class Renderer {
 
   lights: Light[] = [];
 
+  meshes: {
+    vertices: GPUBuffer;
+    indices: GPUBuffer;
+    indexCount: number;
+  }[] = [];
+
   ready: boolean = false;
 
   private readonly UNIFORM_COUNT = 1024;
@@ -40,6 +46,34 @@ export class Renderer {
     this.canvas = canvas;
   }
 
+  uploadMesh(vertices: Float32Array, indices: Uint16Array) {
+    if (!this.device) return null;
+
+    const vertexBuffer = this.device.createBuffer({
+      size: vertices.byteLength,
+      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+      mappedAtCreation: true,
+    });
+    new Float32Array(vertexBuffer.getMappedRange()).set(vertices);
+    vertexBuffer.unmap();
+
+    const indexBuffer = this.device.createBuffer({
+      size: indices.byteLength,
+      usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+      mappedAtCreation: true,
+    });
+    new Uint16Array(indexBuffer.getMappedRange()).set(indices);
+    indexBuffer.unmap();
+
+    return (
+      this.meshes.push({
+        vertices: vertexBuffer,
+        indices: indexBuffer,
+        indexCount: indices.length,
+      }) - 1
+    );
+  }
+
   async initialize() {
     if (!navigator.gpu)
       throw new Error("WebGPU not supported on this browser.");
@@ -48,6 +82,12 @@ export class Renderer {
     if (!this.adapter) throw new Error("No suitable GPU adapter found.");
 
     this.device = await this.adapter.requestDevice();
+
+    // Add error handling for uncaptured errors
+    this.device.addEventListener("uncapturederror", (event) => {
+      console.error("WebGPU uncaptured error:", event.error);
+    });
+
     this.context = this.canvas.getContext("webgpu") as GPUCanvasContext;
     this.format = navigator.gpu.getPreferredCanvasFormat();
 
@@ -146,14 +186,15 @@ export class Renderer {
 
   async render(
     entities: {
-      entity: Entity;
-      mesh: Mesh;
-      transform: TransformComponent;
-      material: Material;
+      meshId: number;
+      position: Vec3;
+      rotation: Vec3;
+      scale: Vec3;
+      matrix: Mat4;
     }[],
-    time: number,
     cameraPosition: Vec3,
     projectionMatrix: Mat4,
+    material: Material,
   ) {
     const viewProjection = projectionMatrix;
 
@@ -175,55 +216,12 @@ export class Renderer {
 
     this.device!.queue.writeBuffer(this.sceneBuffer!, 0, sceneData);
 
-    // Sort entities by material to batch draw calls
-    entities.sort((a, b) => {
-      return a.material.id - b.material.id;
-    });
+    const ubo = new Float32Array(32);
 
-    // Group entities by material and write their data to material buffers
-    const materialBatches = new Map<
-      number,
-      { material: Material; entities: typeof entities }
-    >();
+    ubo.set(material.color);
+    ubo.set(entities[0].matrix, 4);
 
-    entities.forEach((entity) => {
-      const materialId = entity.material.id;
-      if (!materialBatches.has(materialId)) {
-        materialBatches.set(materialId, {
-          material: entity.material,
-          entities: [],
-        });
-      }
-      materialBatches.get(materialId)!.entities.push(entity);
-    });
-
-    // Write object data to each material's buffer
-    materialBatches.forEach((batch) => {
-      const bufferData = new Float32Array(
-        (batch.entities.length * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT) /
-          4,
-      );
-
-      batch.entities.forEach((entity, i) => {
-        const model = entity.transform.matrix;
-        const color = batch.material.color;
-
-        const offsetInFloats =
-          (i * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT) / 4;
-
-        // Write color (vec4)
-        bufferData.set(color, offsetInFloats);
-
-        // Write model matrix (mat4)
-        bufferData.set(model, offsetInFloats + 4);
-      });
-
-      this.device.queue.writeBuffer(
-        batch.material.uniformBuffer!,
-        0,
-        bufferData,
-      );
-    });
+    this.device.queue.writeBuffer(material.uniformBuffer!, 0, ubo);
 
     const commandEncoder = this.device!.createCommandEncoder();
     const textureView = this.context!.getCurrentTexture().createView();
@@ -246,24 +244,35 @@ export class Renderer {
       },
     });
 
-    // Render each material batch
-    materialBatches.forEach((batch) => {
-      renderPass.setPipeline(batch.material.shader.pipeline!);
-      renderPass.setBindGroup(0, this.sceneBindGroup!);
+    renderPass.setPipeline(material.shader.pipeline);
+    renderPass.setBindGroup(0, this.sceneBindGroup!);
+    renderPass.setBindGroup(1, material.bindGroup, [0]);
 
-      batch.entities.forEach((entity, index) => {
-        // Calculate dynamic offset for this object
-        const dynamicOffset =
-          index * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
+    renderPass.setVertexBuffer(0, this.meshes[entities[0].meshId - 1].vertices);
+    renderPass.setIndexBuffer(
+      this.meshes[entities[0].meshId - 1].indices,
+      "uint16",
+    );
+    renderPass.drawIndexed(this.meshes[entities[0].meshId - 1].indexCount);
 
-        // Set bind group with dynamic offset
-        renderPass.setBindGroup(1, batch.material.bindGroup, [dynamicOffset]);
+    // // Render each material batch
+    // materialBatches.forEach((batch) => {
+    //   renderPass.setPipeline(batch.material.shader.pipeline!);
+    //   renderPass.setBindGroup(0, this.sceneBindGroup!);
 
-        renderPass.setVertexBuffer(0, entity.mesh.vertexBuffer!);
-        renderPass.setIndexBuffer(entity.mesh.indexBuffer!, "uint16");
-        renderPass.drawIndexed(entity.mesh.indices.length);
-      });
-    });
+    //   batch.entities.forEach((entity, index) => {
+    //     // Calculate dynamic offset for this object
+    //     const dynamicOffset =
+    //       index * this.MINUMUM_UNIFORM_BUFFER_OFFSET_ALIGNMENT;
+
+    //     // Set bind group with dynamic offset
+    //     renderPass.setBindGroup(1, batch.material.bindGroup, [dynamicOffset]);
+
+    //     renderPass.setVertexBuffer(0, entity.mesh.vertexBuffer!);
+    //     renderPass.setIndexBuffer(entity.mesh.indexBuffer!, "uint16");
+    //     renderPass.drawIndexed(entity.mesh.indices.length);
+    //   });
+    // });
 
     renderPass.end();
     this.device!.queue.submit([commandEncoder.finish()]);

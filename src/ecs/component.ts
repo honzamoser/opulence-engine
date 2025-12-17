@@ -1,1 +1,3 @@
-export abstract class Component {}
+export abstract class Component {
+  static id: number = undefined;
+}

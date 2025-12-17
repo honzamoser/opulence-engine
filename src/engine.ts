@@ -8,12 +8,12 @@ import { Light } from "./renderer/light";
 import { System } from "./ecs/system";
 import { Component } from "./ecs/component";
 import { PointerManager } from "./data/arrayBufferPointer";
-import { ECS } from "./opulence-ecs/ecs";
+import { ClassConstructor, ECS } from "./opulence-ecs/ecs";
 
 export class Engine extends EventTarget {
-  world: [][] = [];
-  input: InputHandler;
-  cameraPosition = vec3.create(0, 10, 20);
+  entities: [][] = [];
+  systems: System[] = [];
+
   renderer: Renderer;
   pointerManager: PointerManager;
 
@@ -21,24 +21,15 @@ export class Engine extends EventTarget {
 
   ecs: ECS;
 
-  systems: System[] = [];
-
-  // Query cache to avoid re-scanning entities every frame
-  private queryCache: Map<string, Entity[]> = new Map();
-  private queryCacheDirty: boolean = true;
-
   constructor(canvas: HTMLCanvasElement, shaderSource: string) {
     super();
-
-    this.pointerManager = new PointerManager();
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     this.canvas = canvas;
-    this.input = new InputHandler(canvas);
 
     this.ecs = new ECS();
+    this.pointerManager = new PointerManager();
   }
 
   async load() {
@@ -59,15 +50,9 @@ export class Engine extends EventTarget {
   async update(delta: number) {
     this.dispatchEvent(new CustomEvent("update", { detail: delta }));
 
-    // Clear query cache at start of frame
-    if (this.queryCacheDirty) {
-      this.queryCache.clear();
-      this.queryCacheDirty = false;
-    }
-
     this.systems.forEach((x) => {
       if (x.update) {
-        x.update(this.world, delta, this);
+        x.update(this.entities, delta, this);
       }
     });
     this.systems.forEach((x) => {
@@ -78,36 +63,42 @@ export class Engine extends EventTarget {
   }
 
   createEntity(): number {
-    return this.world.push([]);
+    return this.entities.push([]) - 1;
   }
 
   public on = this.addEventListener;
 
   query(...componentTypes: (new (...args: any[]) => Component)[]): number[] {
-    const ids = this.ecs.getComponentID(componentTypes);
-    // Create cache key from component type names
-    //
-    console.log(ids);
+    const ids = componentTypes.map((ct) => ct.id);
+    const result: number[] = [];
 
-    console.log(this.world);
+    for (let i = 0; i < this.entities.length; i++) {
+      const entity = this.entities[i];
+      let hasAll = true;
 
-    return this.world
-      .find((entity, entityId) => {
-        for (let id of ids) {
-          if (entity[id] !== undefined && entity[id].length > 0) {
-            return true;
-          } else return false;
+      for (let j = 0; j < ids.length; j++) {
+        if (entity[ids[j]] === undefined) {
+          hasAll = false;
+          break;
         }
-      })
-      .map((entityData, entityId) => {
-        return entityId;
-      });
+      }
+
+      if (hasAll) {
+        result.push(i);
+      }
+    }
+
+    return result;
   }
 
-  addComponent(entityId: number, component: () => Component, args: any[]) {
-    const componentTypeid = this.ecs.getComponentID([component])[0];
-    const componentId = this.ecs.pushComponent<Component>(component, args);
+  addComponent<T extends Component>(
+    entityId: number,
+    component: ClassConstructor<T>,
+    args: any[],
+  ) {
+    const componentTypeid = component.id;
+    const componentId = this.ecs.pushComponent<T>(component, args);
 
-    this.world[id][componentTypeid] = componentId;
+    this.entities[entityId][componentTypeid] = componentId;
   }
 }

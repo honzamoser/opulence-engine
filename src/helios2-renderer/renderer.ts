@@ -5,6 +5,7 @@ import MeshComponent from "../ecs/components/mesh";
 export type Helios2_Buffers = {
   vertex: GPUBuffer; // Vertices
   index: GPUBuffer; // Indices
+  normal: GPUBuffer; // Normals
   indirect: GPUBuffer; // Indirect draw commands
   instance: GPUBuffer; // Mat4 matrix + Vec4 color
   uniform: GPUBuffer; // aspect
@@ -19,13 +20,14 @@ export class Helios2Renderer {
   // A simple multidrawindexedindirect renderer
   // no culling or compute shader
 
-  static readonly BUFFERS_STRIDES = {
+  static readonly BUFFERS_STRIDES_BYTES = {
     vertex: 3 * 4,
+    normal: 3 * 4,
     index: 4, // uint16
     indirect: 5 * 4, // 5 uint32
-    instance: (16 + 4) * 4, // Mat4 (16) + Vec4 (4)
-    uniform: (16 + 4 + 6 * 4) * 4, // viewProj + time
-    visible: 4,
+    instance: (16 + 4 + 4) * 4, // Mat4 (16) + Vec4 (4)
+    uniform: (16 + 24 + 4) * 4, // viewProj (16) + planes (24) + time (1) + instanceCount (1) + padding (2)
+    visible: 4, // uint32
   };
 
   static readonly UP = vec3.create(0, 1, 0);
@@ -44,17 +46,23 @@ export class Helios2Renderer {
    * vertex byte offset: uint32
    * index byte count: uint32
    * index byte offset: uint32
+   * normal byte count: uint32
+   * normal byte offset: uint32
    */
   private meshes: {
     buffer: Uint32Array;
     meshCount: number;
     vertexCursor: number;
     indexCursor: number;
+    normalCursor: number;
+    commandsCursor: number;
   } = {
     buffer: new Uint32Array(opulence_config.render.maxMeshes * 5),
     meshCount: 0,
     vertexCursor: 0,
     indexCursor: 0,
+    normalCursor: 0,
+    commandsCursor: 0,
   };
 
   private instances: {
@@ -74,6 +82,7 @@ export class Helios2Renderer {
   private depthTexture: GPUTexture;
   private pipeline: GPURenderPipeline;
   private cullingPipeline: GPUComputePipeline;
+  private resetPipeline: GPUComputePipeline;
 
   private UniformBindGroup: GPUBindGroup;
   private InstanceBindGroup: GPUBindGroup;
@@ -98,8 +107,8 @@ export class Helios2Renderer {
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
 
-    this.canvas.width = this.canvas.clientWidth * devicePixelRatio;
-    this.canvas.height = this.canvas.clientHeight * devicePixelRatio;
+    this.canvas.width = document.body.clientWidth * devicePixelRatio;
+    this.canvas.height = document.body.clientHeight * devicePixelRatio;
 
     this.slider = document.getElementById("fov") as HTMLInputElement;
 
@@ -114,6 +123,35 @@ export class Helios2Renderer {
       100.0,
       this.projectionMatrix,
     );
+
+    // mat4.ortho(
+    //   0,
+    //   window.innerWidth,
+    //   window.innerHeight,
+    //   0,
+    //   0.01,
+    //   1000,
+    //   this.projectionMatrix,
+    // );
+
+    setInterval(() => {
+      const readBack = this.device.createCommandEncoder();
+      const copySize = 4;
+      readBack.copyBufferToBuffer(
+        this.debugBuffer,
+        0,
+        this.readbackBuf,
+        0,
+        1024,
+      );
+      this.device.queue.submit([readBack.finish()]);
+
+      this.readbackBuf.mapAsync(GPUMapMode.READ).then(() => {
+        const array = new Uint32Array(this.readbackBuf.getMappedRange());
+        console.log("Culled draw calls: ", Uint32Array.from(array));
+        this.readbackBuf.unmap();
+      });
+    }, 1000);
   }
 
   private _getMeshData(meshIndex: number): {
@@ -142,37 +180,45 @@ export class Helios2Renderer {
     matrix: Float32Array,
     color: Float32Array,
   ) {
-    console.log(this.meshes.buffer.subarray(meshIndex * 5, meshIndex * 5 + 5));
-    console.log(this.meshes.buffer.subarray(0, 5));
-
     const instance = this.instances.instanceCount++;
     const meshData = this._getMeshData(meshIndex);
 
+    const instanceData = new Float32Array(
+      Helios2Renderer.BUFFERS_STRIDES_BYTES.instance / 4,
+    );
+    instanceData.set(matrix, 0);
+    instanceData.set(color, 16);
+    instanceData.set([this.meshes.commandsCursor, 0, 0, 0], 20);
+
+    this.device.queue.writeBuffer(
+      this.buffers.instance,
+      instance * Helios2Renderer.BUFFERS_STRIDES_BYTES.instance,
+      instanceData.buffer,
+      0,
+      instanceData.byteLength,
+    );
+
     const indirectData = new Uint32Array([
       meshData.indexByteCount / 4, // index count
-      1, // instance count
+      0, // instance count
       meshData.indexByteOffset / 4, // first index
-      meshData.vertexByteOffset / Helios2Renderer.BUFFERS_STRIDES.vertex, // vertex offset
-      instance,
+      meshData.vertexByteOffset / Helios2Renderer.BUFFERS_STRIDES_BYTES.vertex, // vertex offset
+      instance, // first instance
     ]);
 
     this.device.queue.writeBuffer(
       this.buffers.indirect,
-      instance * Helios2Renderer.BUFFERS_STRIDES.indirect,
+      this.meshes.commandsCursor * 5 * 4,
       indirectData.buffer,
       0,
       indirectData.byteLength,
     );
 
-    const instanceData = new Float32Array([...matrix, ...color]);
-
-    this.device.queue.writeBuffer(
-      this.buffers.instance,
-      instance * Helios2Renderer.BUFFERS_STRIDES.instance,
-      instanceData.buffer,
-      0,
-      instanceData.byteLength,
+    console.log(
+      `Instantiated single mesh ${instance} at command ${this.meshes.commandsCursor}`,
     );
+
+    this.meshes.commandsCursor++;
 
     return instance;
   }
@@ -184,47 +230,52 @@ export class Helios2Renderer {
     const startInstance = this.instances.instanceCount;
     const meshData = this._getMeshData(meshId);
 
-    const instanceData = new Float32Array(
-      instanceValues.length * Helios2Renderer.BUFFERS_STRIDES.instance,
-    );
+    const instanceData = new Float32Array(instanceValues.length * 24);
 
-    instanceValues.forEach((instance) => {
-      const instanceId = this.instances.instanceCount++;
+    instanceValues.forEach((instance, index) => {
+      this.instances.instanceCount++;
 
-      const offset = instanceId * Helios2Renderer.BUFFERS_STRIDES.instance;
-      instanceData.set(instance.matrix, offset / 4);
-      instanceData.set(instance.color, offset / 4 + 16);
+      const offset = index * 24;
+      instanceData.set(instance.matrix, offset);
+      instanceData.set(instance.color, offset + 16);
+      instanceData.set([this.meshes.commandsCursor, 0, 0, 0], offset + 20);
     });
 
     this.device.queue.writeBuffer(
       this.buffers.instance,
-      startInstance * Helios2Renderer.BUFFERS_STRIDES.instance,
+      startInstance * Helios2Renderer.BUFFERS_STRIDES_BYTES.instance,
       instanceData.buffer,
       0,
-      instanceData.byteLength / 4,
+      instanceData.byteLength,
     );
 
     const indirectData = new Uint32Array([
       meshData.indexByteCount / 4, // index count
-      instanceValues.length, // instance count
+      0, // instance count
       meshData.indexByteOffset / 4, // first index
-      meshData.vertexByteOffset / Helios2Renderer.BUFFERS_STRIDES.vertex, // vertex offset
-      startInstance,
+      meshData.vertexByteOffset / Helios2Renderer.BUFFERS_STRIDES_BYTES.vertex, // vertex offset
+      startInstance, // first instance
     ]);
 
     this.device.queue.writeBuffer(
       this.buffers.indirect,
-      startInstance * Helios2Renderer.BUFFERS_STRIDES.indirect,
+      this.meshes.commandsCursor * 5 * 4,
       indirectData.buffer,
       0,
       indirectData.byteLength,
     );
 
+    console.log(
+      `Instantiated ${instanceData.length / 24} meshes at command ${this.meshes.commandsCursor}`,
+    );
+
+    this.meshes.commandsCursor++;
+
     return startInstance;
   }
 
   public _updateMatrix(instanceId: number, matrix: Mat4) {
-    const offset = instanceId * Helios2Renderer.BUFFERS_STRIDES.instance;
+    const offset = instanceId * Helios2Renderer.BUFFERS_STRIDES_BYTES.instance;
     const matrixData = new Float32Array(matrix);
 
     this.device.queue.writeBuffer(
@@ -267,67 +318,61 @@ export class Helios2Renderer {
       this.viewMatrix,
     );
 
-    const testFrustrumProjectionMatrix = mat4.mul(
-      mat4.perspective(
-        degToRad(this.slider.value),
-        this.aspect,
-        5.0,
-        1000.0,
-        mat4.create(),
-      ),
-      this.viewMatrix,
+    this.frustrumPlanes = extractFrustumPlanes(viewProjectionMatrix);
+
+    const uniformBuffer = new ArrayBuffer(
+      Helios2Renderer.BUFFERS_STRIDES_BYTES.uniform,
     );
+    const f32 = new Float32Array(uniformBuffer);
+    const u32 = new Uint32Array(uniformBuffer);
 
-    this.frustrumPlanes = extractFrustumPlanes(testFrustrumProjectionMatrix);
+    f32.set(viewProjectionMatrix, 0);
+    f32.set(this.frustrumPlanes, 16);
+    f32[40] = t;
+    u32[41] = this.instances.instanceCount;
 
-    const uniformData = new Float32Array([
-      ...viewProjectionMatrix,
-      ...this.frustrumPlanes,
-      t,
-    ]);
-    this.device.queue.writeBuffer(this.buffers.uniform, 0, uniformData.buffer);
+    this.device.queue.writeBuffer(this.buffers.uniform, 0, uniformBuffer);
   }
 
   readbackBuf: GPUBuffer;
+  textureView: GPUTextureView;
+  depthTextureView: GPUTextureView;
 
   public render(t: number) {
     const commandEncoder = this.device.createCommandEncoder();
     this.updateUniforms(t);
 
-    const resetData = new Uint32Array([0]);
-    this.device.queue.writeBuffer(this.buffers.indirect, 4, resetData);
+    const resetPass = commandEncoder.beginComputePass();
+    resetPass.setPipeline(this.resetPipeline);
+    resetPass.setBindGroup(0, this.UniformBindGroup);
+    resetPass.setBindGroup(1, this.IndicrectComputeBindGroup);
+    resetPass.dispatchWorkgroups(Math.ceil(this.meshes.commandsCursor / 64));
+    resetPass.end();
 
     const computePass = commandEncoder.beginComputePass();
     computePass.setPipeline(this.cullingPipeline);
     computePass.setBindGroup(0, this.UniformBindGroup);
     computePass.setBindGroup(1, this.IndicrectComputeBindGroup);
+    computePass.setBindGroup(2, this.debugBindGroup);
 
     computePass.dispatchWorkgroups(
       Math.ceil(this.instances.instanceCount / 64),
     );
     computePass.end();
 
-    commandEncoder.copyBufferToBuffer(
-      this.buffers.indirect,
-      4,
-      this.readbackBuf,
-      0,
-      4,
-    );
-
-    const textureView = this.context.getCurrentTexture().createView();
+    this.textureView = this.context.getCurrentTexture().createView();
 
     const renderPass = commandEncoder.beginRenderPass({
       colorAttachments: [
         {
-          view: textureView,
+          view: this.textureView,
           clearValue: { r: 0.3, g: 0.3, b: 0.3, a: 1.0 },
           loadOp: "clear",
           storeOp: "store",
         },
       ],
       depthStencilAttachment: {
-        view: this.depthTexture.createView(),
+        view: this.depthTextureView,
         depthClearValue: 1.0,
         depthLoadOp: "clear",
         depthStoreOp: "store",
@@ -338,12 +383,13 @@ export class Helios2Renderer {
     renderPass.setBindGroup(0, this.UniformBindGroup);
     renderPass.setBindGroup(1, this.InstanceBindGroup);
     renderPass.setVertexBuffer(0, this.buffers.vertex);
+    renderPass.setVertexBuffer(1, this.buffers.normal);
     renderPass.setIndexBuffer(this.buffers.index, "uint32");
     // Experimental function - not standardized yet
     (renderPass as any).multiDrawIndexedIndirect(
       this.buffers.indirect,
       0,
-      this.instances.instanceCount,
+      this.meshes.commandsCursor,
     );
 
     renderPass.end();
@@ -359,7 +405,11 @@ export class Helios2Renderer {
     // }
   }
 
-  public uploadMesh(vertices: Float32Array, indices: Uint32Array): number {
+  public uploadMesh(
+    vertices: Float32Array,
+    indices: Uint32Array,
+    normals: Float32Array,
+  ): number {
     if (this._ready && this.buffers != null) {
       this.device.queue.writeBuffer(
         this.buffers.vertex,
@@ -370,6 +420,12 @@ export class Helios2Renderer {
         this.buffers.index,
         this.meshes.indexCursor,
         indices.buffer,
+      );
+
+      this.device.queue.writeBuffer(
+        this.buffers.normal,
+        this.meshes.normalCursor,
+        normals.buffer,
       );
 
       const meshData = new Uint32Array([
@@ -384,6 +440,7 @@ export class Helios2Renderer {
 
       this.meshes.vertexCursor += vertices.byteLength;
       this.meshes.indexCursor += indices.byteLength;
+      this.meshes.normalCursor += normals.byteLength;
       this.meshes.meshCount++;
 
       return this.meshes.meshCount - 1;
@@ -397,7 +454,9 @@ export class Helios2Renderer {
       throw new Error("WebGPU not supported on this browser.");
     }
 
-    this.adapter = await navigator.gpu.requestAdapter();
+    this.adapter = await navigator.gpu.requestAdapter({
+      powerPreference: "high-performance",
+    });
     if (!this.adapter) throw new Error("No suitable GPU adapter found.");
 
     this.device = await this.adapter.requestDevice({
@@ -430,7 +489,10 @@ export class Helios2Renderer {
       entries: [
         {
           binding: 0,
-          visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE,
+          visibility:
+            GPUShaderStage.VERTEX |
+            GPUShaderStage.FRAGMENT |
+            GPUShaderStage.COMPUTE,
           buffer: { type: "uniform" },
         },
       ],
@@ -525,6 +587,28 @@ export class Helios2Renderer {
       ],
     });
 
+    this.debugLayout = this.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: { type: "storage" },
+        },
+      ],
+    });
+
+    this.debugBindGroup = this.device.createBindGroup({
+      layout: this.debugLayout,
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: this.debugBuffer,
+          },
+        },
+      ],
+    });
+
     this.pipeline = this.device.createRenderPipeline({
       layout: this.device.createPipelineLayout({
         bindGroupLayouts: [this.UniformLayout, this.InstanceLayout],
@@ -539,6 +623,17 @@ export class Helios2Renderer {
             attributes: [
               {
                 shaderLocation: 0,
+                offset: 0,
+                format: "float32x3",
+              },
+            ],
+          },
+          {
+            arrayStride: 3 * 4,
+            stepMode: "vertex",
+            attributes: [
+              {
+                shaderLocation: 1,
                 offset: 0,
                 format: "float32x3",
               },
@@ -566,9 +661,23 @@ export class Helios2Renderer {
       },
     });
 
-    this.cullingPipeline = this.device.createComputePipeline({
+    this.resetPipeline = this.device.createComputePipeline({
       layout: this.device.createPipelineLayout({
         bindGroupLayouts: [this.UniformLayout, this.IndicrectComputeLayout],
+      }),
+      compute: {
+        module: shaderModule,
+        entryPoint: "reset_main",
+      },
+    });
+
+    this.cullingPipeline = this.device.createComputePipeline({
+      layout: this.device.createPipelineLayout({
+        bindGroupLayouts: [
+          this.UniformLayout,
+          this.IndicrectComputeLayout,
+          this.debugLayout,
+        ],
       }),
       compute: {
         module: shaderModule,
@@ -585,11 +694,18 @@ export class Helios2Renderer {
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
+    this.depthTextureView = this.depthTexture.createView();
+
     this._ready = true;
   }
 
   initialize_buffers() {
     this.buffers.vertex = this.device.createBuffer({
+      size: opulence_config.render.meshPage,
+      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+    });
+
+    this.buffers.normal = this.device.createBuffer({
       size: opulence_config.render.meshPage,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     });
@@ -602,7 +718,7 @@ export class Helios2Renderer {
     this.buffers.indirect = this.device.createBuffer({
       size:
         opulence_config.render.maxMeshes *
-        Helios2Renderer.BUFFERS_STRIDES.indirect,
+        Helios2Renderer.BUFFERS_STRIDES_BYTES.indirect,
       usage:
         GPUBufferUsage.INDIRECT |
         GPUBufferUsage.STORAGE |
@@ -613,27 +729,37 @@ export class Helios2Renderer {
     this.buffers.instance = this.device.createBuffer({
       size:
         opulence_config.render.maxInstances *
-        Helios2Renderer.BUFFERS_STRIDES.instance,
+        Helios2Renderer.BUFFERS_STRIDES_BYTES.instance,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
 
     this.buffers.uniform = this.device.createBuffer({
-      size: Helios2Renderer.BUFFERS_STRIDES.uniform,
+      size: Helios2Renderer.BUFFERS_STRIDES_BYTES.uniform,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
     this.buffers.visible = this.device.createBuffer({
       size:
         opulence_config.render.maxInstances *
-        Helios2Renderer.BUFFERS_STRIDES.visible,
+        Helios2Renderer.BUFFERS_STRIDES_BYTES.visible,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
 
     this.readbackBuf = this.device.createBuffer({
-      size: 4,
+      size: 1024,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
+
+    this.debugBuffer = this.device.createBuffer({
+      size: 1024,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+    });
   }
+
+  debugLayout: GPUBindGroupLayout;
+  debugBindGroup: GPUBindGroup;
+  debugBuffer: GPUBuffer;
+  readbackBuffer: GPUBuffer;
 }
 
 function extractFrustumPlanes(m) {

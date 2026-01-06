@@ -1,6 +1,6 @@
 <script lang="ts">
     import "./style.css";
-    import { startGame } from "../../game_src/main.ts";
+    import * as game from "../../game_src/render_test.ts";
 
     const toolbarItems: string[] = [
         "File",

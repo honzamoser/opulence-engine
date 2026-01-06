@@ -12,7 +12,7 @@
     - [ ] Defragmentation
     - [ ] Cold storage allocation
     - [ ] Add checking that a component of the same name doesnt exist
-- [ ] Instancing
+- [X] Instancing
 - [ ] Webassembly transition
 - [ ] Loading subsystem
     - [ ] Data saving serviceworker

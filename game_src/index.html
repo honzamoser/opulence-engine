@@ -41,10 +41,10 @@
         >
             <label for="Rotation Slider"></label>
             <input
-                id="rotation"
+                id="fov"
                 type="range"
-                min="-1"
-                max="1"
+                min="0"
+                max="90"
                 step="0.01"
                 value="0"
                 style="
@@ -57,12 +57,16 @@
         </div>
 
         <!--<script src="./game_src/index.ts" defer async type="module"></script>-->
+        <div id="debugDiv"></div>
 
-        <script src="main.ts" type="module" defer></script>
-        <script>
+        <script src="render_test.ts" type="module" defer></script>
+        <!--<script type="module">
+        import {startGame} from "./main.ts"
             document.addEventListener("contextmenu", (event) =>
                 event.preventDefault(),
             );
-        </script>
+
+            startGame()
+        </script>-->
     </body>
 </html>

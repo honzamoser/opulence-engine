@@ -1,6 +1,6 @@
 import { vec2, vec3 } from "wgpu-matrix";
 import { Engine } from "../src/engine.js";
-import { Mesh } from "../src/renderer/mesh.js";
+// import { Mesh } from "../src/renderer/mesh.js";
 import { createCube, createPlane } from "../src/renderer/primitive.js";
 import { Renderer } from "../src/renderer/renderer.js";
 import { Entity } from "../src/entity.js";
@@ -28,21 +28,19 @@ import { SerDe } from "../src/data/serde.js";
 // import { test, TestComponent } from "./components/testComponent.js";
 import { Pointer, PointerManager } from "../src/data/arrayBufferPointer.js";
 import { log_entity, log_component } from "../src/debug/ecs_debug.js";
+import basic_lit from "../resources/shaders/basic_indirect.wgsl?raw";
+// import "@vite/client";
 
-const canvas: HTMLCanvasElement = document.getElementById(
-  "main",
-) as HTMLCanvasElement;
+export async function startGame() {
+  const canvas: HTMLCanvasElement = document.getElementById(
+    "main",
+  ) as HTMLCanvasElement;
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
-  const shader = await res.text();
-  const engine = new Engine(canvas, shader);
+  const engine = new Engine(canvas);
 
   await engine.load();
 
-  const renderSystem = new RenderSystem(canvas, shader);
+  const renderSystem = new RenderSystem(canvas);
   const cameraSystem = new CameraSystem();
 
   renderSystem.renderer.lights.push(
@@ -70,7 +68,7 @@ fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
     new Float32Array([1, 1, 1]),
   ]);
 
-  const litShader = new Shader(renderSystem.renderer, shader, "default");
+  const litShader = new Shader(renderSystem.renderer, basic_lit, "default");
 
   const defaultMaterial = new Material(
     renderSystem.renderer,
@@ -189,7 +187,7 @@ fetch("../resources/shaders/basic_lit.wgsl").then(async (res) => {
   // }
 
   await engine.start();
-});
+}
 
 /// window.addEventListener("keydown", (e) => {
 // if (e.key === "arrowleft" || e.key === "a") {

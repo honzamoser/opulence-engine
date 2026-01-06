@@ -11,6 +11,7 @@ import { Material } from "../../renderer/material";
 import MaterialComponent from "../components/material";
 import { log_component } from "../../debug/ecs_debug";
 import { Mesh } from "../../renderer/mesh";
+import { IndirectRenderer } from "../../renderer/indirectRenderer";
 
 export class RenderSystem extends System {
   materials: Material[] = [];
@@ -83,7 +84,11 @@ export class RenderSystem extends System {
   public async start(engine: Engine) {
     await this.renderer.initialize();
 
-    this.materials.forEach((x) => x.start());
+    // Only initialize materials if using standard renderer
+    // IndirectRenderer uses its own built-in shader
+    if (!(this.renderer instanceof IndirectRenderer)) {
+      this.materials.forEach((x) => x.start());
+    }
 
     const query = engine.query(MeshComponent, TransformComponent);
     const accessor = engine.ecs.createFieldAccessor(
@@ -101,7 +106,7 @@ export class RenderSystem extends System {
           compInstanceId,
           MeshComponent,
           "meshId",
-          this.uploadMesh(engine, compInstanceId) + 1,
+          this.uploadMesh(engine, compInstanceId),
         );
       }
 
@@ -189,9 +194,9 @@ export class RenderSystem extends System {
     );
   }
 
-  constructor(canvas: HTMLCanvasElement, Material) {
+  constructor(canvas: HTMLCanvasElement) {
     super();
-    this.renderer = new Renderer(canvas);
+    this.renderer = new IndirectRenderer(canvas);
   }
 
   uploadMesh(engine: Engine, componentId: number) {

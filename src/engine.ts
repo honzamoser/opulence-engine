@@ -21,10 +21,10 @@ export class Engine extends EventTarget {
 
   ecs: ECS;
 
-  constructor(canvas: HTMLCanvasElement, shaderSource: string) {
+  constructor(canvas: HTMLCanvasElement) {
     super();
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // canvas.width = window.innerWidth;
+    // canvas.height = window.innerHeight;
 
     this.canvas = canvas;
 

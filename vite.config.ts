@@ -1,8 +1,13 @@
 import { defineConfig } from "vite";
 import { swc } from "rollup-plugin-swc3";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import o_config from "./opulenece.config";
 
 export default defineConfig({
   plugins: [
+    svelte({
+      include: "src/editor/**.svelte",
+    }),
     swc({
       sourceMaps: true,
       jsc: {
@@ -25,4 +30,9 @@ export default defineConfig({
       tsconfig: "./tsconfig.json",
     },
   },
+  define: {
+    opulence_config: o_config,
+  },
+  assetsInclude: ["**/*.wgsl", "**/*.glb", "**/*.gltf", "**/*.png", "**/*.jpg"],
+  publicDir: "resources",
 });

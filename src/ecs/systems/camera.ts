@@ -28,7 +28,7 @@ export class CameraSystem extends System {
       cameraEntity,
       TransformComponent,
       "rotation",
-      new Float32Array([0, this.deb.value, 0]),
+      new Float32Array([0, 0, 0]),
     );
 
     cameraComponent.projectionMatrix.set(
@@ -41,7 +41,8 @@ export class CameraSystem extends System {
     transform: TransformComponent,
     engine: Engine,
   ): Float32Array<ArrayBufferLike> {
-    const aspect = engine.canvas.width / engine.canvas.height;
+    const aspect = engine.canvas.clientWidth / engine.canvas.clientHeight;
+
     const projection = mat4.perspective(
       camera.fov,
       aspect,

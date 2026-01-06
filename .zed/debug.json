@@ -13,4 +13,11 @@
     "webRoot": "${ZED_WORKTREE_ROOT}",
     "skipFiles": ["<node_internals>/**"],
   },
+  {
+    "label": "Attach to Chrome",
+    "adapter": "JavaScript",
+    "type": "chrome",
+    "request": "attach",
+    "url": "http://localhost:5173",
+  },
 ]

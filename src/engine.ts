@@ -66,9 +66,9 @@ export class Engine extends EventTarget {
     }
 
     this.systems.forEach((x) => {
-      if (x.update) {
-        x.update(this.world, delta, this);
-      }
+      // if (x.update) {
+      //   x.update(this.world, delta, this);
+      // }
     });
     this.systems.forEach((x) => {
       if (x.afterUpdate) {
@@ -108,6 +108,8 @@ export class Engine extends EventTarget {
     const componentTypeid = this.ecs.getComponentID([component])[0];
     const componentId = this.ecs.pushComponent<Component>(component, args);
 
-    this.world[id][componentTypeid] = componentId;
+    console.log(this.world[entityId], this.world, entityId)
+
+    this.world[entityId][componentTypeid] = componentId;
   }
 }

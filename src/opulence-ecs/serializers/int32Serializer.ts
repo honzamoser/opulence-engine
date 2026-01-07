@@ -1,7 +1,6 @@
 import { serializable, Serializable } from "../component-gen";
 import { ComponentBufferViews } from "../ecs";
 
-@serializable
 export class Int32Serializer extends Serializable<number, Int32Array> {
   serialize(v: number): Uint8Array | Float32Array | Int32Array | ArrayBuffer {
     return new Int32Array([v]);

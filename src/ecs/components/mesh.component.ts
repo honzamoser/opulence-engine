@@ -1,15 +1,16 @@
 import { vec3, Vec3 } from "wgpu-matrix";
 import { constructor, hot } from "../../opulence-ecs/component-gen";
-import { Mesh } from "../../renderer/mesh";
-import { createCube } from "../../renderer/primitive";
 import { Component } from "../component";
 
 export default class MeshComponent extends Component {
   @hot.int32
+  @constructor(0)
   meshId: number;
 
+  @hot.int32
+  rendererdInstasnceId: number;
+
   @hot.string(64)
-  @constructor(0)
   resourceIdentifier: string;
 
   @hot.float32Array(3)

@@ -3,7 +3,8 @@
     "types": ["@webgpu/types", "wgpu-matrix", "vite/client"],
     "target": "ESNext",
     "moduleResolution": "bundler",
-    "module": "Preserve"
+    "module": "ESNext",
+    "useDefineForClassFields": false,
   },
-  "reflection": true
+  "reflection": true,
 }

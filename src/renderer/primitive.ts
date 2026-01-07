@@ -68,6 +68,7 @@ export function createDiamond(): {
 export function createCube(): {
   vertices: Float32Array;
   indices: Uint32Array;
+  normals: Float32Array;
 } {
   // 24 vertices (4 per face * 6 faces) to support flat shading (unique normals per face)
   const vertices = new Float32Array([
@@ -142,6 +143,7 @@ export function createCube(): {
 export function createPyramid(): {
   vertices: Float32Array;
   indices: Uint32Array;
+  normals: Float32Array;
 } {
   const vertices = new Float32Array([
     // Base (y=0)

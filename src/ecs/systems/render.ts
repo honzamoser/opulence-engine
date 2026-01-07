@@ -1,17 +1,18 @@
 import { Vec3, mat4, vec3 } from "wgpu-matrix";
 import { Entity } from "../../entity";
 import { Light } from "../../renderer/light";
-import MeshComponent from "../components/mesh";
-import TransformComponent from "../components/transform";
+import MeshComponent from "../components/mesh.component";
+import TransformComponent from "../components/transform.component";
 import { System } from "../system";
 import { Engine } from "../../engine";
 import { Renderer } from "../../renderer/renderer";
-import CameraComponent from "../components/camera";
+
 import { Material } from "../../renderer/material";
-import MaterialComponent from "../components/material";
+
 import { log_component } from "../../debug/ecs_debug";
-import { Mesh } from "../../renderer/mesh";
+
 import { IndirectRenderer } from "../../renderer/indirectRenderer";
+import { Helios2Renderer } from "../../helios2-renderer/renderer";
 
 export class RenderSystem extends System {
   materials: Material[] = [];
@@ -20,7 +21,7 @@ export class RenderSystem extends System {
     this.materials.push(defaultMaterial);
   }
 
-  renderer: Renderer;
+  renderer: Helios2Renderer;
 
   cameraComponentId: number | null = null;
   cameraTransformComponentId: number | null = null;
@@ -33,48 +34,63 @@ export class RenderSystem extends System {
   engine: Engine | null = null;
 
   public async update(entities: Entity[], delta: number, engine: Engine) {
-    if (!this.renderer.ready) return;
+    // if (!this.renderer.ready) return;
+    // if (!this.mesh || !this.meshTransform) return;
+    // const projectionMatrix = engine.ecs.getComponentValue(
+    //   this.cameraComponentId,
+    //   CameraComponent,
+    //   "projectionMatrix",
+    // );
+    // const cameraPosition = engine.ecs.getComponentValue(
+    //   this.cameraTransformComponentId,
+    //   TransformComponent,
+    //   "position",
+    // );
+    // // Calculate the transform matrix before rendering
+    // this.calculateTransformMatrix(
+    //   this.meshTransform,
+    //   this.meshTransformComponentId!,
+    //   this.engine!,
+    // );
+    // // Re-fetch the mesh transform to get the updated matrix
+    // this.meshTransform = this.engine!.ecs.getComponentValues(
+    //   this.meshTransformComponentId!,
+    //   TransformComponent,
+    // );
+    // this.renderer.render(
+    //   [
+    //     {
+    //       meshId: this.mesh.meshId,
+    //       position: this.meshTransform.position,
+    //       rotation: this.meshTransform.rotation,
+    //       scale: this.meshTransform.scale,
+    //       matrix: this.meshTransform.matrix,
+    //     },
+    //   ],
+    //   cameraPosition,
+    //   projectionMatrix,
+    //   this.materials[0],
+    // );
+    //
+    //
+    //
 
-    if (!this.mesh || !this.meshTransform) return;
+    engine.query(MeshComponent, TransformComponent).forEach((entity) => {
+      const meshId = engine.entities[entity][MeshComponent.id];
+      const transformId = engine.entities[entity][TransformComponent.id];
+      const transform: TransformComponent = engine.ecs.getComponentValues(
+        transformId,
+        TransformComponent,
+      );
+      const mesh: MeshComponent = engine.ecs.getComponentValues(
+        meshId,
+        MeshComponent,
+      );
 
-    const projectionMatrix = engine.ecs.getComponentValue(
-      this.cameraComponentId,
-      CameraComponent,
-      "projectionMatrix",
-    );
-    const cameraPosition = engine.ecs.getComponentValue(
-      this.cameraTransformComponentId,
-      TransformComponent,
-      "position",
-    );
+      this.calculateTransformMatrix(transform, transformId, engine);
 
-    // Calculate the transform matrix before rendering
-    this.calculateTransformMatrix(
-      this.meshTransform,
-      this.meshTransformComponentId!,
-      this.engine!,
-    );
-
-    // Re-fetch the mesh transform to get the updated matrix
-    this.meshTransform = this.engine!.ecs.getComponentValues(
-      this.meshTransformComponentId!,
-      TransformComponent,
-    );
-
-    this.renderer.render(
-      [
-        {
-          meshId: this.mesh.meshId,
-          position: this.meshTransform.position,
-          rotation: this.meshTransform.rotation,
-          scale: this.meshTransform.scale,
-          matrix: this.meshTransform.matrix,
-        },
-      ],
-      cameraPosition,
-      projectionMatrix,
-      this.materials[0],
-    );
+      this.renderer._updateMatrix(mesh.meshId, transform.matrix);
+    });
   }
 
   afterUpdate(engine: Engine) {}
@@ -82,74 +98,40 @@ export class RenderSystem extends System {
   vertexBuffers: GPUBuffer[] = [];
 
   public async start(engine: Engine) {
-    await this.renderer.initialize();
+    const meshEntities = engine.query(MeshComponent, TransformComponent);
 
-    // Only initialize materials if using standard renderer
-    // IndirectRenderer uses its own built-in shader
-    if (!(this.renderer instanceof IndirectRenderer)) {
-      this.materials.forEach((x) => x.start());
-    }
+    meshEntities.forEach((entity) => {
+      const transformId = engine.entities[entity][TransformComponent.id];
+      const transform: TransformComponent = engine.ecs.getComponentValues(
+        transformId,
+        TransformComponent,
+      );
+      const mesh = engine.ecs.getComponentValues(
+        engine.entities[entity][MeshComponent.id],
+        MeshComponent,
+      );
 
-    const query = engine.query(MeshComponent, TransformComponent);
-    const accessor = engine.ecs.createFieldAccessor(
-      MeshComponent,
-      "resourceIdentifier",
-    );
+      console.log(transform);
 
-    query.forEach((entity) => {
-      const compInstanceId = engine.entities[entity][MeshComponent.id];
+      this.calculateTransformMatrix(transform, transformId, engine);
 
-      const resourceId = accessor.get(compInstanceId);
+      console.log(
+        engine.ecs.getComponentValue(entity, TransformComponent, "matrix"),
+      );
 
-      if (resourceId == "primitive:cube") {
-        engine.ecs.setComponentValue(
-          compInstanceId,
-          MeshComponent,
-          "meshId",
-          this.uploadMesh(engine, compInstanceId),
-        );
-      }
+      console.log(transform);
 
-      log_component(engine, entity, MeshComponent);
+      engine.ecs.setComponentValue(
+        engine.entities[entity][MeshComponent.id],
+        MeshComponent,
+        "meshId",
+        this.renderer._instantiate(
+          0,
+          transform.matrix,
+          new Float32Array([1, 1, 1, 1]),
+        ),
+      );
     });
-
-    this.engine = engine;
-    this.meshTransformComponentId =
-      engine.entities[query[0]][TransformComponent.id];
-
-    this.mesh = engine.ecs.getComponentValues(
-      engine.entities[query[0]][MeshComponent.id],
-      MeshComponent,
-    );
-    this.meshTransform = engine.ecs.getComponentValues(
-      this.meshTransformComponentId,
-      TransformComponent,
-    );
-
-    const mesh_meshId_Accesor = engine.ecs.createFieldAccessor(
-      MeshComponent,
-      "meshId",
-    );
-    this.mesh_meshId_Accesor = mesh_meshId_Accesor;
-
-    const cameraEntity = engine.query(CameraComponent, TransformComponent)[0];
-
-    console.log(
-      cameraEntity,
-      engine.entities[cameraEntity],
-      CameraComponent.id,
-      TransformComponent.id,
-      engine.entities[cameraEntity][CameraComponent.id],
-    );
-
-    this.cameraComponentId = engine.entities[cameraEntity][CameraComponent.id];
-    this.cameraTransformComponentId =
-      engine.entities[cameraEntity][TransformComponent.id];
-
-    // engine.query(MaterialComponent).forEach((entity) => {
-    //   const materialComp = entity.getComponent(MaterialComponent)!;
-    //   materialComp.material.start();
-    // });
   }
 
   calculateBoundingBox(
@@ -185,18 +167,13 @@ export class RenderSystem extends System {
     let transformMatrix = mat4.multiply(translationMatrix, rotationMatrix);
     transformMatrix = mat4.multiply(transformMatrix, scaleMatrix);
 
-    // Write the matrix back to the ECS
-    engine.ecs.setComponentValue(
-      componentId,
-      TransformComponent,
-      "matrix",
-      transformMatrix,
-    );
+    console.log(t.matrix);
+    t.matrix.set(transformMatrix);
   }
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(renderer: Helios2Renderer) {
     super();
-    this.renderer = new IndirectRenderer(canvas);
+    this.renderer = renderer;
   }
 
   uploadMesh(engine: Engine, componentId: number) {
@@ -212,7 +189,11 @@ export class RenderSystem extends System {
       "boundingBoxMax",
     );
     this.calculateBoundingBox(cubeData.vertices, max, min);
-    return this.renderer.uploadMesh(cubeData.vertices, cubeData.indices);
+    return this.renderer.uploadMesh(
+      cubeData.vertices,
+      cubeData.indices,
+      cubeData.normals,
+    );
   }
 }
 

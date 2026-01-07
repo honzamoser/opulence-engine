@@ -3,7 +3,7 @@ import { Entity } from "../entity";
 
 export abstract class System {
   public abstract update?(
-    entities: Entity[],
+    entities: Array<number[]>,
     delta: number,
     engine: Engine,
   ): void;

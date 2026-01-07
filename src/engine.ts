@@ -1,17 +1,13 @@
-import { Entity } from "./entity";
-import { InputHandler } from "./input";
 import { startLifecycle } from "./lifecycle";
 import { vec2, vec3, Vec3 } from "wgpu-matrix";
 import { Renderer } from "./renderer/renderer";
-import { Mesh } from "./renderer/mesh";
-import { Light } from "./renderer/light";
 import { System } from "./ecs/system";
 import { Component } from "./ecs/component";
 import { PointerManager } from "./data/arrayBufferPointer";
 import { ClassConstructor, ECS } from "./opulence-ecs/ecs";
 
 export class Engine extends EventTarget {
-  entities: [][] = [];
+  entities: Array<number[]> = [];
   systems: System[] = [];
 
   renderer: Renderer;
@@ -69,7 +65,7 @@ export class Engine extends EventTarget {
   public on = this.addEventListener;
 
   query(...componentTypes: (new (...args: any[]) => Component)[]): number[] {
-    const ids = componentTypes.map((ct) => ct.id);
+    const ids = componentTypes.map((ct) => (ct as any).id);
     const result: number[] = [];
 
     for (let i = 0; i < this.entities.length; i++) {
@@ -94,10 +90,10 @@ export class Engine extends EventTarget {
   addComponent<T extends Component>(
     entityId: number,
     component: ClassConstructor<T>,
-    args: any[],
+    args: any[] = [],
   ) {
-    const componentTypeid = component.id;
-    const componentId = this.ecs.pushComponent<T>(component, args);
+    const componentTypeid = (component as any).id as number;
+    const componentId = this.ecs.pushComponent<T>(component, args) as number;
 
     this.entities[entityId][componentTypeid] = componentId;
   }

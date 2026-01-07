@@ -8,22 +8,22 @@ export default defineConfig({
     svelte({
       include: "src/editor/**.svelte",
     }),
-    swc({
-      sourceMaps: true,
-      jsc: {
-        parser: {
-          syntax: "typescript",
-          decorators: true,
-          dynamicImport: true,
-        },
-        transform: {
-          // legacyDecorator: true,
-          decoratorMetadata: true,
-        },
-        target: "esnext",
-        keepClassNames: true,
-      },
-    }),
+    // swc({
+    //   sourceMaps: true,
+    //   jsc: {
+    //     parser: {
+    //       syntax: "typescript",
+    //       decorators: true,
+    //       dynamicImport: true,
+    //     },
+    //     transform: {
+    //       // legacyDecorator: true,
+    //       decoratorMetadata: true,
+    //     },
+    //     target: "esnext",
+    //     keepClassNames: true,
+    //   },
+    // }),
   ],
   optimizeDeps: {
     esbuildOptions: {

@@ -15,7 +15,7 @@ export class Entity {
     ComponentClass: C,
     ...args: ConstructorParameters<C>
   ): InstanceType<C> {
-    const componentId = this.world.ecs.createComponent(ComponentClass);
+    const componentId = this.world.ecs._initializeComponent(ComponentClass);
     this.components.set(ComponentClass, componentId);
   }
 
@@ -23,7 +23,7 @@ export class Entity {
     type: new (...args: any[]) => T,
   ): T | undefined {
     console.log(this.components);
-    return this.world.ecs.getComponent(type, this.components.get(type));
+    return this.world.ecs.getComponentValues(type, this.components.get(type));
   }
 
   hasComponent<T extends Component>(type: new (...args: any[]) => T): boolean {

@@ -12,6 +12,8 @@
 		"reflect-metadata": "^0.2.2",
 		"rollup-plugin-swc3": "^0.12.1",
 		"svelte": "^5.46.0",
+		"ts-morph": "^27.0.2",
+		"typescript": "^5.9.3",
 		"wgpu-matrix": "^3.4.0",
 		"wgsl-debug": "^0.0.1"
 	}

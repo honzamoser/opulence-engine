@@ -1,10 +1,5 @@
 import "./component-gen";
 import { dataType, dynamic, serializable } from "./component-gen";
-import Module from "module";
-import { Allocator } from "./allocator";
-import { log } from "console";
-import TransformComponent from "../../game_src/components/transform";
-import MeshComponent from "../../game_src/components/mesh";
 import { Serializable } from "./component-gen";
 import StringSerializer from "./serializers/stringSerializer";
 import { Float32Serializer } from "./serializers/float32Serializer";
@@ -13,7 +8,7 @@ import { Int32Serializer } from "./serializers/int32Serializer";
 import { BooleanSerializer } from "./serializers/booleanSerializer";
 import { Component } from "../ecs/component";
 
-type ComponentEntry = {
+export type ComponentEntry = {
   bufferMap: { [index: string]: BufferMap };
   stride: number;
   id: number;
@@ -40,10 +35,9 @@ export type PropertyValues = {
   size?: number;
 };
 
-const componentPaths = ["../game_src/components", "ecs/components"];
-
 export class ECS {
   componentRegistry: ClassConstructor<Component>[] = [];
+  static instance: ECS;
 
   componentMemory: {
     buffer: ArrayBuffer;
@@ -61,9 +55,11 @@ export class ECS {
     this.serializers[dataType.float32Array] = new Float32ArraySerializer();
     this.serializers[dataType.int32] = new Int32Serializer();
     this.serializers[dataType.boolean] = new BooleanSerializer();
+
+    ECS.instance = this;
   }
 
-  getComponentById(id: number) {
+  _getComponentConstructorById(id: number) {
     return this.componentRegistry[id];
   }
 
@@ -72,26 +68,28 @@ export class ECS {
 
     for (const componentImport in components) {
       const module = (await components[componentImport]()) as any;
-      const bm: ComponentEntry = this.createBufferMap(module.default);
+      const bm: ComponentEntry = this._createComponentBufferMap(module.default);
       console.log(bm);
 
-      this.createComponent(bm);
+      this._initializeComponent(bm);
     }
   }
 
   async loadNativeComponents() {
     const components = import.meta.glob(`../ecs/components/*.ts`);
 
+    console.log(components);
+
     for (const componentImport in components) {
       const module = (await components[componentImport]()) as any;
-      const bm: ComponentEntry = this.createBufferMap(module.default);
+      const bm: ComponentEntry = this._createComponentBufferMap(module.default);
       console.log(bm);
 
-      this.createComponent(bm);
+      this._initializeComponent(bm);
     }
   }
 
-  createComponent(buffermap: ComponentEntry) {
+  _initializeComponent(buffermap: ComponentEntry) {
     const buffer = new ArrayBuffer(buffermap.stride * 64);
     return this.componentMemory.push({
       buffer,
@@ -104,7 +102,9 @@ export class ECS {
     });
   }
 
-  createBufferMap(module: ClassConstructor<Component>): ComponentEntry {
+  _createComponentBufferMap(
+    module: ClassConstructor<Component>,
+  ): ComponentEntry {
     const metadata = (module as any)[Symbol.metadata];
 
     let properties: PropertyValues[] = metadata.properties;
@@ -142,8 +142,8 @@ export class ECS {
 
     console.log();
 
-    module.id = memoryIndex;
-    module.bufferMap = value;
+    (module as any).id = memoryIndex;
+    (module as any).bufferMap = value;
 
     this.componentRegistry[memoryIndex] = module;
 
@@ -151,7 +151,7 @@ export class ECS {
   }
 
   createFieldAccessor(component: ClassConstructor<Component>, field: string) {
-    const bufferMap = component.bufferMap as ComponentEntry;
+    const bufferMap = (component as any).bufferMap as ComponentEntry;
     const prop = bufferMap.bufferMap[field];
     const views = this.componentMemory[bufferMap.id].views;
     const stride = bufferMap.stride;
@@ -170,45 +170,12 @@ export class ECS {
     };
   }
 
-  createComponentAccessor<T extends Component>(component: ClassConstructor<T>) {
-    const bufferMap = component.bufferMap as ComponentEntry;
-    const views = this.componentMemory[bufferMap.id].views;
-    const stride = bufferMap.stride;
-
-    return {
-      get: (instanceId: number, field: string) => {
-        const prop = bufferMap.bufferMap[field];
-        const offset = prop.offset;
-
-        const deser = this.serializers[prop.type];
-
-        return deser.deserialize(
-          views,
-          instanceId * stride + offset,
-          prop.byteLength,
-        );
-      },
-      set: (instanceId: number, field: string, value: any) => {
-        const prop = bufferMap.bufferMap[field];
-        const offset = prop.offset;
-
-        const ser = this.serializers[prop.type];
-        ser.serializeTo(
-          value,
-          views,
-          instanceId * stride + offset,
-          prop.byteLength,
-        );
-      },
-    };
-  }
-
   getComponentValue<T extends Component>(
     componentId: number,
     componentTypes: ClassConstructor<T>,
     componentField: string,
   ) {
-    const bufferMap = componentTypes.bufferMap as ComponentEntry;
+    const bufferMap = (componentTypes as any).bufferMap as ComponentEntry;
 
     const prop = bufferMap.bufferMap[componentField];
     let offset = componentId * bufferMap.stride + prop.offset;
@@ -224,36 +191,12 @@ export class ECS {
     return v;
   }
 
-  getComponentValues<T extends Component>(
-    componentId: number,
-    ComponentType: ClassConstructor<T>,
-  ): T {
-    const bufferMap = ComponentType.bufferMap as ComponentEntry;
-    const values: any = {};
-
-    Object.entries(bufferMap.bufferMap).forEach(([fieldName, prop]) => {
-      let offset = componentId * bufferMap.stride + prop.offset;
-      let length = prop.byteLength;
-
-      const deser = this.serializers[prop.type];
-      const v = deser.deserialize(
-        this.componentMemory[bufferMap.id].views,
-        offset,
-        length,
-      );
-
-      values[fieldName] = v;
-    });
-
-    return values as T;
-  }
-
   getComponentValueSubarray<T extends Component>(
     componentId: number,
     componentTypes: ClassConstructor<T>,
     componentField: string,
   ) {
-    const bufferMap = componentTypes.bufferMap as ComponentEntry;
+    const bufferMap = (componentTypes as any).bufferMap as ComponentEntry;
 
     const prop = bufferMap.bufferMap[componentField];
     let offset = componentId * bufferMap.stride + prop.offset;
@@ -271,7 +214,7 @@ export class ECS {
     componentField: string,
     value: any,
   ) {
-    const bufferMap = componentTypes.bufferMap as ComponentEntry;
+    const bufferMap = (componentTypes as any).bufferMap as ComponentEntry;
 
     const prop = bufferMap.bufferMap[componentField];
     let offset = componentId * bufferMap.stride + prop.offset;
@@ -290,7 +233,8 @@ export class ECS {
     component: ClassConstructor<T>,
     constructionArgs: ClassConstructionArguments<T>,
   ) {
-    const bufferMap = component.bufferMap;
+    // console.log("Pushing component " + component);
+    const bufferMap = (component as any).bufferMap;
     if (!bufferMap) {
       throw new Error(`Component of type ${component.name} is not registered.`);
     }
@@ -338,7 +282,7 @@ export class ECS {
     componentType: ClassConstructor<T>,
     index: number,
   ): T | null {
-    const bufferMap = componentType.bufferMap;
+    const bufferMap = (componentType as any).bufferMap;
     if (!bufferMap) {
       throw new Error(
         `Component of type ${componentType.name} is not registered.`,
@@ -354,7 +298,7 @@ export class ECS {
       console.log(prop);
 
       if (prop.pointer) {
-        console.log(`Retrieving pointer for ${prop.name}`);
+        // console.log(`Retrieving pointer for ${prop.name}`);
       } else {
         const serializer = this.serializers[prop.type];
         (component as any)[x[0]] = serializer.deserialize(
@@ -367,6 +311,30 @@ export class ECS {
     });
 
     return component;
+  }
+
+  getComponentValues<T extends Component>(
+    componentId: number,
+    ComponentType: ClassConstructor<T>,
+  ): T {
+    const bufferMap = (ComponentType as any).bufferMap as ComponentEntry;
+    const values: any = {};
+
+    Object.entries(bufferMap.bufferMap).forEach(([fieldName, prop]) => {
+      let offset = componentId * bufferMap.stride + prop.offset;
+      let length = prop.byteLength;
+
+      const deser = this.serializers[prop.type];
+      const v = deser.deserialize(
+        this.componentMemory[bufferMap.id].views,
+        offset,
+        length,
+      );
+
+      values[fieldName] = v;
+    });
+
+    return values as T;
   }
 }
 

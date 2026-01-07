@@ -1,6 +1,6 @@
 import { mat4, Mat4, Vec3, vec3, Vec4 } from "wgpu-matrix";
 import shaderCode from "./shader.wgsl?raw";
-import MeshComponent from "../ecs/components/mesh";
+import MeshComponent from "../ecs/components/mesh.component";
 
 export type Helios2_Buffers = {
   vertex: GPUBuffer; // Vertices
@@ -148,7 +148,7 @@ export class Helios2Renderer {
 
       this.readbackBuf.mapAsync(GPUMapMode.READ).then(() => {
         const array = new Uint32Array(this.readbackBuf.getMappedRange());
-        console.log("Culled draw calls: ", Uint32Array.from(array));
+        // console.log("Culled draw calls: ", Uint32Array.from(array));
         this.readbackBuf.unmap();
       });
     }, 1000);
@@ -460,7 +460,7 @@ export class Helios2Renderer {
     if (!this.adapter) throw new Error("No suitable GPU adapter found.");
 
     this.device = await this.adapter.requestDevice({
-      requiredFeatures: ["chromium-experimental-multi-draw-indirect"],
+      requiredFeatures: ["chromium-experimental-multi-draw-indirect"] as any,
     });
 
     // Add error handling for uncaptured errors

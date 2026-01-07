@@ -37,8 +37,14 @@ export function dynamic<T>(dataType: dataType, maxSize: number | null = null) {
     target: undefined,
     context: ClassFieldDecoratorContext<This, Value>,
   ) {
+    
+    // Get the metadata properties from the context
     const properties: any[] = (context.metadata["properties"] as any[]) || [];
+
+    // Get the specific property
     const propIndex = properties.findIndex((p) => p.name === context.name);
+
+    // If the property is already defined, update it; otherwise, add a new one
     if (propIndex >= 0) {
       properties[propIndex].type = dataType;
       properties[propIndex].size = maxSize;
@@ -51,7 +57,6 @@ export function dynamic<T>(dataType: dataType, maxSize: number | null = null) {
     }
 
     context.metadata["properties"] = properties;
-    // Standard decorators for fields usually return the initial value (or void to leave it unchanged)
     return target;
   };
 }

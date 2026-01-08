@@ -146,6 +146,9 @@ engine.load().then(() => {
     }, 1000);
 
     requestAnimationFrame(frame);
+
+    // const test = new TransformComponent();
+    // console.log(test.matrix);
   });
 });
 

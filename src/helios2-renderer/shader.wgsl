@@ -114,9 +114,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
                     // Light Setup
                     // Light rotates around center at a distance of 10
                     let lightPos = vec3<f32>(
-                        10.0 * cos(uniforms.time / 1000),
+                        10.0,//  * cos(uniforms.time / 1000),
                         10.0,
-                        10.0 * sin(uniforms.time / 1000)
+                        10.0, // * sin(uniforms.time / 1000)
                     );
                     let lightColor = vec3<f32>(1.0, 1.0, 1.0);
                     let lightRange = 100.0;

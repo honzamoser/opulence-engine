@@ -11,5 +11,5 @@ export default class CameraComponent extends Component {
   far: number = 1000;
 
   @hot.float32Array(16)
-  static projectionMatrix: Mat4 = mat4.create();
+  projectionMatrix: Mat4 = mat4.create();
 }

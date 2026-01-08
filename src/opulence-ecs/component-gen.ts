@@ -57,6 +57,17 @@ export function dynamic<T>(dataType: dataType, maxSize: number | null = null) {
     }
 
     context.metadata["properties"] = properties;
+
+    context.access.get = () => {
+      return "Hello" as any;
+    }
+    console.log(context.access)
+
+    //set a custom getter for the property
+
+    
+
+    
     return target;
   };
 }

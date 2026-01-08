@@ -5,6 +5,5 @@
     "moduleResolution": "bundler",
     "module": "ESNext",
     "useDefineForClassFields": false,
-  },
-  "reflection": true,
+  }
 }

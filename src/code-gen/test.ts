@@ -1,4 +1,5 @@
 import { Project, SyntaxKind, Scope, VariableDeclarationKind, SourceFile } from "ts-morph";
+import * as ts from "typescript"
 import * as path from "path";
 import * as fs from "fs";
 
@@ -17,7 +18,7 @@ const project = new Project({
 });
 
 // Add source files
-const sourceFiles = project.addSourceFilesAtPaths(COMPONENT_GLOB_PATTERNS);
+const sourceFiles = project.addSourceFilesAtPaths("src/ecs/components/transform.component.ts");
 
 console.log(`Found ${sourceFiles.length} component files to process\n`);
 
@@ -247,19 +248,33 @@ project.emit({
 });
 
 function visitSourceFile(
-  sourceFile: SourceFile,
-  context: any,
-  visitNode: (node: Node, context: any) => Node,
+  sourceFile: ts.SourceFile,
+  context: ts.TransformationContext,
+  visitNode: (node: ts.Node, context: ts.TransformationContext) => ts.Node,
 ) {
-  return visitNodeAndChildren(sourceFile) as SourceFile;
 
-  function visitNodeAndChildren(node: Node): Node {
-    return visitEachChild(visitNode(node, context), visitNodeAndChildren, context);
+  console.log(sourceFile.text)
+
+  return visitNodeAndChildren(sourceFile) as ts.SourceFile;
+
+  function visitNodeAndChildren(node: ts.Node): ts.Node {
+    return ts.visitEachChild(visitNode(node, context), visitNodeAndChildren, context);
   }
 }
 
 function numericLiteralToStringLiteral(node: ts.Node, context: ts.TransformationContext) {
-  if (ts.isNumericLiteral(node))
-    return context.factory.createStringLiteral(node.text);
+  if (ts.isClassDeclaration(node)) {
+    console.log("Found class declaration:", node.name?.getText());
+
+    node.forEachChild(member => {
+      if (ts.isPropertyDeclaration(member)) {
+        // Check if the property has decorators
+        ts.getDecorators(member)?.forEach(decorator => {
+          ts.factory.updateGetAccessorDeclaration(member, undefined, undefined, member.name, [], undefined, ts.factory.createBlock([ts.factory.createReturnStatement(ts.factory.createStringLiteral("Transformed Value"))], true));
+          console.log("  Found decorator on property:", member.name.getText());
+        });
+      }
+    });
+  }
   return node;
 }

@@ -1,4 +1,4 @@
-import { hot } from "../../opulence-ecs/component-gen";
+import { hot } from "../component-gen";
 import { Component } from "../component";
 
 export default class MaterialComponent extends Component {

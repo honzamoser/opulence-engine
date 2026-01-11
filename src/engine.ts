@@ -4,13 +4,14 @@ import { Renderer } from "./renderer/renderer";
 import { System } from "./ecs/system";
 import { Component } from "./ecs/component";
 import { PointerManager } from "./data/arrayBufferPointer";
-import { ClassConstructor, ECS } from "./opulence-ecs/ecs";
+import { ClassConstructor, ECS } from "./ecs/ecs";
+import { Helios2Renderer } from "./renderer/renderer";
 
 export class Engine extends EventTarget {
   entities: Array<number[]> = [];
   systems: System[] = [];
 
-  renderer: Renderer;
+  renderer: Helios2Renderer;
   pointerManager: PointerManager;
 
   canvas: HTMLCanvasElement;
@@ -62,6 +63,10 @@ export class Engine extends EventTarget {
     return this.entities.push([]) - 1;
   }
 
+  ofEntity(id: number) {
+    return this.entities[id];
+  }
+
   public on = this.addEventListener;
 
   query(...componentTypes: (new (...args: any[]) => Component)[]): number[] {
@@ -96,5 +101,7 @@ export class Engine extends EventTarget {
     const componentId = this.ecs.pushComponent<T>(component, args) as number;
 
     this.entities[entityId][componentTypeid] = componentId;
+
+    return componentId;
   }
 }

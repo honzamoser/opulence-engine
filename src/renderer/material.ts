@@ -1,6 +1,6 @@
 import { vec4, Vec4 } from "wgpu-matrix";
 import { Renderer } from "./renderer";
-import { Shader } from "./shader";
+import { Shader } from "../renderer/shader";
 
 export class Material {
   shader: Shader;

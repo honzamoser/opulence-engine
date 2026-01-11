@@ -1,5 +1,5 @@
 import { vec3, Vec3 } from "wgpu-matrix";
-import { constructor, hot } from "../../opulence-ecs/component-gen";
+import { constructor, hot } from "../component-gen";
 import { Component } from "../component";
 
 export default class MeshComponent extends Component {

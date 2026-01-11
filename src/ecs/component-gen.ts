@@ -58,11 +58,6 @@ export function dynamic<T>(dataType: dataType, maxSize: number | null = null) {
 
     context.metadata["properties"] = properties;
 
-    context.access.get = () => {
-      return "Hello" as any;
-    }
-    console.log(context.access)
-
     //set a custom getter for the property
 
     
@@ -134,3 +129,28 @@ export const cold = {
 
 export const heap = cold;
 export const stack = hot;
+
+export function namespace(ns: string) {
+  // 'target' IS the class constructor
+  return function (target: any, context: ClassDecoratorContext) {
+    
+    // 1. Register the class immediately.
+    // We use 'target' directly, avoiding all 'this' and scope issues.
+    // const manager = NamespaceManager.instance;
+    
+    // if (!manager.namespaces.has(ns)) {
+    //    manager.namespaces.set(ns, target);
+    // }
+
+    // 2. Return the class unchanged.
+    // This ensures the compiler doesn't try to generate a wrapper/proxy class,
+    // which prevents the "super()" error from ever happening.
+    return target;
+  };
+}
+
+// export class NamespaceManager {
+//   static instance = new NamespaceManager();
+
+//   namespaces: Map<string, number> = new Map();
+// }

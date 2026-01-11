@@ -15,7 +15,6 @@ export class Float32ArraySerializer extends Serializable<
     offset: number,
     byteLength: number,
   ): Float32Array<ArrayBufferLike> {
-    console.log("Returning subarray of ", offset, byteLength);
     return views.Float32View.subarray(offset / 4, offset / 4 + byteLength / 4);
   }
 

@@ -3,7 +3,7 @@ import {
   hot,
   Serializable,
   serializable,
-} from "../../src/opulence-ecs/component-gen";
+} from "../../src/ecs/component-gen";
 
 @serializable
 class SerializableVec2 extends Serializable<SerializableVec2> {

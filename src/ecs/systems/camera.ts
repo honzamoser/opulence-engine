@@ -4,7 +4,9 @@ import { Entity } from "../../entity";
 import CameraComponent from "../components/camera";
 import { System } from "../system";
 import TransformComponent from "../components/transform";
+import { namespace } from "../component-gen";
 
+@namespace("builtin.render.Camera")
 export class CameraSystem extends System {
   deb = document.getElementById("rotation");
 

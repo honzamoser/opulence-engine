@@ -6,7 +6,7 @@ import { Float32Serializer } from "./serializers/float32Serializer";
 import { Float32ArraySerializer } from "./serializers/float32ArraySerializer";
 import { Int32Serializer } from "./serializers/int32Serializer";
 import { BooleanSerializer } from "./serializers/booleanSerializer";
-import { Component } from "../ecs/component";
+import { Component } from "./component";
 
 export type ComponentEntry = {
   bufferMap: { [index: string]: BufferMap };
@@ -177,6 +177,8 @@ export class ECS {
   ) {
     const bufferMap = (componentTypes as any).bufferMap as ComponentEntry;
 
+    console.log(bufferMap.bufferMap)
+
     const prop = bufferMap.bufferMap[componentField];
     let offset = componentId * bufferMap.stride + prop.offset;
     let length = prop.byteLength;
@@ -278,7 +280,7 @@ export class ECS {
     return instanceId;
   }
 
-  getComponent<T extends Component>(
+  getNewComponentInstance<T extends Component>(
     componentType: ClassConstructor<T>,
     index: number,
   ): T | null {
@@ -335,6 +337,36 @@ export class ECS {
     });
 
     return values as T;
+  }
+
+  __getComponent(type: ClassConstructor<Component>, id: number) {
+    const bufferMap = (type as any).bufferMap;
+    if (!bufferMap) {
+      throw new Error(
+        `Component of type ${type.name} is not registered.`,
+      );
+    }
+
+    const component = type.componentAccessInstance;
+
+    Object.entries(bufferMap.bufferMap).forEach((x: [string, BufferMap]) => {
+      const prop = x[1];
+      let offset = id * bufferMap.stride + prop.offset;
+
+      if (prop.pointer) {
+        // console.log(`Retrieving pointer for ${prop.name}`);
+      } else {
+        const serializer = this.serializers[prop.type];
+        (component as any)[x[0]] = serializer.deserialize(
+          this.componentMemory[bufferMap.id].views,
+          offset,
+          prop.byteLength,
+        );
+      }
+      offset += prop.byteLength;
+    });
+
+    return component;
   }
 }
 

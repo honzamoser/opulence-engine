@@ -1,7 +1,7 @@
 import { Component } from "../ecs/component";
 import MeshComponent from "../ecs/components/mesh";
 import { Engine } from "../engine";
-import { ClassConstructor } from "../opulence-ecs/ecs";
+import { ClassConstructor } from "../ecs/ecs";
 
 export function log_entity(engine: Engine, entityId: number) {
   const components = engine.entities[entityId];

@@ -75,4 +75,7 @@ export default defineConfig({
   },
   assetsInclude: ["**/*.wgsl", "**/*.glb", "**/*.gltf", "**/*.png", "**/*.jpg"],
   publicDir: "resources",
+  esbuild: {
+    target: "es2022",
+  }
 });

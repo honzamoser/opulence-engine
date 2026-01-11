@@ -12,9 +12,11 @@ import { Material } from "../../renderer/material";
 import { log_component } from "../../debug/ecs_debug";
 
 import { IndirectRenderer } from "../../renderer/indirectRenderer";
-import { Helios2Renderer } from "../../helios2-renderer/renderer";
+import { Helios2Renderer } from "../../renderer/renderer";
+import { namespace } from "../component-gen";
 
-export class RenderSystem extends System {
+@namespace("builtin.render.RenderSystem")
+export default class RenderSystem extends System {
   materials: Material[] = [];
 
   registerMaterial(defaultMaterial: Material) {
@@ -33,7 +35,7 @@ export class RenderSystem extends System {
   meshTransformComponentId: number | null = null;
   engine: Engine | null = null;
 
-  public async update(entities: Entity[], delta: number, engine: Engine) {
+  public async update(entities: number[][], delta: number, engine: Engine) {
     // if (!this.renderer.ready) return;
     // if (!this.mesh || !this.meshTransform) return;
     // const projectionMatrix = engine.ecs.getComponentValue(
@@ -75,9 +77,14 @@ export class RenderSystem extends System {
     //
     //
 
+    
     engine.query(MeshComponent, TransformComponent).forEach((entity) => {
+      
       const meshId = engine.entities[entity][MeshComponent.id];
       const transformId = engine.entities[entity][TransformComponent.id];
+
+
+
       const transform: TransformComponent = engine.ecs.getComponentValues(
         transformId,
         TransformComponent,
@@ -87,51 +94,58 @@ export class RenderSystem extends System {
         MeshComponent,
       );
 
+
+
+      if(mesh.meshId === 0) {
+        this.instantiate(engine, entity);
+        return;
+      }
+
+      
       this.calculateTransformMatrix(transform, transformId, engine);
+      
 
       this.renderer._updateMatrix(mesh.meshId, transform.matrix);
     });
+
+    this.renderer.render(delta);
   }
 
   afterUpdate(engine: Engine) {}
 
-  vertexBuffers: GPUBuffer[] = [];
+  // vertexBuffers: GPUBuffer[] = [];
 
   public async start(engine: Engine) {
     const meshEntities = engine.query(MeshComponent, TransformComponent);
 
     meshEntities.forEach((entity) => {
-      const transformId = engine.entities[entity][TransformComponent.id];
-      const transform: TransformComponent = engine.ecs.getComponentValues(
-        transformId,
-        TransformComponent,
-      );
-      const mesh = engine.ecs.getComponentValues(
-        engine.entities[entity][MeshComponent.id],
-        MeshComponent,
-      );
-
-      console.log(transform);
-
-      this.calculateTransformMatrix(transform, transformId, engine);
-
-      console.log(
-        engine.ecs.getComponentValue(entity, TransformComponent, "matrix"),
-      );
-
-      console.log(transform);
-
-      engine.ecs.setComponentValue(
-        engine.entities[entity][MeshComponent.id],
-        MeshComponent,
-        "meshId",
-        this.renderer._instantiate(
-          0,
-          transform.matrix,
-          new Float32Array([1, 1, 1, 1]),
-        ),
-      );
+      this.instantiate(engine, entity);
     });
+  }
+
+  private instantiate(engine: Engine, entity: number) {
+    const transformId = engine.entities[entity][TransformComponent.id];
+    const transform: TransformComponent = engine.ecs.getComponentValues(
+      transformId,
+      TransformComponent
+    );
+    const mesh = engine.ecs.getComponentValues(
+      engine.entities[entity][MeshComponent.id],
+      MeshComponent
+    );
+
+    this.calculateTransformMatrix(transform, transformId, engine);
+
+    engine.ecs.setComponentValue(
+      engine.entities[entity][MeshComponent.id],
+      MeshComponent,
+      "meshId",
+      this.renderer._instantiate(
+        0,
+        transform.matrix,
+        new Float32Array([1, 1, 1, 1])
+      ) + 1
+    );
   }
 
   calculateBoundingBox(
@@ -167,7 +181,6 @@ export class RenderSystem extends System {
     let transformMatrix = mat4.multiply(translationMatrix, rotationMatrix);
     transformMatrix = mat4.multiply(transformMatrix, scaleMatrix);
 
-    console.log(t.matrix);
     t.matrix.set(transformMatrix);
   }
 

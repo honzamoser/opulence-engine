@@ -1,6 +1,6 @@
 import { mat4, Mat4, vec3, Vec3 } from "wgpu-matrix";
 import { Component } from "../component";
-import { hot } from "../../opulence-ecs/component-gen";
+import { hot } from "../component-gen";
 
 export default class CameraComponent extends Component {
   @hot.float32

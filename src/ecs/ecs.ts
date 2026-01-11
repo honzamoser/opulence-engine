@@ -69,7 +69,6 @@ export class ECS {
     for (const componentImport in components) {
       const module = (await components[componentImport]()) as any;
       const bm: ComponentEntry = this._createComponentBufferMap(module.default);
-      console.log(bm);
 
       this._initializeComponent(bm);
     }
@@ -78,12 +77,9 @@ export class ECS {
   async loadNativeComponents() {
     const components = import.meta.glob(`../ecs/components/*.ts`);
 
-    console.log(components);
-
     for (const componentImport in components) {
       const module = (await components[componentImport]()) as any;
       const bm: ComponentEntry = this._createComponentBufferMap(module.default);
-      console.log(bm);
 
       this._initializeComponent(bm);
     }
@@ -347,7 +343,7 @@ export class ECS {
       );
     }
 
-    const component = type.componentAccessInstance;
+    const component = (type as any).componentAccessInstance;
 
     Object.entries(bufferMap.bufferMap).forEach((x: [string, BufferMap]) => {
       const prop = x[1];

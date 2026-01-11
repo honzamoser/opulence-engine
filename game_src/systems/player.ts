@@ -33,7 +33,7 @@ export class PlayerSystem extends System {
     delta: number,
     engine: Engine,
   ): void {
-    // const transformComponent = engine.ecs.__getComponent(TransformComponent, this.c_playerEnt)!; // Získáme TransformComponent hráče
-    // transformComponent.position[2] -= 0.01 * delta; // Posuneme hráče vpřed podél osy Z
+    const transformComponent = engine.ecs.__getComponent(TransformComponent, this.c_playerEnt)!; // Získáme TransformComponent hráče
+    transformComponent.position[2] -= 0.01 * delta; // Posuneme hráče vpřed podél osy Z
   }
 }

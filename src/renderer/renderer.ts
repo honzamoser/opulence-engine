@@ -114,8 +114,6 @@ export class Helios2Renderer {
 
     this.aspect = this.canvas.width / this.canvas.height;
 
-    console.log(this.aspect);
-
     mat4.perspective(
       degToRad(90),
       this.aspect,

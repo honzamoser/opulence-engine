@@ -1,9 +1,8 @@
 import { mat4, vec3, Vec3 } from "wgpu-matrix";
 import { Engine } from "../../engine";
-import { Entity } from "../../entity";
-import CameraComponent from "../components/camera";
+import CameraComponent from "../components/camera.component";
 import { System } from "../system";
-import TransformComponent from "../components/transform";
+import TransformComponent from "../components/transform.component";
 import { namespace } from "../component-gen";
 
 @namespace("builtin.render.Camera")
@@ -11,19 +10,19 @@ export class CameraSystem extends System {
   deb = document.getElementById("rotation");
 
   public async update(
-    entities: Entity[],
+    entities: number[][],
     delta: number,
     engine: Engine,
   ): Promise<void> {
     const cameraEntity = engine.query(CameraComponent, TransformComponent)[0];
 
-    const cameraComponent = engine.ecs.getComponentValues(
-      cameraEntity,
+    const cameraComponent = engine.ecs.__getComponent(
       CameraComponent,
-    )!;
-    const transformComponent = engine.ecs.getComponentValues(
       cameraEntity,
+    )!;
+    const transformComponent = engine.ecs.__getComponent(
       TransformComponent,
+      cameraEntity,
     )!;
 
     engine.ecs.setComponentValue(
@@ -65,13 +64,5 @@ export class CameraSystem extends System {
     mat4.translate(view, vec3.negate(transform.position), view);
 
     return mat4.multiply(projection, view);
-  }
-
-  public async start(engine: Engine): Promise<void> {
-    // No initialization needed for camera system
-  }
-
-  public afterUpdate(engine: Engine): void {
-    // No cleanup needed
   }
 }

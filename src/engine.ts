@@ -1,6 +1,4 @@
 import { startLifecycle } from "./lifecycle";
-import { vec2, vec3, Vec3 } from "wgpu-matrix";
-import { Renderer } from "./renderer/renderer";
 import { System } from "./ecs/system";
 import { Component } from "./ecs/component";
 import { PointerManager } from "./data/arrayBufferPointer";

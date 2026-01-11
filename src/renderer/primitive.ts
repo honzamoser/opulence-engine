@@ -1,9 +1,7 @@
-import { Material } from "./material";
-// import { Mesh } from "./mesh";
-
 export function createDiamond(): {
   vertices: Float32Array;
   indices: Uint32Array;
+  normals: Float32Array;
 } {
   const vertices = new Float32Array([
     // Top vertex

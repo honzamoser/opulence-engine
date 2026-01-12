@@ -4,7 +4,6 @@
  * @returns
  */
 
-import "reflect-metadata";
 import { ComponentBufferViews } from "./ecs";
 
 // Polyfill for Symbol.metadata if not available
@@ -99,7 +98,6 @@ export const hot = {
   float32: dynamic<number>(dataType.float32, 4),
   boolean: dynamic<boolean>(dataType.boolean, 1),
   /**
-   *
    * @param maxSize number of ELEMENTS in the array (not bytes)
    */
   float32Array: (maxSize: number) =>
@@ -114,43 +112,25 @@ export const hot = {
   },
 };
 
+// TODO: Implement class serialization
 export function serializable(target: Function, context: ClassDecoratorContext) {
   console.log(target, context);
 }
 
-/**
- * Defines that the property should be uploaded to the Heap. This means the size of the value can change, but is slighlty less performant (cold).
- * The size of this property is always 4 bytes (UInt32 pointer).
- */
 export const cold = {
   string: dynamic<string>(dataType.string, null),
   float32Array: dynamic<Float32Array>(dataType.float32Array, null),
 };
 
+// Alternative namings
 export const heap = cold;
 export const stack = hot;
 
 export function namespace(ns: string) {
-  // 'target' IS the class constructor
   return function (target: any, context: ClassDecoratorContext) {
     
-    // 1. Register the class immediately.
-    // We use 'target' directly, avoiding all 'this' and scope issues.
-    // const manager = NamespaceManager.instance;
-    
-    // if (!manager.namespaces.has(ns)) {
-    //    manager.namespaces.set(ns, target);
-    // }
-
-    // 2. Return the class unchanged.
-    // This ensures the compiler doesn't try to generate a wrapper/proxy class,
-    // which prevents the "super()" error from ever happening.
+    // TODO: Implement namespace logic so that you can register systems from a scene file
     return target;
   };
 }
 
-// export class NamespaceManager {
-//   static instance = new NamespaceManager();
-
-//   namespaces: Map<string, number> = new Map();
-// }

@@ -1,4 +1,4 @@
-import { mat4, Mat4, Vec2, vec3, Vec3, vec4 } from "wgpu-matrix";
+/* import { mat4, Mat4, Vec2, vec3, Vec3, vec4 } from "wgpu-matrix";
 import { Entity } from "../entity";
 import { TransformComponent } from "../ecs/components/transform";
 import { Mesh } from "../renderer/mesh";
@@ -105,3 +105,4 @@ export function rayIntersectEntity(
     point: hitPoint,
   };
 }
+ */

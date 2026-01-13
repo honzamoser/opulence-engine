@@ -6,6 +6,8 @@ see [TODO](TODO.md) for the roadmap. A full re-write will come eventually if I m
 
 ## How to use
 
+For the Helios2 renderer you need to have the [Unsafe WwebGPU support](chrome://flags/#enable-unsafe-webgpu) flag enabled
+
 There is no package or anything yet. To build something with this, clone the repo and start making your game in game_src. It doesn't really matter where you make it as long as you build it behind Vite and import the engine. Also run npm install, even though there is only 1 real dependency.
 
 ## A bit of technical stuff

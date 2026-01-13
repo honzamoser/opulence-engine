@@ -1,5 +1,3 @@
-import { assert } from "@deepkit/type";
-
 export class PointerManager {
   getBuffer(pointerId: number): any {
     return this.buffers[pointerId];

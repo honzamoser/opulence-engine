@@ -8,23 +8,24 @@
 - [ ] **Animations**
 - [x] ECS
   - [ ] Data-oriented ECS
-    - [ ] Constructors
+    - [X] Constructors
     - [ ] Defragmentation
     - [ ] Cold storage allocation
-- [ ] Instancing
+    - [ ] Add checking that a component of the same name doesnt exist
+- [X] Instancing
 - [ ] Webassembly transition
 - [ ] Loading subsystem
     - [ ] Data saving serviceworker
-- [ ] **3D rendering**
-  - [ ] [Shadows](https://gemini.google.com/share/3c8fdf0e0dda)
-    - [ ] Directional Shadows
-    - [ ] Point Shadows
-    - [ ] Shadow baking?
-  - [x] [Material System](https://gemini.google.com/share/3c8fdf0e0dda)
-  - [x] Lighting System
-  - [ ] Dynamic buffer allocation (if they overflow)
-- [ ] Better shaders
-    - [ ] Dynamic shader loading
+- [X] **3D rendering** -> Moved to Helios renderer
+  - [ ] ~~[Shadows](https://gemini.google.com/share/3c8fdf0e0dda)~~
+    - [ ] ~~Directional Shadows~~
+    - [ ] ~~Point Shadows~~
+    - [ ] ~~Shadow baking?~~
+  - [x] ~~[Material System](https://gemini.google.com/share/3c8fdf0e0dda)~~
+  - [x] ~~Lighting System~~
+  - [ ] ~~Dynamic buffer allocation (if they overflow)~~
+- [ ] ~~Better shaders~~
+    - [ ] ~~Dynamic shader loading~~
 - [ ] Input handling
 - [ ] Launcher
 - [ ] Persistent data
@@ -37,3 +38,12 @@
       - [ ] Capsules
       - [ ] OBB
 - [ ] Editor
+
+
+// Helios renderer
+- [ ] Buffer manager
+  - [ ] Support multiple mesh pages
+
+- [ ] Frame Graph
+  - [ ] Render Passes
+  - [ ] Culling

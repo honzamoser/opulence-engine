@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "types": ["@webgpu/types", "wgpu-matrix", "vite/client"],
-    "target": "ESNext",
+    "target": "esnext",
     "moduleResolution": "bundler",
-    "module": "Preserve"
-  },
-  "reflection": true
+    "module": "ESNext",
+    "useDefineForClassFields": true,
+  }
 }

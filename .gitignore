@@ -6,3 +6,4 @@ dist/
 benchmark/
 archive/
 src/files/README-GLTF.md
+.github

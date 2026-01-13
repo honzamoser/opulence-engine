@@ -1,0 +1,773 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #252526;
+    --bg-tertiary: #2d2d30;
+    --bg-hover: #3e3e42;
+    --border-color: #3e3e42;
+    --text-primary: #cccccc;
+    --text-secondary: #969696;
+    --accent-blue: #007acc;
+    --accent-blue-hover: #1c97ea;
+    --accent-orange: #ce9178;
+    --accent-green: #4ec9b0;
+    --accent-red: #f48771;
+    --accent-yellow: #dcdcaa;
+    --toolbar-height: 32px;
+    --statusbar-height: 20px;
+}
+
+body {
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+        Arial, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    overflow: hidden;
+    height: 100vh;
+    font-size: 12px;
+}
+
+/* Toolbar */
+.toolbar {
+    height: var(--toolbar-height);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    gap: 6px;
+}
+
+.toolbar-logo {
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--accent-blue);
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.toolbar-logo::before {
+    content: "◆";
+    font-size: 14px;
+}
+
+.toolbar-menu {
+    display: flex;
+    gap: 2px;
+}
+
+.toolbar-menu-item {
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.15s;
+}
+
+.toolbar-menu-item:hover {
+    background: var(--bg-hover);
+}
+
+.toolbar-buttons {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+}
+
+.toolbar-button {
+    padding: 4px 10px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+    transition: all 0.15s;
+}
+
+.toolbar-button:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+}
+
+.toolbar-button.primary {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.toolbar-button.primary:hover {
+    background: var(--accent-blue-hover);
+}
+
+/* Main Container */
+.main-container {
+    display: flex;
+    height: calc(100vh - var(--toolbar-height) - var(--statusbar-height));
+}
+
+/* Left Panel - Hierarchy */
+.left-panel {
+    width: 220px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    height: 28px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+
+.panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+/* Scene Hierarchy Tree */
+.hierarchy-item {
+    padding: 4px 6px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-bottom: 1px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    user-select: none;
+}
+
+.hierarchy-item:hover {
+    background: var(--bg-hover);
+}
+
+.hierarchy-item.selected {
+    background: var(--accent-blue);
+}
+
+.hierarchy-item .icon {
+    width: 12px;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    color: var(--text-secondary);
+}
+
+.hierarchy-item.nested {
+    margin-left: 16px;
+}
+
+.hierarchy-item .expand {
+    cursor: pointer;
+    font-size: 8px;
+    width: 10px;
+    color: var(--text-secondary);
+}
+
+/* Center Panel - Viewport */
+.center-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+}
+
+.viewport-tabs {
+    height: 28px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: flex-end;
+    padding: 0 6px;
+    gap: 1px;
+}
+
+.viewport-tab {
+    padding: 6px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 11px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    transition: all 0.15s;
+}
+
+.viewport-tab:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.viewport-tab.active {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.viewport-content {
+    flex: 1;
+    background: var(--bg-primary);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.viewport-canvas {
+    width: 100%;
+    height: 100%;
+    background:
+        linear-gradient(
+            45deg,
+            #1a1a1a 25%,
+            transparent 25%,
+            transparent 75%,
+            #1a1a1a 75%,
+            #1a1a1a
+        ),
+        linear-gradient(
+            45deg,
+            #1a1a1a 25%,
+            transparent 25%,
+            transparent 75%,
+            #1a1a1a 75%,
+            #1a1a1a
+        );
+    background-size: 20px 20px;
+    background-position:
+        0 0,
+        10px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.viewport-controls {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    display: flex;
+    gap: 4px;
+}
+
+.viewport-control-btn {
+    width: 28px;
+    height: 28px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.15s;
+}
+
+.viewport-control-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+}
+
+.viewport-control-btn.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+/* Right Panel - Inspector */
+.right-panel {
+    width: 260px;
+    background: var(--bg-secondary);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.inspector-section {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.inspector-section-header {
+    padding: 6px 8px;
+    background: var(--bg-tertiary);
+    font-size: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.inspector-section-header:hover {
+    background: var(--bg-hover);
+}
+
+.inspector-section-content {
+    padding: 8px;
+}
+
+.inspector-field {
+    margin-bottom: 8px;
+}
+
+.inspector-field label {
+    display: block;
+    font-size: 9px;
+    color: var(--text-secondary);
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.inspector-field input,
+.inspector-field select {
+    width: 100%;
+    padding: 4px 6px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    color: var(--text-primary);
+    font-size: 11px;
+    outline: none;
+}
+
+.inspector-field input:focus,
+.inspector-field select:focus {
+    border-color: var(--accent-blue);
+}
+
+.inspector-field-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+
+.inspector-field-group input {
+    text-align: center;
+}
+
+.inspector-field-group label {
+    grid-column: 1 / -1;
+}
+
+/* Bottom Panel - Assets and Console */
+.bottom-panel {
+    height: 180px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.bottom-tabs {
+    height: 28px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: flex-end;
+    padding: 0 6px;
+    gap: 1px;
+}
+
+.bottom-tab {
+    padding: 6px 12px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 10px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    transition: all 0.15s;
+}
+
+.bottom-tab:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.bottom-tab.active {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.bottom-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.assets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 6px;
+    padding: 6px;
+}
+
+.asset-item {
+    aspect-ratio: 1;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    padding: 6px;
+}
+
+.asset-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+}
+
+.asset-item .icon {
+    font-size: 24px;
+    margin-bottom: 3px;
+}
+
+.asset-item .name {
+    font-size: 9px;
+    text-align: center;
+    word-break: break-all;
+    color: var(--text-secondary);
+}
+
+/* Console */
+.console-content {
+    padding: 6px;
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
+    font-size: 10px;
+}
+
+.console-message {
+    padding: 3px 6px;
+    margin-bottom: 2px;
+    border-radius: 2px;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.console-message .icon {
+    width: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.console-message.log {
+    color: var(--text-primary);
+}
+
+.console-message.log .icon {
+    color: var(--text-secondary);
+}
+
+.console-message.warning {
+    background: rgba(206, 145, 120, 0.1);
+    color: var(--accent-orange);
+}
+
+.console-message.warning .icon {
+    color: var(--accent-orange);
+}
+
+.console-message.error {
+    background: rgba(244, 135, 113, 0.1);
+    color: var(--accent-red);
+}
+
+.console-message.error .icon {
+    color: var(--accent-red);
+}
+
+.console-message.success {
+    color: var(--accent-green);
+}
+
+.console-message.success .icon {
+    color: var(--accent-green);
+}
+
+/* Status Bar */
+.statusbar {
+    height: var(--statusbar-height);
+    background: var(--accent-blue);
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    font-size: 10px;
+    gap: 12px;
+}
+
+.statusbar-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.statusbar-separator {
+    width: 1px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-hover);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4e4e52;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Asset Tree */
+.assets-tree {
+    padding: 4px;
+}
+
+.asset-tree-item {
+    padding: 4px 6px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-bottom: 1px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    user-select: none;
+}
+
+.asset-tree-item:hover {
+    background: var(--bg-hover);
+}
+
+.asset-tree-item.selected {
+    background: var(--accent-blue);
+}
+
+.asset-tree-item .expand {
+    cursor: pointer;
+    font-size: 8px;
+    width: 10px;
+    color: var(--text-secondary);
+}
+
+.asset-tree-item .icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+.asset-tree-item .name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Explorer View */
+.explorer-sidebar {
+    width: 20%;
+    min-width: 150px;
+    max-width: 250px;
+    border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+    padding: 6px;
+    background: var(--bg-tertiary);
+}
+
+.explorer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.explorer-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+}
+
+.explorer-tile {
+    aspect-ratio: 1;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    padding: 8px;
+    user-select: none;
+}
+
+.explorer-tile:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+}
+
+.explorer-tile.selected {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.explorer-tile .tile-icon {
+    font-size: 32px;
+    margin-bottom: 6px;
+}
+
+.explorer-tile .tile-name {
+    font-size: 10px;
+    text-align: center;
+    word-break: break-all;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    color: var(--text-secondary);
+}
+
+.explorer-back-button {
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    user-select: none;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    margin-bottom: 12px;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.explorer-back-button:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+}
+
+.explorer-back-button .back-icon {
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.explorer-back-button .back-text {
+    flex: 1;
+}
+
+.explorer-tree-item {
+    font-size: 10px;
+}
+
+.explorer-tree-item.selected {
+    background: var(--accent-blue);
+    font-weight: 600;
+}
+
+.explorer-tree-item .icon {
+    font-size: 10px;
+}
+
+.explorer-tree-item .name {
+    font-size: 10px;
+}
+
+/* Breadcrumb Navigation */
+.breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    overflow-x: auto;
+    flex: 1;
+}
+
+.breadcrumb-item {
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 2px;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+
+.breadcrumb-item:hover {
+    background: var(--bg-hover);
+}
+
+.breadcrumb-separator {
+    color: var(--text-secondary);
+    user-select: none;
+}
+
+/* View Mode Toggle Button */
+.view-mode-toggle {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.view-mode-toggle:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+}

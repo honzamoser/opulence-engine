@@ -1,25 +1,39 @@
 import { mat4, vec3, Vec3 } from "wgpu-matrix";
 import { Engine } from "../../engine";
-import { Entity } from "../../entity";
-import CameraComponent from "../components/camera";
+import CameraComponent from "../components/camera.component";
 import { System } from "../system";
-import TransformComponent from "../components/transform";
+import TransformComponent from "../components/transform.component";
+import { namespace } from "../component-gen";
 
+@namespace("builtin.render.Camera")
 export class CameraSystem extends System {
-  public update(
-    entities: Entity[],
+  deb = document.getElementById("rotation");
+
+  public async update(
+    entities: number[][],
     delta: number,
     engine: Engine,
   ): Promise<void> {
-    const camera = engine.query(CameraComponent, TransformComponent)[0];
+    const cameraEntity = engine.query(CameraComponent, TransformComponent)[0];
 
-    const cameraComponent = camera.getComponent(CameraComponent)!;
-    const transformComponent = camera.getComponent(TransformComponent)!;
+    const cameraComponent = engine.ecs.__getComponent(
+      CameraComponent,
+      cameraEntity,
+    )!;
+    const transformComponent = engine.ecs.__getComponent(
+      TransformComponent,
+      cameraEntity,
+    )!;
 
-    cameraComponent.projectionMatrix = this.getViewProjectionMatrix(
-      cameraComponent,
-      transformComponent,
-      engine,
+    engine.ecs.setComponentValue(
+      cameraEntity,
+      TransformComponent,
+      "rotation",
+      new Float32Array([0, 0, 0]),
+    );
+
+    cameraComponent.projectionMatrix.set(
+      this.getViewProjectionMatrix(cameraComponent, transformComponent, engine),
     );
   }
 
@@ -28,7 +42,8 @@ export class CameraSystem extends System {
     transform: TransformComponent,
     engine: Engine,
   ): Float32Array<ArrayBufferLike> {
-    const aspect = engine.canvas.width / engine.canvas.height;
+    const aspect = engine.canvas.clientWidth / engine.canvas.clientHeight;
+
     const projection = mat4.perspective(
       camera.fov,
       aspect,
@@ -48,7 +63,6 @@ export class CameraSystem extends System {
     // Then translate to camera position (negated because we're moving the world)
     mat4.translate(view, vec3.negate(transform.position), view);
 
-    const viewProjection = mat4.multiply(projection, view);
-    return viewProjection;
+    return mat4.multiply(projection, view);
   }
 }

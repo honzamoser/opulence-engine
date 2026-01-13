@@ -1,8 +1,23 @@
 export function startLifecycle(fn: (delta: number) => any) {
-    let l = performance.now();
-    requestAnimationFrame(function loop(timestamp) {
-        fn(timestamp - l);
-        l = timestamp;
-        requestAnimationFrame(loop);
-    });
+  let lastTime = performance.now();
+  let frameId: number;
+
+  function loop(currentTime: number) {
+    frameId = requestAnimationFrame(loop);
+
+    const delta = currentTime - lastTime;
+    lastTime = currentTime;
+
+    if (delta > (1 / 60) * 1000 + 1) {
+      console.warn(`Skipped frame: ${delta}`);
+    }
+
+    fn(delta);
+  }
+
+  frameId = requestAnimationFrame(loop);
+
+  return () => {
+    cancelAnimationFrame(frameId);
+  };
 }

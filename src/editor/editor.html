@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .main {
+            width: 100vw;
+            height: 100vh;
+
+            display: grid;
+            grid-template-columns: 1fr 3fr 1fr;
+            grid-template-rows: 1fr;
+        }
+
+        .main > div {
+             border: black 1px solid;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div>
+            <label>
+                Hiearchy
+            </label>
+
+            <div></div>
+        </div>
+        <div>
+            <canvas id="editor-canvas" width="800" height="600">
+                
+            </canvas>
+        </div>
+
+        <div>
+            <label>
+                Properties
+            </label>
+
+            <div></div>
+        </div>
+    </div>
+
+    <script src="./editor.ts"></script>
+</body>
+
+</html>

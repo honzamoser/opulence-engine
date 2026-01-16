@@ -1,13 +1,18 @@
-import CameraComponent from "H:/Project/engine/opulence-engine/src/ecs/components/camera.component.ts";
-import MaterialComponent from "H:/Project/engine/opulence-engine/src/ecs/components/material.component.ts";
-import MeshComponent from "H:/Project/engine/opulence-engine/src/ecs/components/mesh.component.ts";
-import RigidbodyComponent from "H:/Project/engine/opulence-engine/src/ecs/components/rigidbody.component.ts";
-import TransformComponent from "H:/Project/engine/opulence-engine/src/ecs/components/transform.component.ts";
+import CameraComponent from "/workspaces/legends-of-league/src/ecs/components/camera.component.ts";
+import MaterialComponent from "/workspaces/legends-of-league/src/ecs/components/material.component.ts";
+import MeshComponent from "/workspaces/legends-of-league/src/ecs/components/mesh.component.ts";
+import RigidbodyComponent from "/workspaces/legends-of-league/src/ecs/components/rigidbody.component.ts";
+import TransformComponent from "/workspaces/legends-of-league/src/ecs/components/transform.component.ts";
 
-import { mat4, Mat4, vec3, Vec3 } from "wgpu-matrix";
-import { Component } from "../component";
-import { hot, constructor, cold } from "../component-gen";
-// GENERATED AT 2026-01-16T08:36:52.798Z
+import { mat4 } from "wgpu-matrix";
+import { Mat4 } from "wgpu-matrix";
+import { vec3 } from "wgpu-matrix";
+import { Vec3 } from "wgpu-matrix";
+import { Component } from "/workspaces/legends-of-league/src/ecs/component";
+import { hot } from "/workspaces/legends-of-league/src/ecs/component-gen";
+import { constructor } from "/workspaces/legends-of-league/src/ecs/component-gen";
+import { cold } from "/workspaces/legends-of-league/src/ecs/component-gen";
+// GENERATED AT 2026-01-16T11:54:53.658Z
 // AUTO-GENERATED - DO NOT EDIT
 
 export interface MemoryViews {
@@ -285,7 +290,7 @@ export class RigidbodyComponentAccessor {
         const ptr = this.i32[base];
         const ptr_len = this.i32[base + 1];
 
-        if(v.byteLength > ptr_len) {
+        if(v.length * 4 > ptr_len) {
             throw new Error("Pointer overflow: trying to write more data than allocated.");
         }
 
@@ -408,6 +413,7 @@ export class TransformComponentAccessor {
 
 export const generatedComponents = [CameraComponentAccessor, MaterialComponentAccessor, MeshComponentAccessor, RigidbodyComponentAccessor, TransformComponentAccessor];
 
+type PointerType<T> = number;
 export const components = [{
     name: "CameraComponent",
     path: "/src/ecs/components/camera.component.ts",
@@ -559,3 +565,33 @@ export const components = [{
         type: "float32Array",
         defaultValue: mat4.identity(),
     }]}]
+ export type CameraComponentConstructionFootprint = {
+  fov: number;
+  near: number;
+  far: number;
+  projectionMatrix: Float32Array;
+}
+
+ export type MaterialComponentConstructionFootprint = {
+  materialId: number;
+}
+
+ export type MeshComponentConstructionFootprint = {
+  meshId: number;
+  rendererdInstasnceId: number;
+  boundingBoxMin: Float32Array;
+  boundingBoxMax: Float32Array;
+}
+
+ export type RigidbodyComponentConstructionFootprint = {
+  mass: number;
+  velocity: Float32Array;
+  vertices: PointerType<Float32Array>;
+}
+
+ export type TransformComponentConstructionFootprint = {
+  position: Float32Array;
+  rotation: Float32Array;
+  scale: Float32Array;
+  matrix: Float32Array;
+}

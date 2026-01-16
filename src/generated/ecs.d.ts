@@ -1,8 +1,8 @@
-type CameraComponent = import("H:/Project/engine/opulence-engine/src/ecs/components/camera.component.ts").default;
-type MaterialComponent = import("H:/Project/engine/opulence-engine/src/ecs/components/material.component.ts").default;
-type MeshComponent = import("H:/Project/engine/opulence-engine/src/ecs/components/mesh.component.ts").default;
-type RigidbodyComponent = import("H:/Project/engine/opulence-engine/src/ecs/components/rigidbody.component.ts").default;
-type TransformComponent = import("H:/Project/engine/opulence-engine/src/ecs/components/transform.component.ts").default;
+type CameraComponent = import("/workspaces/legends-of-league/src/ecs/components/camera.component.ts").default;
+type MaterialComponent = import("/workspaces/legends-of-league/src/ecs/components/material.component.ts").default;
+type MeshComponent = import("/workspaces/legends-of-league/src/ecs/components/mesh.component.ts").default;
+type RigidbodyComponent = import("/workspaces/legends-of-league/src/ecs/components/rigidbody.component.ts").default;
+type TransformComponent = import("/workspaces/legends-of-league/src/ecs/components/transform.component.ts").default;
 
 declare module "virtual:ecs" {
     
@@ -15,7 +15,7 @@ export interface MemoryViews {
 export class CameraComponentAccessor {
     index: number;
     static readonly stride: number;
-    static readonly parent: typeof CameraComponent;
+    static readonly parent: CameraComponent;
     private f32;
     private i32;
     private u8;
@@ -36,7 +36,7 @@ export class CameraComponentAccessor {
 export class MaterialComponentAccessor {
     index: number;
     static readonly stride: number;
-    static readonly parent: typeof MaterialComponent;
+    static readonly parent: MaterialComponent;
     private f32;
     private i32;
     private u8;
@@ -51,7 +51,7 @@ export class MaterialComponentAccessor {
 export class MeshComponentAccessor {
     index: number;
     static readonly stride: number;
-    static readonly parent: typeof MeshComponent;
+    static readonly parent: MeshComponent;
     private f32;
     private i32;
     private u8;
@@ -72,7 +72,7 @@ export class MeshComponentAccessor {
 export class RigidbodyComponentAccessor {
     index: number;
     static readonly stride: number;
-    static readonly parent: typeof RigidbodyComponent;
+    static readonly parent: RigidbodyComponent;
     private f32;
     private i32;
     private u8;
@@ -91,7 +91,7 @@ export class RigidbodyComponentAccessor {
 export class TransformComponentAccessor {
     index: number;
     static readonly stride: number;
-    static readonly parent: typeof TransformComponent;
+    static readonly parent: TransformComponent;
     private f32;
     private i32;
     private u8;
@@ -109,13 +109,14 @@ export class TransformComponentAccessor {
     getMatrix(out: Float32Array | number[]): void;
     setMatrix(v: Float32Array | number[]): void;
 }
-export const generatedComponents: (typeof CameraComponentAccessor | typeof MaterialComponentAccessor | typeof MeshComponentAccessor | typeof RigidbodyComponentAccessor | typeof TransformComponentAccessor)[];
+export const generatedComponents: (CameraComponentAccessor | MaterialComponentAccessor | MeshComponentAccessor | RigidbodyComponentAccessor | TransformComponentAccessor)[];
+type PointerType<T> = number;
 export const components: ({
     name: string;
     path: string;
     id: number;
     stride: number;
-    cls: typeof CameraComponent;
+    cls: CameraComponent;
     fields: {
         name: string;
         count: number;
@@ -129,7 +130,7 @@ export const components: ({
     path: string;
     id: number;
     stride: number;
-    cls: typeof MaterialComponent;
+    cls: MaterialComponent;
     fields: {
         name: string;
         count: number;
@@ -142,7 +143,7 @@ export const components: ({
     path: string;
     id: number;
     stride: number;
-    cls: typeof MeshComponent;
+    cls: MeshComponent;
     fields: ({
         name: string;
         count: number;
@@ -163,7 +164,7 @@ export const components: ({
     path: string;
     id: number;
     stride: number;
-    cls: typeof RigidbodyComponent;
+    cls: RigidbodyComponent;
     fields: ({
         name: string;
         count: number;
@@ -184,7 +185,7 @@ export const components: ({
     path: string;
     id: number;
     stride: number;
-    cls: typeof TransformComponent;
+    cls: TransformComponent;
     fields: ({
         name: string;
         count: number;
@@ -201,5 +202,32 @@ export const components: ({
         defaultValue: any;
     })[];
 })[];
+export type CameraComponentConstructionFootprint = {
+    fov: number;
+    near: number;
+    far: number;
+    projectionMatrix: Float32Array;
+};
+export type MaterialComponentConstructionFootprint = {
+    materialId: number;
+};
+export type MeshComponentConstructionFootprint = {
+    meshId: number;
+    rendererdInstasnceId: number;
+    boundingBoxMin: Float32Array;
+    boundingBoxMax: Float32Array;
+};
+export type RigidbodyComponentConstructionFootprint = {
+    mass: number;
+    velocity: Float32Array;
+    vertices: PointerType<Float32Array>;
+};
+export type TransformComponentConstructionFootprint = {
+    position: Float32Array;
+    rotation: Float32Array;
+    scale: Float32Array;
+    matrix: Float32Array;
+};
+export {};
 
 }

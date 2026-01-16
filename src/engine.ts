@@ -90,13 +90,13 @@ export class Engine extends EventTarget {
     return result;
   }
 
-  addComponent<T extends Component>(
+  addComponent<T extends Component, Y>(
     entityId: number,
     component: ClassConstructor<T>,
-    args: any[] = [],
+    args: Partial<Y>,
   ) {
     const componentTypeid = (component as any).id as number;
-    const componentId = this.ecs.pushComponent<T>(component, args) as number;
+    const componentId = this.ecs.pushComponent(component, args) as number;
 
     this.entities[entityId][componentTypeid] = componentId;
 

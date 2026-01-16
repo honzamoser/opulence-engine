@@ -135,6 +135,7 @@ type ComponentStructure = {
     id: number,
     stride: number,
     fields: FieldSchema[]
+    cls: any;
 }
 
 type FieldSchema = {
@@ -164,14 +165,14 @@ export function reflectComponents() {
                 fields: comp.schema,
                 cls: cd
             };
-            registry.push(entry);
+            registry[entry.id] = entry
 
         });
 
     });
 
 
-    const outputCode = `export const components = [` + registry.map(x => {
+    let outputCode = `export const components = [` + registry.map(x => {
         return `{
     name: "${x.name}",
     path: "${x.path}",
@@ -187,5 +188,49 @@ export function reflectComponents() {
         ${f.defaultValue !== undefined ? `defaultValue: ${f.defaultValue},` : ''}
     }`).join(", ")}]}` ;
     }) + `]`;
+
+    registry.forEach(comp => {
+        outputCode += `\n export type ${comp.name}ConstructionFootprint = {`
+        comp.fields.forEach(field => {
+            const typeConfig = TYPE_CONFIG[field.type];
+            let tsType = "unknown";
+            if (field.pointer) {
+                tsType = `PointerType<${typeConfig.view === 'f32' ? 'Float32Array' : typeConfig.view === 'i32' ? 'Int32Array' : 'Uint8Array'}>`;
+            } else {
+                if (field.count === 1) {
+                    switch (typeConfig.view) {
+                        case 'f32':
+                            tsType = 'number';
+                            break;
+                        case 'i32':
+                            tsType = 'number';
+                            break;
+                        case 'u8':
+                            tsType = 'boolean';
+                            break;
+                    }
+                } else {
+                    switch (typeConfig.view) {
+                        case 'f32':
+                            tsType = 'Float32Array';
+                            break;
+                        case 'i32':
+                            tsType = 'Int32Array';
+                            break;
+                        case 'u8':
+                            tsType = 'Uint8Array';
+                            break;
+                    }
+                }
+            }
+
+            outputCode += `\n  ${field.name}: ${tsType};`
+        });
+        outputCode += `\n}\n`;
+    })
+    outputCode = PointerType + "\n" + outputCode;
     return outputCode;
 }
+
+
+const PointerType = `type PointerType<T> = number;`;

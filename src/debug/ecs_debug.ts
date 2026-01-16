@@ -16,7 +16,7 @@ export function log_entity(engine: Engine, entityId: number) {
   console.log(`Entity ${entityId}: `);
   for (const [componentId, componentInstanceId] of Object.entries(components)) {
     console.log(
-      `  Component: ${engine.ecs.getComponentById(Number.parseInt(componentId))[0]} (${componentId}) -> Instance ID: `,
+      // `  Component: ${engine.ecs.getComponentById(Number.parseInt(componentId))[0]} (${componentId}) -> Instance ID: `,
       componentInstanceId,
     );
   }

@@ -12,7 +12,8 @@ export function startLifecycle(fn: (delta: number) => any) {
       console.warn(`Skipped frame: ${delta}`);
     }
 
-    fn(delta);
+    fn(1/delta);
+    
   }
 
   frameId = requestAnimationFrame(loop);

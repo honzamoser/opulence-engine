@@ -1,17 +1,32 @@
+import { ComponentBufferViews } from "./ecs";
+
+// TODO: Actually implement a bucketed heap allocator
 export class Allocator {
-  heap: Uint8Array;
+  heap: ArrayBuffer;
 
   cursor: number = 0;
   buckets: number[][] = [];
 
+  views: ComponentBufferViews;
+
   constructor(initPage: number) {
-    this.heap = new Uint8Array(initPage);
+    this.heap = new ArrayBuffer(initPage);
+    this.views = {
+      Uint8View: new Uint8Array(this.heap),
+      Float32View: new Float32Array(this.heap),
+      Int32View: new Int32Array(this.heap),
+    };
   }
 
   resize() {
-    const newHeap = new Uint8Array(this.heap.byteLength * 2);
-    new Uint8Array(newHeap).set(this.heap);
+    const newHeap = new ArrayBuffer(this.heap.byteLength * 2);
+    new Uint8Array(newHeap).set(new Uint8Array(this.heap));
     this.heap = newHeap;
+    this.views = {
+      Uint8View: new Uint8Array(this.heap),
+      Float32View: new Float32Array(this.heap),
+      Int32View: new Int32Array(this.heap),
+    };
   }
 
   alloc(size: number) {
@@ -21,7 +36,28 @@ export class Allocator {
 
     const ptr = this.cursor;
     this.cursor += size;
-    return this.heap.subarray(ptr, ptr + size);
+    return ptr;
+  }
+
+  resize_alloc(ptr: number, size: number, newSize: number) {
+    if (this.cursor + newSize > this.heap.byteLength) {
+      this.resize();
+    }
+
+    // Find a place for the new allocation
+    const newPtr = this.cursor;
+    this.cursor += newSize;
+
+    // Copy the old data to the new location
+    this.views.Uint8View.set(this.views.Uint8View.subarray(ptr, ptr + size), newPtr);
+    
+    // Free the old allocation
+    this.free(ptr, size);
+    return newPtr;
+  }
+
+  get_mem(ptr: number, size: number) {
+    return this.views.Uint8View.subarray(ptr, ptr + size);
   }
 
   free(ptr: number, size: number) {

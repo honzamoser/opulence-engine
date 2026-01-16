@@ -32,4 +32,8 @@ export class Float32ArraySerializer extends Serializable<
       );
     }
   }
+
+  byteLength(value: Float32Array | null): number {
+    return value ? value.byteLength : 0;
+  }
 }

@@ -16,11 +16,11 @@ export class CameraSystem extends System {
   ): Promise<void> {
     const cameraEntity = engine.query(CameraComponent, TransformComponent)[0];
 
-    const cameraComponent = engine.ecs.__getComponent(
+    const cameraComponent = engine.ecs.getComponent(
       CameraComponent,
       cameraEntity,
     )!;
-    const transformComponent = engine.ecs.__getComponent(
+    const transformComponent = engine.ecs.getComponent(
       TransformComponent,
       cameraEntity,
     )!;

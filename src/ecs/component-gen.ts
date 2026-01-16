@@ -57,11 +57,6 @@ export function dynamic<T>(dataType: dataType, maxSize: number | null = null) {
 
     context.metadata["properties"] = properties;
 
-    //set a custom getter for the property
-
-    
-
-    
     return target;
   };
 }
@@ -82,6 +77,8 @@ export abstract class Serializable<
     offset: number,
     byteLength: number,
   ): void;
+
+  abstract byteLength(value: T | null): number;
 }
 
 /**

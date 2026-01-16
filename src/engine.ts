@@ -28,8 +28,8 @@ export class Engine extends EventTarget {
   }
 
   async load() {
-    await this.ecs.loadNativeComponents();
-    await this.ecs.loadComponents();
+    // await this.ecs.loadNativeComponents();
+    // await this.ecs.loadComponents();
   }
 
   async start() {
@@ -43,7 +43,7 @@ export class Engine extends EventTarget {
   }
 
   async update(delta: number) {
-    this.dispatchEvent(new CustomEvent("update", { detail: delta }));
+    // this.dispatchEvent(new CustomEvent("update", { detail: delta }));
 
     this.systems.forEach((x) => {
       if (x.update) {

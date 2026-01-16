@@ -4,6 +4,9 @@ import { Engine } from "../../src/engine";
 import TransformComponent from "../../src/ecs/components/transform.component";
 import { createCube } from "../../src/renderer/primitive";
 import { namespace } from "../../src/ecs/component-gen";
+import RigidbodyComponent from "../../src/ecs/components/rigidbody.component";
+import { log_component, log_entity } from "../../src/debug/ecs_debug";
+
 
 @namespace("game.PlayerSystem")
 export class PlayerSystem extends System {
@@ -22,10 +25,15 @@ export class PlayerSystem extends System {
 
     engine.addComponent(this.c_playerEnt, MeshComponent, [cubeMesh]); // Přidáme komponentu MeshComponent s krychlí
     engine.addComponent(this.c_playerEnt, TransformComponent, [
-      new Float32Array([0, 0, -5]),
+      new Float32Array([0, 0, -10]),
       new Float32Array([0, 0, 0]),
       new Float32Array([1, 1, 1]),
     ]); // Přidáme komponentu TransformComponent s počáteční pozicí, rotací a škálou
+    const rb = engine.addComponent(this.c_playerEnt, RigidbodyComponent, [1]); // Přidáme komponentu MeshComponent s krychlí
+
+    engine.ecs.setComponentColdValue(rb, RigidbodyComponent, "vertices", cube.vertices);
+
+    console.log(log_component(engine, this.c_playerEnt, RigidbodyComponent));
   }
 
   public update(
@@ -33,7 +41,11 @@ export class PlayerSystem extends System {
     delta: number,
     engine: Engine,
   ): void {
-    const transformComponent = engine.ecs.__getComponent(TransformComponent, this.c_playerEnt)!; // Získáme TransformComponent hráče
-    transformComponent.position[2] -= 0.01 * delta; // Posuneme hráče vpřed podél osy Z
+    // const transformComponent = engine.ecs.__getComponent(TransformComponent, this.c_playerEnt)!; // Získáme TransformComponent hráče
+    // transformComponent.position[2] -= 0.01 * delta; // Posuneme hráče vpřed podél osy Z
+    // console.log(log_component(engine, this.c_playerEnt, RigidbodyComponent));
+
+    // new MeshComponentAccessor().
+
   }
 }

@@ -5,5 +5,10 @@
     "moduleResolution": "bundler",
     "module": "ESNext",
     "useDefineForClassFields": true,
-  }
+    "typeRoots": ["./node_modules/@types", "./src/generated"]
+  },
+  "include": [
+    "src/**/*",
+    "src/generated/**/*"
+  ]
 }

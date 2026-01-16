@@ -9,8 +9,9 @@ Types:
 
 ex:
 
-position: Vec3,
-rotation: Vec3,
-scale: Vec3,
-matrix: Mat4
-name: &char[]
+RigidbodyComponent:
+position: Vec3;
+rotation: Vec3;
+scale: Vec3;
+matrix: Mat4;
+name: &char[];

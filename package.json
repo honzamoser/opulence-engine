@@ -2,19 +2,11 @@
 	"name": "eureka",
 	"devDependencies": {
 		"@webgpu/types": "^0.1.67",
-		"vite": "^7.2.7"
+		"vite": "^7.3.1"
 	},
 	"dependencies": {
-		"@loaders.gl/core": "^4.3.4",
-		"@loaders.gl/gltf": "^4.3.4",
-		"@sveltejs/vite-plugin-svelte": "^6.2.1",
-		"@swc/core": "^1.15.5",
-		"reflect-metadata": "^0.2.2",
-		"rollup-plugin-swc3": "^0.12.1",
-		"svelte": "^5.46.0",
+		"@types/node": "^25.0.9",
 		"ts-morph": "^27.0.2",
-		"typescript": "^5.9.3",
-		"wgpu-matrix": "^3.4.0",
-		"wgsl-debug": "^0.0.1"
+		"wgpu-matrix": "^3.4.0"
 	}
 }

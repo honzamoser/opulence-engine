@@ -1,18 +1,18 @@
-import CameraComponent from "/workspaces/legends-of-league/src/ecs/components/camera.component.ts";
-import MaterialComponent from "/workspaces/legends-of-league/src/ecs/components/material.component.ts";
-import MeshComponent from "/workspaces/legends-of-league/src/ecs/components/mesh.component.ts";
-import RigidbodyComponent from "/workspaces/legends-of-league/src/ecs/components/rigidbody.component.ts";
-import TransformComponent from "/workspaces/legends-of-league/src/ecs/components/transform.component.ts";
+import CameraComponent from "D:/projects/opulence/opulence-engine/src/ecs/components/camera.component.ts";
+import MaterialComponent from "D:/projects/opulence/opulence-engine/src/ecs/components/material.component.ts";
+import MeshComponent from "D:/projects/opulence/opulence-engine/src/ecs/components/mesh.component.ts";
+import RigidbodyComponent from "D:/projects/opulence/opulence-engine/src/ecs/components/rigidbody.component.ts";
+import TransformComponent from "D:/projects/opulence/opulence-engine/src/ecs/components/transform.component.ts";
 
 import { mat4 } from "wgpu-matrix";
 import { Mat4 } from "wgpu-matrix";
 import { vec3 } from "wgpu-matrix";
 import { Vec3 } from "wgpu-matrix";
-import { Component } from "/workspaces/legends-of-league/src/ecs/component";
-import { hot } from "/workspaces/legends-of-league/src/ecs/component-gen";
-import { constructor } from "/workspaces/legends-of-league/src/ecs/component-gen";
-import { cold } from "/workspaces/legends-of-league/src/ecs/component-gen";
-// GENERATED AT 2026-01-16T11:54:53.658Z
+import { Component } from "D:\projects\opulence\opulence-engine\src\ecs\component";
+import { hot } from "D:\projects\opulence\opulence-engine\src\ecs\component-gen";
+import { constructor } from "D:\projects\opulence\opulence-engine\src\ecs\component-gen";
+import { cold } from "D:\projects\opulence\opulence-engine\src\ecs\component-gen";
+// GENERATED AT 2026-01-17T08:41:25.883Z
 // AUTO-GENERATED - DO NOT EDIT
 
 export interface MemoryViews {

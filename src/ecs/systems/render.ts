@@ -20,6 +20,8 @@ export default class RenderSystem extends System {
   public override async update(entities: number[][], delta: number, engine: Engine) {
     engine.query(MeshComponent, TransformComponent).forEach((entity) => {
 
+      console.log(engine.entities[entity][MeshComponent.id])
+
       const meshId = engine.entities[entity][MeshComponent.id];
       const transformId = engine.entities[entity][TransformComponent.id];
 
@@ -41,7 +43,7 @@ export default class RenderSystem extends System {
 
       console.log(this.update_scratchPad.matrix);
 
-      this.calculateTransformMatrix(transform, transformId, engine);
+      this.calculateTransformMatrix(transform);
       this.renderer._updateMatrix(mesh.meshId, this.update_scratchPad.matrix);
     });
 
@@ -119,6 +121,9 @@ export default class RenderSystem extends System {
     t.getPosition(this.calculateTransformMatrix_Scratchpad.positionVec3);
     t.getRotation(this.calculateTransformMatrix_Scratchpad.rotationVec3);
     t.getScale(this.calculateTransformMatrix_Scratchpad.scaleVec3);
+
+    console.log(this.calculateTransformMatrix_Scratchpad.positionVec3);
+
 
     const translationMatrix = mat4.translation(this.calculateTransformMatrix_Scratchpad.translationMatrix, this.calculateTransformMatrix_Scratchpad.positionVec3);
     const rotationXMatrix = mat4.rotationX(this.calculateTransformMatrix_Scratchpad.rotationVec3[0], this.calculateTransformMatrix_Scratchpad.rotationXMatrix);

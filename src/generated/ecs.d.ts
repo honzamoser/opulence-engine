@@ -1,8 +1,8 @@
-type CameraComponent = import("/workspaces/legends-of-league/src/ecs/components/camera.component.ts").default;
-type MaterialComponent = import("/workspaces/legends-of-league/src/ecs/components/material.component.ts").default;
-type MeshComponent = import("/workspaces/legends-of-league/src/ecs/components/mesh.component.ts").default;
-type RigidbodyComponent = import("/workspaces/legends-of-league/src/ecs/components/rigidbody.component.ts").default;
-type TransformComponent = import("/workspaces/legends-of-league/src/ecs/components/transform.component.ts").default;
+type CameraComponent = import("D:/projects/opulence/opulence-engine/src/ecs/components/camera.component.ts").default;
+type MaterialComponent = import("D:/projects/opulence/opulence-engine/src/ecs/components/material.component.ts").default;
+type MeshComponent = import("D:/projects/opulence/opulence-engine/src/ecs/components/mesh.component.ts").default;
+type RigidbodyComponent = import("D:/projects/opulence/opulence-engine/src/ecs/components/rigidbody.component.ts").default;
+type TransformComponent = import("D:/projects/opulence/opulence-engine/src/ecs/components/transform.component.ts").default;
 
 declare module "virtual:ecs" {
     

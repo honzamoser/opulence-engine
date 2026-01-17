@@ -62,12 +62,11 @@ export class ECS {
         const componentStructure = ecsComponents[componentTypeId];
         const accessor: typeof generatedComponents[number] = this.componentAccessors[componentTypeId];
         
+        console.log(componentStructure, args)
+
         componentStructure.fields.forEach((field, index) => {
-            if(args[field.name]) {
-                if(field.type == "f32") {
-                    accessor.
-                }
-            }
+            if(field.defaultValue !== undefined || args[field.name] !== undefined) {
+                if(field.type)
         })
         
         return this.componentCursors[componentTypeId];

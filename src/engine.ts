@@ -39,7 +39,7 @@ export class Engine extends EventTarget {
       ),
     );
 
-    startLifecycle(this.update.bind(this));
+    // startLifecycle(this.update.bind(this));
   }
 
   async update(delta: number) {

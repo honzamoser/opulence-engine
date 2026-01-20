@@ -6,7 +6,6 @@ import { createCube } from "../../src/renderer/primitive";
 import { namespace } from "../../src/ecs/component-gen";
 import RigidbodyComponent from "../../src/ecs/components/rigidbody.component";
 import { log_component, log_entity } from "../../src/debug/ecs_debug";
-import { TransformComponentConstructionFootprint } from "../../debug_virtual";
 
 
 @namespace("game.PlayerSystem")
@@ -23,6 +22,8 @@ export class PlayerSystem extends System {
     ); // Nahrajeme krychli na grafickou kartu
 
     this.c_playerEnt = engine.createEntity(); // Vytvoříme entitu pro hráče
+
+    CameraComponent
 
     engine.addComponent(this.c_playerEnt, MeshComponent, [cubeMesh]); // Přidáme komponentu MeshComponent s krychlí
     engine.addComponent<TransformComponent, TransformComponentConstructionFootprint>(this.c_playerEnt, TransformComponent, { position: new Float32Array([0, 0, -10]), rotation: new Float32Array([0, 0, 0]), scale: new Float32Array([1, 1, 1]) }); // Přidáme komponentu TransformComponent s počáteční pozicí, rotací a škálou

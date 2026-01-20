@@ -4,6 +4,7 @@ import { Component } from "./ecs/component";
 import { PointerManager } from "./data/arrayBufferPointer";
 import { ClassConstructor, ECS } from "./ecs/ecs";
 import { Helios2Renderer } from "./renderer/renderer";
+import { TransformComponent } from "../generated";
 
 export class Engine extends EventTarget {
   entities: Array<number[]> = [];
@@ -90,13 +91,13 @@ export class Engine extends EventTarget {
     return result;
   }
 
-  addComponent<T extends Component, Y>(
+  addComponent<T extends Component>(
     entityId: number,
     component: ClassConstructor<T>,
-    args: Partial<Y>,
+    args: any,
   ) {
     const componentTypeid = (component as any).id as number;
-    const componentId = this.ecs.pushComponent(component, args) as number;
+    const componentId = component.new(args);
 
     this.entities[entityId][componentTypeid] = componentId;
 

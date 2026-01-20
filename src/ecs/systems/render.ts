@@ -1,11 +1,9 @@
 import { Vec3, mat4, vec3 } from "wgpu-matrix";
-import MeshComponent from "../components/mesh.component";
-import TransformComponent from "../components/transform.component";
 import { System } from "../system";
 import { Engine } from "../../engine";
 import { Helios2Renderer } from "../../renderer/renderer";
 import { namespace } from "../component-gen";
-import { MeshComponentAccessor, TransformComponentAccessor } from "virtual:ecs";
+import { MeshComponent, TransformComponent } from "../../../generated";
 
 @namespace("builtin.render.RenderSystem")
 export default class RenderSystem extends System {
@@ -64,10 +62,7 @@ export default class RenderSystem extends System {
 
   private instantiate(engine: Engine, entity: number) {
     const transformId = engine.entities[entity][TransformComponent.id];
-    const transform: TransformComponentAccessor = engine.ecs.getAccesor(
-      transformId,
-      TransformComponent
-    );
+    const transform: TransformComponentAccessor = TransformComponent.
     const mesh: MeshComponentAccessor = engine.ecs.getAccesor(
       engine.entities[entity][MeshComponent.id],
       MeshComponent

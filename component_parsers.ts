@@ -1,6 +1,12 @@
 import { writeFileSync } from "fs";
 import * as path from "path";
 import { cwd } from "process";
+import { Glob } from "bun";
+
+
+const componentDirectories = [
+    "./src/ecs/components/**.component.ts"
+]
 
 // Component definition:
 // Types: 
@@ -35,7 +41,7 @@ const OUT_PATH = "./"
 
 const target_path = path.join(cwd(), OUT_PATH);
 
-type PointerTo<T> = {
+export type PointerTo<T> = {
     ptr: number | undefined,
     ptr_len: number
 }
@@ -102,6 +108,23 @@ const typeMap: { [key: string]: PropertyDefinition } = {
         pointer: true,
         jsType: "PointerTo<Float32Array>",
         default: "{ ptr: undefined, ptr_len: 0 }"
+    },
+    "string": {
+        name: null,
+        type: "&char[]",
+        byteLength: 8,
+        offset: null,
+        pointer: true,
+        jsType: "PointerTo<Uint8Array>",
+        default: "{ ptr: undefined, ptr_len: 0 }"
+    },
+    "Float32Array": {
+        name: null,
+        type: "f32[]",
+        byteLength: 0, // to be filled
+        offset: null,
+        jsType: "Float32Array",
+        default: "new Float32Array(16)"
     },
 }
 
@@ -484,4 +507,37 @@ function isArray(f: PropertyDefinition) {
 
 console.log();
 
-writeFileSync("./component.ts", createComponentAccessor(parseComponent(componentCode), 1))
+let index = 0;
+
+let createdComponents = [];
+
+for (const dir of componentDirectories) {
+    const components = new Glob(dir).scanSync();
+    for (const comp of components) {
+        const code = await Bun.file(comp).text();
+        const component = parseComponent(code);
+        const moduleName = path.basename(comp).replace(".component.ts", "");
+        writeFileSync(`./generated/${moduleName}.ts`, createComponentAccessor(component, index));
+        createdComponents.push({ name: component.name, moduleName: moduleName, path: `./generated/${moduleName}.ts`, });
+        index++;
+    }
+
+    writeFileSync('./generated/index.ts', `
+${createdComponents.map(c => {
+        return `import { ${c.name} } from "./${c.moduleName}";`
+    }).join("\n")}
+
+export const generatedComponents = [
+    ${createdComponents.map(c => {
+        return c.name;
+    }).join(",\n")}
+];
+
+export {
+${createdComponents.map(c => {
+        return c.name;
+    }).join(",\n")}}
+
+`)
+
+}

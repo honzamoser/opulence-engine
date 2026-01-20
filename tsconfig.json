@@ -9,6 +9,8 @@
   },
   "include": [
     "src/**/*",
-    "src/generated/**/*"
+    "src/generated/**/*",
+    "generated/**/*",
+    "game_src/**/*"
   ]
 }

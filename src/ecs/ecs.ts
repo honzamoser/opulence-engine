@@ -1,9 +1,6 @@
-import { generatedComponents } from "virtual:ecs";
-import { components as ecsComponents } from "virtual:ecs";
 import { Allocator } from "./allocator";
 import { Component } from "./component";
-import CameraComponent from "./components/camera.component";
-import { ClassConstructor } from "./oldecs";
+import { generatedComponents } from "../../generated";
 
 type ComponentStructure = {
     name: string,
@@ -26,51 +23,19 @@ type FieldSchema = {
 export class ECS {
     coldAllocator = new Allocator(2 ** 12);
 
-    componentRegistry: Component[] = []
     componentMemory: ArrayBuffer[] = [];
-    componentAccessors: InstanceType<(typeof generatedComponents)[number]>[] = [];
-    componentCursors: number[] = [];
-
+    
     constructor() {
 
-        for (let i = 0; i < ecsComponents.length; i++) {
-            const componentType = ecsComponents[i];
-            this.componentMemory.push(new ArrayBuffer(componentType.stride * 100));
-            this.componentCursors[componentType.id] = 0;
-            this.componentAccessors[componentType.id] = new (generatedComponents.find(c => c.parent === componentType.cls)! as any)({
-                f32: new Float32Array(this.componentMemory[i]),
-                i32: new Int32Array(this.componentMemory[i]),
-                u32: new Uint32Array(this.componentMemory[i]),
-                u8: new Uint8Array(this.componentMemory[i]),
-            }, {
-                f32: new Float32Array(this.coldAllocator.heap),
-                i32: new Int32Array(this.coldAllocator.heap),
-                u32: new Uint32Array(this.coldAllocator.heap),
-                u8: new Uint8Array(this.coldAllocator.heap),
+        for (let i = 0; i < generatedComponents.length; i++) {
+            const componentType = generatedComponents[i];
+            this.componentMemory.push(new ArrayBuffer(componentType.STRIDE * 100));
+            this.componentMemory[componentType.IDENTIFIER] = new ArrayBuffer(componentType.STRIDE * 100);
+            componentType.initialize({
+                vf32: new Float32Array(this.componentMemory[componentType.IDENTIFIER]),
+                vi32: new Int32Array(this.componentMemory[componentType.IDENTIFIER]),
+                vu8: new Uint8Array(this.componentMemory[componentType.IDENTIFIER]),
             });
-            (componentType.cls as Component).id = i;
         }
-    }
-
-
-    getAccesor(id: number, c: ClassConstructor<any>): any {
-        return this.componentAccessors[c.id].to(id);
-    }
-
-    pushComponent(componentType: Component, args: any): number {
-        const componentTypeId = componentType.id;
-        const componentStructure = ecsComponents[componentTypeId];
-        const accessor: typeof generatedComponents[number] = this.componentAccessors[componentTypeId];
-        
-        console.log(componentStructure, args)
-
-        componentStructure.fields.forEach((field, index) => {
-            if(field.defaultValue !== undefined || args[field.name] !== undefined) {
-                if(field.type)
-        })
-        
-        return this.componentCursors[componentTypeId];
-        this.componentCursors[componentTypeId]++;
-
     }
 }

@@ -1,6 +1,7 @@
 {
 	"name": "eureka",
 	"devDependencies": {
+		"@types/bun": "^1.3.6",
 		"@webgpu/types": "^0.1.67",
 		"vite": "^7.3.1"
 	},

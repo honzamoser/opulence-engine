@@ -2,7 +2,7 @@
 import { mat4, Mat4, vec3, Vec3 } from "wgpu-matrix";import { Component } from "../component";import { hot } from "../component-gen";
 
 
-import {SparseSet } from "./index"
+import { SparseSet } from "./index"
 
 type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
@@ -36,18 +36,18 @@ type ComponentDescription = {
 
 
 type CameraComponentSignature = {
-    fov: number;
+        fov: number;
     near: number;
     far: number;
-    position: Vec3;
+    position: Float32Array;
     rotation: Vec3;
     projectionMatrix: Mat4;
     _componentId: number;}
 
 export class CameraComponent {
-    static STRIDE: number = 108;
+    static STRIDE: number = 160;
     static IDENTIFIER: number = 0;
-    static DESCRIPTION: ComponentDescription = {"name":"CameraComponent","stride":108,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { hot } from \"../component-gen\";","properties":[{"name":"fov","type":"f32","byteLength":4,"offset":4,"jsType":"number","default":"Math.PI / 2"},{"name":"near","type":"f32","byteLength":4,"offset":8,"jsType":"number","default":"0.1"},{"name":"far","type":"f32","byteLength":4,"offset":12,"jsType":"number","default":"1000"},{"name":"position","type":"f32[]","byteLength":12,"length":3,"offset":16,"jsType":"Vec3","default":"vec3.zero()"},{"name":"rotation","type":"f32[]","byteLength":12,"length":3,"offset":28,"jsType":"Vec3","default":"vec3.zero()"},{"name":"projectionMatrix","type":"f32[]","byteLength":64,"length":16,"offset":40,"jsType":"Mat4","default":"mat4.create()"},{"name":"_componentId","type":"i32","byteLength":4,"offset":0,"jsType":"number","default":"0"}]}
+    static DESCRIPTION: ComponentDescription = {"name":"CameraComponent","stride":160,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { hot } from \"../component-gen\";","properties":[{"byteLength":4,"type":"number","name":"fov","view":"vf32","default":0,"offset":4},{"byteLength":4,"type":"number","name":"near","view":"vf32","default":0,"offset":8},{"byteLength":4,"type":"number","name":"far","view":"vf32","default":0,"offset":12},{"name":"position","byteLength":64,"arrayLength":16,"default":"new Float32Array(16)","type":"Float32Array","view":"vf32","offset":16},{"name":"rotation","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":80},{"name":"projectionMatrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.create()","view":"vf32","offset":92},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -55,9 +55,9 @@ export class CameraComponent {
 
     declare _constructionFootprint: CameraComponentSignature;
     
-	static vf32: Float32Array;
-	static vi32: Int32Array;
-	static vu8: Uint8Array;
+	static vf32: Float32Array; 
+	static vi32: Int32Array; 
+	static vu8: Uint8Array; 
 
 
     static IS_INITIALIZED: boolean = false; 
@@ -69,37 +69,37 @@ export class CameraComponent {
 
         CameraComponent.IS_INITIALIZED = true;
         CameraComponent.SET = new SparseSet();
-    }
-    static new(v: Partial<CameraComponentSignature>) {
-        const elId = CameraComponent.NEXT;
+} 
+    static new (v: Partial < CameraComponentSignature >) {
+    const elId = CameraComponent.NEXT;
     CameraComponent.NEXT += 1;
     const memId = CameraComponent.SET.add(elId);
 
-        const constructionData: CameraComponentSignature = {
-            fov: v.fov ? v.fov : Math.PI / 2,
-near: v.near ? v.near : 0.1,
-far: v.far ? v.far : 1000,
-position: v.position ? v.position : vec3.zero(),
+    const constructionData: CameraComponentSignature = {
+        fov: v.fov ? v.fov : 0,
+near: v.near ? v.near : 0,
+far: v.far ? v.far : 0,
+position: v.position ? v.position : new Float32Array(16),
 rotation: v.rotation ? v.rotation : vec3.zero(),
 projectionMatrix: v.projectionMatrix ? v.projectionMatrix : mat4.create(),
 _componentId: v._componentId ? v._componentId : 0,
     }
-    const base = CameraComponent.MEM_CURSOR * 108;
+const base = CameraComponent.MEM_CURSOR * 160;
     CameraComponent.vi32[base / 4] = memId;
-    CameraComponent.MEM_CURSOR += 1;
-    CameraComponent.vf32[base / 4 + 1 + 0] = constructionData.fov;
-CameraComponent.vf32[base / 4 + 2 + 0] = constructionData.near;
-CameraComponent.vf32[base / 4 + 3 + 0] = constructionData.far;
-CameraComponent.vf32[base / 4 + 4 + 0] = constructionData.position[0];CameraComponent.vf32[base / 4 + 4 + 1] = constructionData.position[1];CameraComponent.vf32[base / 4 + 4 + 2] = constructionData.position[2];
-CameraComponent.vf32[base / 4 + 7 + 0] = constructionData.rotation[0];CameraComponent.vf32[base / 4 + 7 + 1] = constructionData.rotation[1];CameraComponent.vf32[base / 4 + 7 + 2] = constructionData.rotation[2];
-CameraComponent.vf32.set(constructionData.projectionMatrix, base / 4 + 10);
 
-    
+    CameraComponent.fov = constructionData.fov;
+CameraComponent.near = constructionData.near;
+CameraComponent.far = constructionData.far;
+CameraComponent.position = constructionData.position;
+CameraComponent.rotation = constructionData.rotation;
+CameraComponent.projectionMatrix = constructionData.projectionMatrix;
 
-    return elId;
+
+
+return memId;
     }
         
-    static delete() {
+    static delete () {
     //    if (CameraComponent.CURSOR < CameraComponent.SET.length) {
     //     CameraComponent.SET[CameraComponent.SET.length - 1] = CameraComponent.SET[CameraComponent.CURSOR]; 
     //     CameraComponent.SET[CameraComponent.CURSOR] = undefined;
@@ -108,8 +108,8 @@ CameraComponent.vf32.set(constructionData.projectionMatrix, base / 4 + 10);
 
         // move data from last component in dense array to the deleted component's position
         CameraComponent.SET.remove(CameraComponent.CURSOR);
-    }
-    
+}
+
 
     static to(cId: number) {
 
@@ -120,109 +120,98 @@ CameraComponent.vf32.set(constructionData.projectionMatrix, base / 4 + 10);
         CameraComponent.MEM_CURSOR = CameraComponent.SET.getValue(cId);
         CameraComponent.CURSOR = cId;
         return CameraComponent;
-    }
-
-   static get fov() {
-        return CameraComponent.vf32[1 + CameraComponent.MEM_CURSOR * 27];
-    } 
-    
-    static set fov(v: number) {
-        CameraComponent.vf32[1 + CameraComponent.MEM_CURSOR * 27] = v;
-    }   static get near() {
-        return CameraComponent.vf32[2 + CameraComponent.MEM_CURSOR * 27];
-    } 
-    
-    static set near(v: number) {
-        CameraComponent.vf32[2 + CameraComponent.MEM_CURSOR * 27] = v;
-    }   static get far() {
-        return CameraComponent.vf32[3 + CameraComponent.MEM_CURSOR * 27];
-    } 
-    
-    static set far(v: number) {
-        CameraComponent.vf32[3 + CameraComponent.MEM_CURSOR * 27] = v;
-    }   static get position() {
-        return CameraComponent.vf32.subarray(4 + CameraComponent.MEM_CURSOR * 27, 7 + CameraComponent.MEM_CURSOR * 27)
     } 
 
-    static set position(v: Vec3) {
-            CameraComponent.vf32[4 + CameraComponent.MEM_CURSOR * 27] = v[0]
-CameraComponent.vf32[5 + CameraComponent.MEM_CURSOR * 27] = v[1]
-CameraComponent.vf32[6 + CameraComponent.MEM_CURSOR * 27] = v[2]
+static get fov() {
+            return CameraComponent.vf32[1 + 160 * CameraComponent.MEM_CURSOR]
+        } 
+            
+        static set fov(v: number) {
+            CameraComponent.vf32[1 + 160 * CameraComponent.MEM_CURSOR] = v;
+        }
+
+static get near() {
+            return CameraComponent.vf32[2 + 160 * CameraComponent.MEM_CURSOR]
+        } 
+            
+        static set near(v: number) {
+            CameraComponent.vf32[2 + 160 * CameraComponent.MEM_CURSOR] = v;
+        }
+
+static get far() {
+            return CameraComponent.vf32[3 + 160 * CameraComponent.MEM_CURSOR]
+        } 
+            
+        static set far(v: number) {
+            CameraComponent.vf32[3 + 160 * CameraComponent.MEM_CURSOR] = v;
+        }
+
+   static get position() {
+        return CameraComponent.vFloat32Array.subarray(4 + CameraComponent.MEM_CURSOR * 40, 20 + CameraComponent.MEM_CURSOR * 40)
+    } 
+
+    static set position(v: undefined) {
+            CameraComponent.vFloat32Array.set(v, 4 + CameraComponent.MEM_CURSOR * 40)
 
         }
 
-    static cpy_position(out: Vec3) {
-          out[0] = CameraComponent.vf32[4 + CameraComponent.MEM_CURSOR * 27]
- out[1] = CameraComponent.vf32[5 + CameraComponent.MEM_CURSOR * 27]
- out[2] = CameraComponent.vf32[6 + CameraComponent.MEM_CURSOR * 27]
+    static cpy_position(out: undefined) {
+         out.set(CameraComponent.vFloat32Array.subarray(4 + CameraComponent.MEM_CURSOR * 40, 20 + CameraComponent.MEM_CURSOR * 40))
 
     }
-    
 
-
-            static get positionX () {
-        return CameraComponent.vf32[4 + CameraComponent.MEM_CURSOR * 27];
-            }
-
-            static get positionY () {
-        return CameraComponent.vf32[5 + CameraComponent.MEM_CURSOR * 27];
-            }
-
-            static get positionZ () {
-        return CameraComponent.vf32[6 + CameraComponent.MEM_CURSOR * 27];
-            }
+static get rotation() {
+            return CameraComponent.vf32.subarray((80 / 4) + (160 / 4) * CameraComponent.MEM_CURSOR, (80 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR + 3)
+    }
+            
+    static set rotation(v: Vec3 | Float32Array) {
+        CameraComponent.vf32.set(v, (80 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR);
+    }
         
-               static get rotation() {
-        return CameraComponent.vf32.subarray(7 + CameraComponent.MEM_CURSOR * 27, 10 + CameraComponent.MEM_CURSOR * 27)
-    } 
-
-    static set rotation(v: Vec3) {
-            CameraComponent.vf32[7 + CameraComponent.MEM_CURSOR * 27] = v[0]
-CameraComponent.vf32[8 + CameraComponent.MEM_CURSOR * 27] = v[1]
-CameraComponent.vf32[9 + CameraComponent.MEM_CURSOR * 27] = v[2]
-
-        }
-
     static cpy_rotation(out: Vec3) {
-          out[0] = CameraComponent.vf32[7 + CameraComponent.MEM_CURSOR * 27]
- out[1] = CameraComponent.vf32[8 + CameraComponent.MEM_CURSOR * 27]
- out[2] = CameraComponent.vf32[9 + CameraComponent.MEM_CURSOR * 27]
-
+        out.set(CameraComponent.vf32.subarray((80 / 4) + (160 / 4) * CameraComponent.MEM_CURSOR, (80 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR + 3));
     }
-    
-
-
-            static get rotationX () {
-        return CameraComponent.vf32[7 + CameraComponent.MEM_CURSOR * 27];
-            }
-
-            static get rotationY () {
-        return CameraComponent.vf32[8 + CameraComponent.MEM_CURSOR * 27];
-            }
-
-            static get rotationZ () {
-        return CameraComponent.vf32[9 + CameraComponent.MEM_CURSOR * 27];
-            }
         
-               static get projectionMatrix() {
-        return CameraComponent.vf32.subarray(10 + CameraComponent.MEM_CURSOR * 27, 26 + CameraComponent.MEM_CURSOR * 27)
-    } 
+    static get rotationX() {
+        return CameraComponent.vf32[(80 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR + 0];
+    }
 
-    static set projectionMatrix(v: Mat4) {
-            CameraComponent.vf32.set(v, 10 + CameraComponent.MEM_CURSOR * 27)
+    static set rotationX(v: number) {
+        CameraComponent.vf32[(80 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR + 0] = v;
+    }
+static get rotationY() {
+        return CameraComponent.vf32[(80 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR + 1];
+    }
 
+    static set rotationY(v: number) {
+        CameraComponent.vf32[(80 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR + 1] = v;
+    }
+static get rotationZ() {
+        return CameraComponent.vf32[(80 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR + 2];
+    }
+
+    static set rotationZ(v: number) {
+        CameraComponent.vf32[(80 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR + 2] = v;
+    }
+
+static get projectionMatrix() {
+            return CameraComponent.vf32.subarray((92 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR, (92 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR + 16)
+    }
+            
+    static set projectionMatrix(v: Mat4 | Float32Array) {
+        CameraComponent.vf32.set(v, (92 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR);
+    }
+        
+    static cpy_projectionMatrix(out: Mat4) {
+        out.set(CameraComponent.vf32.subarray((92 / 4) + (160 / 4) * CameraComponent.MEM_CURSOR, (92 / 4) + 160 / 4 * CameraComponent.MEM_CURSOR + 16));
+    }
+
+static get _componentId() {
+            return CameraComponent.vf32[0 + 160 * CameraComponent.MEM_CURSOR]
+        } 
+            
+        static set _componentId(v: number) {
+            CameraComponent.vf32[0 + 160 * CameraComponent.MEM_CURSOR] = v;
         }
 
-    static cpy_projectionMatrix(out: Mat4) {
-         out.set(CameraComponent.vf32.subarray(10 + CameraComponent.MEM_CURSOR * 27, 26 + CameraComponent.MEM_CURSOR * 27))
-
-    }
-    
-
-   static get _componentId() {
-        return CameraComponent.vi32[0 + CameraComponent.MEM_CURSOR * 27];
-    } 
-    
-    static set _componentId(v: number) {
-        CameraComponent.vi32[0 + CameraComponent.MEM_CURSOR * 27] = v;
-    }}
+}

@@ -58,20 +58,19 @@ import { MeshComponent } from "./mesh";
 import { RigidbodyComponent } from "./rigidbody";
 import { TransformComponent } from "./transform";
 
-            export const generatedComponents = [
-                CameraComponent,
+    export const generatedComponents = [
+        CameraComponent,
 MeshComponent,
 RigidbodyComponent,
 TransformComponent
-            ];
+    ];
 
-            export {
-                CameraComponent,
+    export {
+        CameraComponent,
 MeshComponent,
 RigidbodyComponent,
 TransformComponent
-        }
+}
 
-        export type GeneratedComponent = CameraComponent | MeshComponent | RigidbodyComponent | TransformComponent;
+export type GeneratedComponent = CameraComponent | MeshComponent | RigidbodyComponent | TransformComponent;
 
-        

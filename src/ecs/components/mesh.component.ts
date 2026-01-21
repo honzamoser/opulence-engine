@@ -7,7 +7,7 @@ export default class MeshComponent extends Component {
 
   rendererdInstasnceId: number;
 
-  resourceIdentifier: string;
+  // resourceIdentifier: string;
 
   boundingBoxMin: Vec3 = vec3.create(
     Number.POSITIVE_INFINITY,

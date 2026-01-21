@@ -35,7 +35,6 @@ export default class RenderSystem extends System {
         return;
       }
 
-      console.log(transform.positionZ)
 
       this.calculateTransformMatrix(transform);
       this.renderer._updateMatrix(mesh.meshId, this.calculateTransformMatrix_Scratchpad.matrix);
@@ -61,7 +60,6 @@ export default class RenderSystem extends System {
     const transformId = engine.entities[entity][TransformComponent.IDENTIFIER];
     const transform = TransformComponent.to(transformId);
     const mesh = MeshComponent.to(engine.entities[entity][MeshComponent.IDENTIFIER])
-
 
     this.calculateTransformMatrix(transform);
     transform.cpy_matrix(this.instantiatScratchpad.matrix);

@@ -31,11 +31,7 @@ export class ECS {
             const componentType = generatedComponents[i];
             this.componentMemory.push(new ArrayBuffer(componentType.STRIDE * 100));
             this.componentMemory[componentType.IDENTIFIER] = new ArrayBuffer(componentType.STRIDE * 100);
-            componentType.initialize({
-                vf32: new Float32Array(this.componentMemory[componentType.IDENTIFIER]),
-                vi32: new Int32Array(this.componentMemory[componentType.IDENTIFIER]),
-                vu8: new Uint8Array(this.componentMemory[componentType.IDENTIFIER]),
-            });
+            componentType.initialize(this.componentMemory[componentType.IDENTIFIER]);
         }
     }
 }

@@ -17,7 +17,7 @@
     "src/generated/**/*",
     "generated/**/*",
     "game_src/**/*",
-    "compiler/component_parsers.ts",
+    "compiler/**/*",
   ],
   
 }

@@ -105,6 +105,6 @@ export class Engine extends EventTarget {
     console.log(this.entities)
     console.log(component.SET)
 
-    return componentId;
+    return componentId as number;
   }
 }

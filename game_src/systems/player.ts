@@ -23,9 +23,13 @@ export class PlayerSystem extends System {
 
     this.c_playerEnt = engine.createEntity(); // Vytvoříme entitu pro hráče
 
+    TransformComponent.CURSOR = 0;
+    TransformComponent.NEXT = 0;
+
     engine.addComponent<MeshComponent>(this.c_playerEnt, MeshComponent, { meshId: cubeMesh }); // Přidáme komponentu MeshComponent s krychlí
     engine.addComponent<TransformComponent>(this.c_playerEnt, TransformComponent, { position: new Float32Array([0, 0, -10]), rotation: new Float32Array([0, 0, 0]), scale: new Float32Array([1, 1, 1]) }); // Přidáme komponentu TransformComponent s počáteční pozicí, rotací a škálou
-    
+
+
     
     // const rb = engine.addComponent(this.c_playerEnt, RigidbodyComponent, [1]); // Přidáme komponentu MeshComponent s krychlí
 

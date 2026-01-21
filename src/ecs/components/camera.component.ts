@@ -9,7 +9,7 @@ export class CameraComponent  {
   near: number = 0.1;
   far: number = 1000;
 
-  position: Vec3;
+  position: Float32Array = new Float32Array(16);
   rotation: Vec3;
 
   projectionMatrix: Mat4 = mat4.create();

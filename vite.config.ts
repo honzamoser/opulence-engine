@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import o_config from "./opulenece.config";
 import ecsCodegen from "./plugin/opulence-compiler"
+import path from "path/win32";
 
 export default defineConfig({
   plugins: [
@@ -42,5 +43,10 @@ export default defineConfig({
   publicDir: "resources",
   esbuild: {
     target: "es2022",
+  },
+  resolve: {
+    alias: {
+      "@generated": path.resolve(__dirname, "./generated"),
+    }
   }
 });

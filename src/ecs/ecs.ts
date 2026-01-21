@@ -1,6 +1,6 @@
 import { Allocator } from "./allocator";
 import { Component } from "./component";
-import { generatedComponents } from "../../generated";
+import { generatedComponents } from "@generated";
 
 type ComponentStructure = {
     name: string,

@@ -3,7 +3,7 @@ import { System } from "../system";
 import { Engine } from "../../engine";
 import { Helios2Renderer } from "../../renderer/renderer";
 import { namespace } from "../component-gen";
-import { MeshComponent, TransformComponent } from "../../../generated";
+import { MeshComponent, TransformComponent } from "@generated";
 
 @namespace("builtin.render.RenderSystem")
 export default class RenderSystem extends System {
@@ -16,20 +16,18 @@ export default class RenderSystem extends System {
   }
 
   public override async update(entities: number[][], delta: number, engine: Engine) {
+    this.renderer.render(delta);
+
     engine.query(MeshComponent, TransformComponent).forEach((entity) => {
 
-      console.log(engine.entities[entity][MeshComponent.id])
+      const meshId = engine.entities[entity][MeshComponent.IDENTIFIER];
+      const transformId = engine.entities[entity][TransformComponent.IDENTIFIER];
 
-      const meshId = engine.entities[entity][MeshComponent.id];
-      const transformId = engine.entities[entity][TransformComponent.id];
-
-      const transform: TransformComponentAccessor = engine.ecs.getAccesor(
-        transformId,
-        TransformComponent,
+      const transform = TransformComponent.to(
+        transformId
       );
-      const mesh: MeshComponent = engine.ecs.getAccesor(
-        meshId,
-        MeshComponent,
+      const mesh = MeshComponent.to(
+        meshId
       );
 
       if (mesh.meshId === 0) {
@@ -37,15 +35,14 @@ export default class RenderSystem extends System {
         return;
       }
 
-      transform.getMatrix(this.update_scratchPad.matrix);
-
-      console.log(this.update_scratchPad.matrix);
+      console.log(transform.positionZ)
 
       this.calculateTransformMatrix(transform);
-      this.renderer._updateMatrix(mesh.meshId, this.update_scratchPad.matrix);
+      this.renderer._updateMatrix(mesh.meshId, this.calculateTransformMatrix_Scratchpad.matrix);
+
+      transform.matrix = this.calculateTransformMatrix_Scratchpad.matrix;
     });
 
-    this.renderer.render(delta);
   }
 
   public async start(engine: Engine) {
@@ -61,17 +58,13 @@ export default class RenderSystem extends System {
   }
 
   private instantiate(engine: Engine, entity: number) {
-    const transformId = engine.entities[entity][TransformComponent.id];
-    const transform: TransformComponentAccessor = TransformComponent.
-    const mesh: MeshComponentAccessor = engine.ecs.getAccesor(
-      engine.entities[entity][MeshComponent.id],
-      MeshComponent
-    );
+    const transformId = engine.entities[entity][TransformComponent.IDENTIFIER];
+    const transform = TransformComponent.to(transformId);
+    const mesh = MeshComponent.to(engine.entities[entity][MeshComponent.IDENTIFIER])
 
-    console.log(transform, mesh)
 
     this.calculateTransformMatrix(transform);
-    transform.getMatrix(this.instantiatScratchpad.matrix);
+    transform.cpy_matrix(this.instantiatScratchpad.matrix);
     mesh.meshId = this.renderer._instantiate(
       0,
       this.instantiatScratchpad.matrix,
@@ -102,6 +95,7 @@ export default class RenderSystem extends System {
     scaleMatrix: mat4.create(),
     rotationMatrix: mat4.create(),
     transformMatrix: mat4.create(),
+    matrix: mat4.create(),
 
     positionVec3: vec3.create(),
     rotationVec3: vec3.create(),
@@ -109,18 +103,16 @@ export default class RenderSystem extends System {
   }
 
   calculateTransformMatrix(
-    t: TransformComponentAccessor,
+    t: typeof TransformComponent,
   ) {
     // const translationMatrix = mat4.translation(t.position, mat4.create());
 
-    t.getPosition(this.calculateTransformMatrix_Scratchpad.positionVec3);
-    t.getRotation(this.calculateTransformMatrix_Scratchpad.rotationVec3);
-    t.getScale(this.calculateTransformMatrix_Scratchpad.scaleVec3);
-
-    console.log(this.calculateTransformMatrix_Scratchpad.positionVec3);
+    t.cpy_position(this.calculateTransformMatrix_Scratchpad.positionVec3);
+    t.cpy_rotation(this.calculateTransformMatrix_Scratchpad.rotationVec3);
+    t.cpy_scale(this.calculateTransformMatrix_Scratchpad.scaleVec3);
 
 
-    const translationMatrix = mat4.translation(this.calculateTransformMatrix_Scratchpad.translationMatrix, this.calculateTransformMatrix_Scratchpad.positionVec3);
+    const translationMatrix = mat4.translation(this.calculateTransformMatrix_Scratchpad.positionVec3, this.calculateTransformMatrix_Scratchpad.translationMatrix);
     const rotationXMatrix = mat4.rotationX(this.calculateTransformMatrix_Scratchpad.rotationVec3[0], this.calculateTransformMatrix_Scratchpad.rotationXMatrix);
     const rotationYMatrix = mat4.rotationY(this.calculateTransformMatrix_Scratchpad.rotationVec3[1], this.calculateTransformMatrix_Scratchpad.rotationYMatrix);
     const rotationZMatrix = mat4.rotationZ(this.calculateTransformMatrix_Scratchpad.rotationVec3[2], this.calculateTransformMatrix_Scratchpad.rotationZMatrix);
@@ -128,11 +120,12 @@ export default class RenderSystem extends System {
 
     let rotationMatrix = mat4.multiply(rotationYMatrix, rotationXMatrix);
     rotationMatrix = mat4.multiply(rotationZMatrix, rotationMatrix);
-
     let transformMatrix = mat4.multiply(translationMatrix, rotationMatrix);
     transformMatrix = mat4.multiply(transformMatrix, scaleMatrix);
 
-    t.setMatrix(transformMatrix);
+
+    t.matrix = transformMatrix;
+    this.calculateTransformMatrix_Scratchpad.matrix = transformMatrix;
   }
 
   constructor(renderer: Helios2Renderer) {

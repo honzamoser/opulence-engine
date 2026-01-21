@@ -2,6 +2,8 @@
 import { vec3, Vec3 } from "wgpu-matrix";import { constructor, hot } from "../component-gen";import { Component } from "../component";
 
 
+import {SparseSet } from "./index"
+
     type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
 
@@ -43,12 +45,14 @@ type MeshComponentSignature = {
 
 export class MeshComponent {
     static STRIDE: number = 48;
-    static IDENTIFIER: number = 0;
-    static DESCRIPTION: ComponentDescription = {"name":"MeshComponent","stride":48,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { constructor, hot } from \"../component-gen\";import { Component } from \"../component\";","properties":[{"name":"meshId","type":"f32","byteLength":4,"offset":4,"jsType":"number","default":"0"},{"name":"rendererdInstasnceId","type":"f32","byteLength":4,"offset":8,"jsType":"number","default":"0"},{"name":"resourceIdentifier","type":"&char[]","byteLength":8,"offset":12,"pointer":true,"jsType":"PointerTo<Uint8Array>","default":"{ ptr: undefined, ptr_len: 0 }"},{"name":"boundingBoxMin","type":"f32[]","byteLength":12,"length":3,"offset":20,"jsType":"Vec3","default":"vec3.create(\n    Number.POSITIVE_INFINITY,\n    Number.POSITIVE_INFINITY,\n    Number.POSITIVE_INFINITY,\n  )"},{"name":"boundingBoxMax","type":"f32[]","byteLength":12,"length":3,"offset":32,"jsType":"Vec3","default":"vec3.create(\n    Number.NEGATIVE_INFINITY,\n    Number.NEGATIVE_INFINITY,\n    Number.NEGATIVE_INFINITY,\n  )"},{"name":"_componentId","type":"i32","byteLength":4,"offset":0,"jsType":"number","default":"0"}]}
+    static IDENTIFIER: number = 1;
+    static DESCRIPTION: ComponentDescription = {"name":"MeshComponent","stride":48,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { constructor, hot } from \"../component-gen\";import { Component } from \"../component\";","properties":[{"name":"meshId","type":"f32","byteLength":4,"offset":4,"jsType":"number","default":"0"},{"name":"rendererdInstasnceId","type":"f32","byteLength":4,"offset":8,"jsType":"number","default":"0"},{"name":"resourceIdentifier","type":"&char[]","byteLength":8,"offset":12,"pointer":true,"jsType":"PointerTo<Uint8Array>","default":"{ ptr: undefined, ptr_len: 0 }"},{"name":"boundingBoxMin","type":"f32[]","byteLength":12,"length":3,"offset":20,"jsType":"Vec3","default":"vec3.create(\r\n    Number.POSITIVE_INFINITY,\r\n    Number.POSITIVE_INFINITY,\r\n    Number.POSITIVE_INFINITY,\r\n  )"},{"name":"boundingBoxMax","type":"f32[]","byteLength":12,"length":3,"offset":32,"jsType":"Vec3","default":"vec3.create(\r\n    Number.NEGATIVE_INFINITY,\r\n    Number.NEGATIVE_INFINITY,\r\n    Number.NEGATIVE_INFINITY,\r\n  )"},{"name":"_componentId","type":"i32","byteLength":4,"offset":0,"jsType":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
-    static SET: number[] = [];
+    static SET: SparseSet;
     static NEXT: number = 0;
+
+    declare _constructionFootprint: MeshComponentSignature;
     
 	static vf32: Float32Array;
 	static vi32: Int32Array;
@@ -63,10 +67,12 @@ export class MeshComponent {
 
 
         MeshComponent.IS_INITIALIZED = true;
+        MeshComponent.SET = new SparseSet();
     }
     static new(v: Partial<MeshComponentSignature>) {
-        const memId = MeshComponent.SET.length;
-        MeshComponent.SET[memId] = memId;
+        const elId = MeshComponent.NEXT;
+    MeshComponent.NEXT += 1;
+    const memId = MeshComponent.SET.add(elId);
 
         const constructionData: MeshComponentSignature = {
             meshId: v.meshId ? v.meshId : 0,
@@ -94,35 +100,29 @@ MeshComponent.vf32[base / 4 + 5 + 0] = constructionData.boundingBoxMin[0];MeshCo
 MeshComponent.vf32[base / 4 + 8 + 0] = constructionData.boundingBoxMax[0];MeshComponent.vf32[base / 4 + 8 + 1] = constructionData.boundingBoxMax[1];MeshComponent.vf32[base / 4 + 8 + 2] = constructionData.boundingBoxMax[2];
 
     
+
+    return elId;
     }
         
     static delete() {
-       if (MeshComponent.CURSOR < MeshComponent.SET.length) {
-        MeshComponent.SET[MeshComponent.SET.length - 1] = MeshComponent.SET[MeshComponent.CURSOR]; 
-        MeshComponent.SET[MeshComponent.CURSOR] = undefined;
-        MeshComponent.MEM_CURSOR = MeshComponent.SET[MeshComponent.CURSOR];
-       } 
+    //    if (MeshComponent.CURSOR < MeshComponent.SET.length) {
+    //     MeshComponent.SET[MeshComponent.SET.length - 1] = MeshComponent.SET[MeshComponent.CURSOR]; 
+    //     MeshComponent.SET[MeshComponent.CURSOR] = undefined;
+    //     MeshComponent.MEM_CURSOR = MeshComponent.SET[MeshComponent.CURSOR];
+    //    } 
 
         // move data from last component in dense array to the deleted component's position
-        if (MeshComponent.SET.length > MeshComponent.MEM_CURSOR) {
-            const baseSrc = MeshComponent.NEXT * 48;
-            const baseDst = MeshComponent.MEM_CURSOR * 48;
-
-            // Copy data in vf32
-            for (let i = 0; i < 120 / 4; i++) {
-                MeshComponent.vf32[baseDst / 4 + i] = MeshComponent.vf32[baseSrc / 4 + i];
-            }
-        }
+        MeshComponent.SET.remove(MeshComponent.CURSOR);
     }
     
 
     static to(cId: number) {
 
-        if (MeshComponent.SET[cId] == undefined) {
+        if (!MeshComponent.SET.contains(cId)) {
             throw new Error("Entity does not have this component");
         }
 
-        MeshComponent.MEM_CURSOR = MeshComponent.SET[cId]
+        MeshComponent.MEM_CURSOR = MeshComponent.SET.getValue(cId);
         MeshComponent.CURSOR = cId;
         return MeshComponent;
     }
@@ -158,7 +158,20 @@ MeshComponent.vf32[7 + MeshComponent.MEM_CURSOR * 12] = v[2]
     }
     
 
-   static get boundingBoxMax() {
+
+            static get boundingBoxMinX () {
+        return MeshComponent.vf32[5 + MeshComponent.MEM_CURSOR * 12];
+            }
+
+            static get boundingBoxMinY () {
+        return MeshComponent.vf32[6 + MeshComponent.MEM_CURSOR * 12];
+            }
+
+            static get boundingBoxMinZ () {
+        return MeshComponent.vf32[7 + MeshComponent.MEM_CURSOR * 12];
+            }
+        
+               static get boundingBoxMax() {
         return MeshComponent.vf32.subarray(8 + MeshComponent.MEM_CURSOR * 12, 11 + MeshComponent.MEM_CURSOR * 12)
     } 
 
@@ -177,7 +190,20 @@ MeshComponent.vf32[10 + MeshComponent.MEM_CURSOR * 12] = v[2]
     }
     
 
-   static get _componentId() {
+
+            static get boundingBoxMaxX () {
+        return MeshComponent.vf32[8 + MeshComponent.MEM_CURSOR * 12];
+            }
+
+            static get boundingBoxMaxY () {
+        return MeshComponent.vf32[9 + MeshComponent.MEM_CURSOR * 12];
+            }
+
+            static get boundingBoxMaxZ () {
+        return MeshComponent.vf32[10 + MeshComponent.MEM_CURSOR * 12];
+            }
+        
+               static get _componentId() {
         return MeshComponent.vi32[0 + MeshComponent.MEM_CURSOR * 12];
     } 
     

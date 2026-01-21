@@ -2,6 +2,8 @@
 import { vec3, Vec3 } from "wgpu-matrix";import { Component } from "../component";import { cold, constructor, hot } from "../component-gen";import {PointerTo} from "../../../component_parsers"
 
 
+import {SparseSet } from "./index"
+
     type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
 
@@ -41,12 +43,14 @@ type RigidbodyComponentSignature = {
 
 export class RigidbodyComponent {
     static STRIDE: number = 32;
-    static IDENTIFIER: number = 3;
+    static IDENTIFIER: number = 2;
     static DESCRIPTION: ComponentDescription = {"name":"RigidbodyComponent","stride":32,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { cold, constructor, hot } from \"../component-gen\";import {PointerTo} from \"../../../component_parsers\"","properties":[{"name":"mass","type":"f32","byteLength":4,"offset":4,"jsType":"number","default":"1"},{"name":"velocity","type":"f32[]","byteLength":12,"length":3,"offset":8,"jsType":"Vec3","default":"vec3.zero()"},{"name":"vertices","type":"&f32[]","byteLength":8,"offset":20,"pointer":true,"jsType":"PointerTo<Float32Array>","default":"{ ptr: undefined, ptr_len: 0 }"},{"name":"_componentId","type":"i32","byteLength":4,"offset":0,"jsType":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
-    static SET: number[] = [];
+    static SET: SparseSet;
     static NEXT: number = 0;
+
+    declare _constructionFootprint: RigidbodyComponentSignature;
     
 	static vf32: Float32Array;
 	static vi32: Int32Array;
@@ -61,10 +65,12 @@ export class RigidbodyComponent {
 
 
         RigidbodyComponent.IS_INITIALIZED = true;
+        RigidbodyComponent.SET = new SparseSet();
     }
     static new(v: Partial<RigidbodyComponentSignature>) {
-        const memId = RigidbodyComponent.SET.length;
-        RigidbodyComponent.SET[memId] = memId;
+        const elId = RigidbodyComponent.NEXT;
+    RigidbodyComponent.NEXT += 1;
+    const memId = RigidbodyComponent.SET.add(elId);
 
         const constructionData: RigidbodyComponentSignature = {
             mass: v.mass ? v.mass : 1,
@@ -80,35 +86,29 @@ RigidbodyComponent.vf32[base / 4 + 2 + 0] = constructionData.velocity[0];Rigidbo
 // throw new Error("Pointers are not yet implemented");
 
     
+
+    return elId;
     }
         
     static delete() {
-       if (RigidbodyComponent.CURSOR < RigidbodyComponent.SET.length) {
-        RigidbodyComponent.SET[RigidbodyComponent.SET.length - 1] = RigidbodyComponent.SET[RigidbodyComponent.CURSOR]; 
-        RigidbodyComponent.SET[RigidbodyComponent.CURSOR] = undefined;
-        RigidbodyComponent.MEM_CURSOR = RigidbodyComponent.SET[RigidbodyComponent.CURSOR];
-       } 
+    //    if (RigidbodyComponent.CURSOR < RigidbodyComponent.SET.length) {
+    //     RigidbodyComponent.SET[RigidbodyComponent.SET.length - 1] = RigidbodyComponent.SET[RigidbodyComponent.CURSOR]; 
+    //     RigidbodyComponent.SET[RigidbodyComponent.CURSOR] = undefined;
+    //     RigidbodyComponent.MEM_CURSOR = RigidbodyComponent.SET[RigidbodyComponent.CURSOR];
+    //    } 
 
         // move data from last component in dense array to the deleted component's position
-        if (RigidbodyComponent.SET.length > RigidbodyComponent.MEM_CURSOR) {
-            const baseSrc = RigidbodyComponent.NEXT * 32;
-            const baseDst = RigidbodyComponent.MEM_CURSOR * 32;
-
-            // Copy data in vf32
-            for (let i = 0; i < 120 / 4; i++) {
-                RigidbodyComponent.vf32[baseDst / 4 + i] = RigidbodyComponent.vf32[baseSrc / 4 + i];
-            }
-        }
+        RigidbodyComponent.SET.remove(RigidbodyComponent.CURSOR);
     }
     
 
     static to(cId: number) {
 
-        if (RigidbodyComponent.SET[cId] == undefined) {
+        if (!RigidbodyComponent.SET.contains(cId)) {
             throw new Error("Entity does not have this component");
         }
 
-        RigidbodyComponent.MEM_CURSOR = RigidbodyComponent.SET[cId]
+        RigidbodyComponent.MEM_CURSOR = RigidbodyComponent.SET.getValue(cId);
         RigidbodyComponent.CURSOR = cId;
         return RigidbodyComponent;
     }
@@ -138,7 +138,20 @@ RigidbodyComponent.vf32[4 + RigidbodyComponent.MEM_CURSOR * 8] = v[2]
     }
     
 
-   static get _componentId() {
+
+            static get velocityX () {
+        return RigidbodyComponent.vf32[2 + RigidbodyComponent.MEM_CURSOR * 8];
+            }
+
+            static get velocityY () {
+        return RigidbodyComponent.vf32[3 + RigidbodyComponent.MEM_CURSOR * 8];
+            }
+
+            static get velocityZ () {
+        return RigidbodyComponent.vf32[4 + RigidbodyComponent.MEM_CURSOR * 8];
+            }
+        
+               static get _componentId() {
         return RigidbodyComponent.vi32[0 + RigidbodyComponent.MEM_CURSOR * 8];
     } 
     

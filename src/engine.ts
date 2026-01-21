@@ -1,10 +1,11 @@
+
 import { startLifecycle } from "./lifecycle";
 import { System } from "./ecs/system";
 import { Component } from "./ecs/component";
 import { PointerManager } from "./data/arrayBufferPointer";
 import { ClassConstructor, ECS } from "./ecs/ecs";
 import { Helios2Renderer } from "./renderer/renderer";
-import { TransformComponent } from "../generated";
+import { GeneratedComponent, TransformComponent } from "../generated";
 
 export class Engine extends EventTarget {
   entities: Array<number[]> = [];
@@ -40,7 +41,7 @@ export class Engine extends EventTarget {
       ),
     );
 
-    // startLifecycle(this.update.bind(this));
+    startLifecycle(this.update.bind(this));
   }
 
   async update(delta: number) {
@@ -68,8 +69,8 @@ export class Engine extends EventTarget {
 
   public on = this.addEventListener;
 
-  query(...componentTypes: (new (...args: any[]) => Component)[]): number[] {
-    const ids = componentTypes.map((ct) => (ct as any).id);
+  query(...componentTypes: any): number[] {
+    const ids = componentTypes.map((ct) => (ct as any).IDENTIFIER);
     const result: number[] = [];
 
     for (let i = 0; i < this.entities.length; i++) {
@@ -91,15 +92,18 @@ export class Engine extends EventTarget {
     return result;
   }
 
-  addComponent<T extends Component>(
+  addComponent<T extends GeneratedComponent>(
     entityId: number,
     component: ClassConstructor<T>,
-    args: any,
+    args: Partial<T["_constructionFootprint"]>
   ) {
-    const componentTypeid = (component as any).id as number;
+    console.log(component.IDENTIFIER)
     const componentId = component.new(args);
 
-    this.entities[entityId][componentTypeid] = componentId;
+    this.entities[entityId][component.IDENTIFIER] = componentId;
+
+    console.log(this.entities)
+    console.log(component.SET)
 
     return componentId;
   }

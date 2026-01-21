@@ -1,16 +1,16 @@
-import MeshComponent from "/workspaces/legends-of-league/src/ecs/components/mesh.component.ts";
-import TransformComponent from "/workspaces/legends-of-league/src/ecs/components/transform.component.ts";
+import MeshComponent from "D:/projects/opulence/opulence-engine/src/ecs/components/mesh.component.ts";
+import TransformComponent from "D:/projects/opulence/opulence-engine/src/ecs/components/transform.component.ts";
 
 import { mat4 } from "wgpu-matrix";
 import { Mat4 } from "wgpu-matrix";
 import { vec3 } from "wgpu-matrix";
 import { Vec3 } from "wgpu-matrix";
-import { Component } from "/workspaces/legends-of-league/src/ecs/component";
-import { hot } from "/workspaces/legends-of-league/src/ecs/component-gen";
-import { constructor } from "/workspaces/legends-of-league/src/ecs/component-gen";
-import { cold } from "/workspaces/legends-of-league/src/ecs/component-gen";
-import { PointerTo } from "/workspaces/legends-of-league/component_parsers";
-// GENERATED AT 2026-01-20T13:49:01.418Z
+import { Component } from "D:\projects\opulence\opulence-engine\src\ecs\component";
+import { hot } from "D:\projects\opulence\opulence-engine\src\ecs\component-gen";
+import { constructor } from "D:\projects\opulence\opulence-engine\src\ecs\component-gen";
+import { cold } from "D:\projects\opulence\opulence-engine\src\ecs\component-gen";
+import { PointerTo } from "D:\projects\opulence\opulence-engine\component_parsers";
+// GENERATED AT 2026-01-21T09:35:23.811Z
 // AUTO-GENERATED - DO NOT EDIT
 
 export interface MemoryViews {
@@ -21,7 +21,7 @@ export interface MemoryViews {
 }
 
 export class MeshComponentAccessor {
-    public index: number = 0;
+    public index: number = 2;
     public static readonly stride: number = 12;
     public static readonly parent:typeof  MeshComponent = MeshComponent
     
@@ -64,7 +64,7 @@ export class MeshComponentAccessor {
 }
 
 export class TransformComponentAccessor {
-    public index: number = 1;
+    public index: number = 3;
     public static readonly stride: number = 100;
     public static readonly parent:typeof  TransformComponent = TransformComponent
     

@@ -1,8 +1,8 @@
 import { mat4, vec3, Vec3 } from "wgpu-matrix";
 import { Engine } from "../../engine";
-import CameraComponent from "../components/camera.component";
+import { CameraComponent } from "@generated"
 import { System } from "../system";
-import TransformComponent from "../components/transform.component";
+import {TransformComponent} from "@generated";
 import { namespace } from "../component-gen";
 
 @namespace("builtin.render.Camera")
@@ -16,30 +16,18 @@ export class CameraSystem extends System {
   ): Promise<void> {
     const cameraEntity = engine.query(CameraComponent, TransformComponent)[0];
 
-    const cameraComponent = engine.ecs.getComponent(
-      CameraComponent,
-      cameraEntity,
-    )!;
-    const transformComponent = engine.ecs.getComponent(
-      TransformComponent,
-      cameraEntity,
-    )!;
+    const cameraComponent = CameraComponent.to(cameraEntity[CameraComponent.IDENTIFIER])
+    const transformComponent = TransformComponent.to(cameraEntity[TransformComponent.IDENTIFIER])
 
-    engine.ecs.setComponentValue(
-      cameraEntity,
-      TransformComponent,
-      "rotation",
-      new Float32Array([0, 0, 0]),
-    );
 
-    cameraComponent.projectionMatrix.set(
+    cameraComponent.projectionMatrix = (
       this.getViewProjectionMatrix(cameraComponent, transformComponent, engine),
     );
   }
 
   getViewProjectionMatrix(
-    camera: CameraComponent,
-    transform: TransformComponent,
+    camera: typeof CameraComponent,
+    transform: typeof TransformComponent,
     engine: Engine,
   ): Float32Array<ArrayBufferLike> {
     const aspect = engine.canvas.clientWidth / engine.canvas.clientHeight;

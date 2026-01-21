@@ -8,6 +8,60 @@ const componentDirectories = [
     "./src/ecs/components/**.component.ts"
 ]
 
+const SPARSE_SET_DEF = `export class SparseSet {
+    // Stores the actual values (Entity IDs) tightly packed
+    // O(1) to get Value from Index (dense[i])
+    dense: number[] = [];
+
+    // Maps the Value to its Index in the dense array
+    // O(1) to get Index from Value (sparse[val])
+    // If your values are huge integers, use a Map<number, number> instead of an array.
+    sparse: number[] = []; 
+
+    add(value: number) {
+        if (this.contains(value)) return;
+
+        this.dense.push(value);
+        this.sparse[value] = this.dense.length - 1;
+
+        return this.sparse[value];
+    }
+
+    contains(value: number): boolean {
+        // Checks if value exists and points to valid data
+        const index = this.sparse[value];
+        return index < this.dense.length && this.dense[index] === value;
+    }
+
+    /* O(1) Removal (The Swap-Pop trick) */
+    remove(value: number) {
+        if (!this.contains(value)) return;
+
+        const indexToDelete = this.sparse[value];
+        const lastElement = this.dense[this.dense.length - 1];
+
+        // 1. Overwrite the element to delete with the last element
+        this.dense[indexToDelete] = lastElement;
+
+        // 2. Update the sparse map for the swapped element
+        this.sparse[lastElement] = indexToDelete;
+
+        // 3. Remove the last element
+        this.dense.pop();
+        
+        // Optional: clear the sparse slot (not strictly necessary but cleaner)
+        this.sparse[value] = undefined; 
+    }
+    
+    getIndex(value: number) {
+        return this.sparse[value];
+    }
+    
+    getValue(index: number) {
+        return this.dense[index];
+    }
+}`
+
 // Component definition:
 // Types: 
 //     Scalars: f32, i32, u32, i16, u16, u8, char
@@ -269,6 +323,8 @@ type PropertyDefinition = {
 }
 
 const COMPONENT_BOILERPLATE = (c: ComponentDescription) => `
+import {SparseSet } from "./index"
+
     type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
 
@@ -321,6 +377,7 @@ ${Object.keys(views).map(x => {
     }).join("")}
 
         ${c.name}.IS_INITIALIZED = true;
+        ${c.name}.SET = new SparseSet();
     }`
 }
 
@@ -344,8 +401,9 @@ function getCorrectView(type: string) {
 
 function generateComponentConstructor(c: ComponentDescription) {
     return `static new(v: Partial<${c.name}Signature>) {
-        const memId = ${c.name}.SET.length;
-        ${c.name}.SET[memId] = memId;
+        const elId = ${c.name}.NEXT;
+    ${c.name}.NEXT += 1;
+    const memId = ${c.name}.SET.add(elId);
 
         const constructionData: ${c.name}Signature = {
             ${c.properties.map(p => {
@@ -376,25 +434,19 @@ function generateComponentConstructor(c: ComponentDescription) {
             return out;
         }).join("\n")}
     
+
+    return elId;
     }
         
     static delete() {
-       if (${c.name}.CURSOR < ${c.name}.SET.length) {
-        ${c.name}.SET[${c.name}.SET.length - 1] = ${c.name}.SET[${c.name}.CURSOR]; 
-        ${c.name}.SET[${c.name}.CURSOR] = undefined;
-        ${c.name}.MEM_CURSOR = ${c.name}.SET[${c.name}.CURSOR];
-       } 
+    //    if (${c.name}.CURSOR < ${c.name}.SET.length) {
+    //     ${c.name}.SET[${c.name}.SET.length - 1] = ${c.name}.SET[${c.name}.CURSOR]; 
+    //     ${c.name}.SET[${c.name}.CURSOR] = undefined;
+    //     ${c.name}.MEM_CURSOR = ${c.name}.SET[${c.name}.CURSOR];
+    //    } 
 
         // move data from last component in dense array to the deleted component's position
-        if (${c.name}.SET.length > ${c.name}.MEM_CURSOR) {
-            const baseSrc = ${c.name}.NEXT * ${c.stride};
-            const baseDst = ${c.name}.MEM_CURSOR * ${c.stride};
-
-            // Copy data in vf32
-            for (let i = 0; i < 120 / 4; i++) {
-                ${c.name}.vf32[baseDst / 4 + i] = ${c.name}.vf32[baseSrc / 4 + i];
-            }
-        }
+        ${c.name}.SET.remove(${c.name}.CURSOR);
     }
     `
 }
@@ -413,8 +465,10 @@ export class ${c.name} {
     static DESCRIPTION: ComponentDescription = ${JSON.stringify(c)}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
-    static SET: number[] = [];
+    static SET: SparseSet;
     static NEXT: number = 0;
+
+    declare _constructionFootprint: ${c.name}Signature;
     
 ${generateViewsCode()}
 
@@ -424,16 +478,19 @@ ${generateViewsCode()}
 
     static to(cId: number) {
 
-        if (${c.name}.SET[cId] == undefined) {
+        if (!${c.name}.SET.contains(cId)) {
             throw new Error("Entity does not have this component");
         }
 
-        ${c.name}.MEM_CURSOR = ${c.name}.SET[cId]
+        ${c.name}.MEM_CURSOR = ${c.name}.SET.getValue(cId);
         ${c.name}.CURSOR = cId;
         return ${c.name};
     }\n\n`
 
     c.properties.forEach((p) => {
+
+        // code += `// ${p.type}`
+
         if (isArray(p)) {
             if (!p.pointer) {
                 code += `   static get ${p.name}() {
@@ -482,6 +539,24 @@ ${generateViewsCode()}
     static set ${p.name}(v: ${p.jsType}) {
         ${c.name}.v${p.type}[${p.offset / getDivisor(p)} + ${c.name}.MEM_CURSOR * ${c.stride / getDivisor(p)}] = v;
     }`
+
+        }
+
+        if (p.jsType == 'Vec3') {
+            code += `
+            static get ${p.name}X () {
+        return ${c.name}.vf32[${p.offset / getDivisor(p)} + ${c.name}.MEM_CURSOR * ${c.stride / getDivisor(p)}];
+            }
+
+            static get ${p.name}Y () {
+        return ${c.name}.vf32[${p.offset / getDivisor(p) + 1} + ${c.name}.MEM_CURSOR * ${c.stride / getDivisor(p)}];
+            }
+
+            static get ${p.name}Z () {
+        return ${c.name}.vf32[${p.offset / getDivisor(p) + 2} + ${c.name}.MEM_CURSOR * ${c.stride / getDivisor(p)}];
+            }
+        
+            `
         }
     });
 
@@ -518,26 +593,37 @@ for (const dir of componentDirectories) {
         const component = parseComponent(code);
         const moduleName = path.basename(comp).replace(".component.ts", "");
         writeFileSync(`./generated/${moduleName}.ts`, createComponentAccessor(component, index));
-        createdComponents.push({ name: component.name, moduleName: moduleName, path: `./generated/${moduleName}.ts`, });
+        createdComponents.push({ name: component.name, moduleName: moduleName, path: `./ generated / ${moduleName}.ts`, });
         index++;
     }
 
     writeFileSync('./generated/index.ts', `
+        ${SPARSE_SET_DEF}
+
 ${createdComponents.map(c => {
         return `import { ${c.name} } from "./${c.moduleName}";`
-    }).join("\n")}
+    }).join("\n")
+        }
 
-export const generatedComponents = [
-    ${createdComponents.map(c => {
-        return c.name;
-    }).join(",\n")}
-];
+            export const generatedComponents = [
+                ${createdComponents.map(c => {
+            return c.name;
+        }).join(",\n")
+        }
+            ];
 
-export {
-${createdComponents.map(c => {
-        return c.name;
-    }).join(",\n")}}
+            export {
+                ${createdComponents.map(c => {
+            return c.name;
+        }).join(",\n")
+        }
+        }
 
-`)
+        export type GeneratedComponent = ${createdComponents.map(c => {
+            return c.name;
+        }).join(" | ")
+        };
+
+        `)
 
 }

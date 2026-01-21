@@ -5,12 +5,18 @@
     "moduleResolution": "bundler",
     "module": "ESNext",
     "useDefineForClassFields": true,
-    "typeRoots": ["./node_modules/@types", "./src/generated"]
+    "typeRoots": ["./node_modules/@types", "./src/generated"],
+    "baseUrl": ".",
+    "paths": {
+      "@generated": ["generated/index"],
+      "@generated/*": ["generated/*"]
+    }
   },
   "include": [
     "src/**/*",
     "src/generated/**/*",
     "generated/**/*",
     "game_src/**/*"
-  ]
+  ],
+  
 }

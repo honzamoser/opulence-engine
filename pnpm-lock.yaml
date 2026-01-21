@@ -12,11 +12,11 @@ importers:
       vite: ^7.3.1
       wgpu-matrix: ^3.4.0
     dependencies:
-      '@types/node': 25.0.9
       ts-morph: 27.0.2
       wgpu-matrix: 3.4.0
     devDependencies:
       '@types/bun': 1.3.6
+      '@types/node': 25.0.9
       '@webgpu/types': 0.1.69
       typescript: 5.9.3
       vite: 7.3.1_@types+node@25.0.9
@@ -491,6 +491,7 @@ packages:
     resolution: {integrity: sha512-/rpCXHlCWeqClNBwUhDcusJxXYDjZTyE8v5oTO7WbL8eij2nKhUeU89/6xgjU7N4/Vh3He0BtyhJdQbDyhiXAw==}
     dependencies:
       undici-types: 7.16.0
+    dev: true
 
   /@webgpu/types/0.1.69:
     resolution: {integrity: sha512-RPmm6kgRbI8e98zSD3RVACvnuktIja5+yLgDAkTmxLr90BEwdTXRQWNLF3ETTTyH/8mKhznZuN5AveXYFEsMGQ==}
@@ -655,6 +656,7 @@ packages:
 
   /undici-types/7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
+    dev: true
 
   /vite/7.3.1_@types+node@25.0.9:
     resolution: {integrity: sha512-w+N7Hifpc3gRjZ63vYBXA56dvvRlNWRczTdmCBBa+CotUzAPf5b7YMdMR/8CQoeYE5LX3W4wj6RYTgonm1b9DA==}

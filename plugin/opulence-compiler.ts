@@ -12,7 +12,7 @@ export default function ecsVirtualPlugin(): Plugin {
   // Helper to run codegen and save types
   const update = () => {
     try {
-      const { outputCode, types } = generateAccessorsCode();
+     
       
 
 

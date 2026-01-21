@@ -1,7 +1,7 @@
-import { writeFileSync } from "fs";
+import { writeFileSync, readFileSync } from "fs";
 import * as path from "path";
 import { cwd } from "process";
-import { Glob } from "bun";
+import { glob } from "node:fs/promises";
 
 
 const componentDirectories = [
@@ -69,7 +69,6 @@ const SPARSE_SET_DEF = `export class SparseSet {
 //     Util: Vec2, Vec3, Mat3, Mat4
 
 import { ClassDeclaration, Project, PropertyDeclaration, SyntaxKind, TypedNode, TypeNode } from "ts-morph"
-import { Mat4, mat4, vec3, Vec3 } from "wgpu-matrix";
 
 //     pointer def: 
 //         &f32[], &char[], 
@@ -94,7 +93,7 @@ b) How to access each property of the component
 const OUT_PATH = "./"
 
 const target_path = path.join(cwd(), OUT_PATH);
-
+export type SizeOf<T, Y extends number> = T
 export type PointerTo<T> = {
     ptr: number | undefined,
     ptr_len: number
@@ -107,6 +106,8 @@ type ComponentDescription = {
     properties: PropertyDefinition[],
 }
 
+export type TypeTransformer = (c: ComponentDescription, p: PropertyDefinition) => string;
+
 const componentCode = `import { Mat4, Vec3, mat4, vec3 } from "wgpu-matrix"
 
 export default class RigidbodyComponent {
@@ -117,6 +118,71 @@ export default class RigidbodyComponent {
     name?: PointerTo<Uint8Array<ArrayBuffer>>;
     test: number = 0;
 }`
+
+import { typedArray } from "./typeHandlers/typedArray"
+
+const typedArrays = [
+    "Float64Array",
+    "Float32Array",
+    "Uint32Array",
+    "Int32Array",
+    "Int16Array",
+    "Uint16Array",
+    "Int8Array",
+    "Uint8Array",
+]
+
+const sizedStringRegex = /SizeOf<\s*string\s*,\s*(\d+)\s*>/i;
+
+const typeTransformers: { [key: string | RegExp]: TypeTransformer } = {
+    "number": (c, p) => {
+        return `static get ${p.name}() {
+            return ${c.name}.vf32[${p.offset / 4} + ${c.stride} * ${c.name}.MEM_CURSOR]
+        } 
+            
+        static set ${p.name}(v: number) {
+            ${c.name}.vf32[${p.offset / 4} + ${c.stride} * ${c.name}.MEM_CURSOR] = v;
+        }`
+    },
+
+    "string": (c, p) => {
+        return `static get ${p.name}() {
+            return ${c.name}.subarray(${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR, ${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR + 64)
+        }
+            
+        static set ${p.name}(v: string) {
+            for (let i = 0; i < 64; i++) {
+                if(v[i]) {
+                    ${c.name}.vu8[${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR + i] = v.charCodeAt(i);
+                } else {
+                    ${c.name}.vu8[${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR + i] = 0
+                }
+            }
+        }
+            
+        static cpy_${p.name}(out: Uint8Array) {
+            out.set(${c.name}.vu8, ${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR);
+        }`
+    },
+
+    ...typedArrays.reduce((acc, arr) => {
+        acc[arr] = typedArray;
+        return acc;
+    }, {} as { [key: string]: TypeTransformer }),
+
+    "SizeOf": (c, p) => {
+        if(p.typeArgs && p.typeArgs.length == 2) {
+            p.byteLength = parseInt(p.typeArgs[1]);
+        }
+    }
+}
+
+
+const x = /w3schools/i;
+
+    // / w3schools / i
+
+    // / SizeOf < string, \d*>
 
 const typeMap: { [key: string]: PropertyDefinition } = {
     "number": {
@@ -154,23 +220,23 @@ const typeMap: { [key: string]: PropertyDefinition } = {
         jsType: "PointerTo<Uint8Array>",
         default: "{ ptr: undefined, ptr_len: 0 }"
     },
-    "PointerTo<Float32Array>": {
+    "PointerTo": {
         name: null,
         type: "&f32[]",
         byteLength: 8,
         offset: null,
         pointer: true,
-        jsType: "PointerTo<Float32Array>",
+        jsType: "PointerTo",
         default: "{ ptr: undefined, ptr_len: 0 }"
     },
     "string": {
         name: null,
-        type: "&char[]",
-        byteLength: 8,
+        type: "char[]",
+        byteLength: 64,
         offset: null,
-        pointer: true,
-        jsType: "PointerTo<Uint8Array>",
-        default: "{ ptr: undefined, ptr_len: 0 }"
+        pointer: false,
+        jsType: "string",
+        default: ""
     },
     "Float32Array": {
         name: null,
@@ -180,6 +246,14 @@ const typeMap: { [key: string]: PropertyDefinition } = {
         jsType: "Float32Array",
         default: "new Float32Array(16)"
     },
+    "SizeOf": {
+        name: null,
+        type: "SizeOf",
+        byteLength: 0,
+        offset: null,
+        jsType: "SizeOf",
+        default: "undefined"
+    }
 }
 
 function parseComponent(code: string) {
@@ -215,6 +289,10 @@ function parseClass(cls: ClassDeclaration): ComponentDescription {
 
         if (getInitializer(p)) {
             propDef.default = getInitializer(p);
+        }
+
+        if(propDef.jsType == "SizeOf") {
+            propDef.byteLength = parseInt(propDef.typeArgs ? propDef.typeArgs[1] : "0");
         }
 
         offset += propDef.byteLength;
@@ -271,16 +349,23 @@ function parseProperty(p: PropertyDeclaration): PropertyDefinition {
     const typeNode = p.getTypeNodeOrThrow();
     const typeStructure = recuresiveTypeParse(typeNode);
 
-    console.log(typeStructure)
+    console.log("t:", typeStructure)
 
-    const matchType = typeStructure.length == 1 ? typeMap[typeStructure[0]] : typeMap[typeStructure[0] + "<" + typeStructure[1] + ">"];
+    const matchType = typeMap[typeStructure[0]];
+
+    if(!matchType)
+        throw new Error(`Type ${typeStructure[0]} is not supported`);
+
+    if(typeStructure.length > 1) {
+        matchType.typeArgs = typeStructure.slice(1);
+    }
+
 
     return structuredClone(matchType)
 }
 
 function recuresiveTypeParse(typeNode: TypeNode): string[] {
     const children = typeNode.getChildren();
-    console.log(typeNode.getText(), children.length)
 
     if (children.length == 0) {
         return [typeNode.getText()]
@@ -297,7 +382,7 @@ function recuresiveTypeParse(typeNode: TypeNode): string[] {
             if (children[i].getChildCount() > 0) {
                 res = [...res, ...recuresiveTypeParse(children[i] as TypeNode)]
             } else {
-                if (!(children[i].isKind(SyntaxKind.LessThanToken) || children[i].isKind(SyntaxKind.GreaterThanToken))) {
+                if (!(children[i].isKind(SyntaxKind.LessThanToken) || children[i].isKind(SyntaxKind.GreaterThanToken) || children[i].isKind(SyntaxKind.CommaToken))) {
                     res = [...res, children[i].getText()];
                 }
             }
@@ -309,7 +394,7 @@ function recuresiveTypeParse(typeNode: TypeNode): string[] {
 type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
 
-type PropertyDefinition = {
+export type PropertyDefinition = {
     name: string | null,
     type: PropertyType,
     jsType: string,
@@ -319,13 +404,14 @@ type PropertyDefinition = {
     pointer?: boolean,
     length?: number,
     offset: number,
-    default?: string
+    default?: string,
+    typeArgs?: string[]
 }
 
 const COMPONENT_BOILERPLATE = (c: ComponentDescription) => `
 import {SparseSet } from "./index"
 
-    type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
+type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
 
 type PropertyDefinition = {
@@ -371,9 +457,9 @@ function generateViewsCode() {
 }
 
 function generateInitializator(c: ComponentDescription) {
-    return `static initialize(v: {${Object.keys(views).map(x => { return `${x}: ${views[x]}` })}}) {
+    return `static initialize(v: ArrayBuffer) {
 ${Object.keys(views).map(x => {
-        return `\t\t${c.name}.${x} = v.${x}\n`
+        return `\t\t${c.name}.${x} = new ${views[x]}(v)\n`
     }).join("")}
 
         ${c.name}.IS_INITIALIZED = true;
@@ -580,50 +666,55 @@ function isArray(f: PropertyDefinition) {
     return f.type.endsWith("[]");
 }
 
-console.log();
+import {Glob} from "bun"
 
-let index = 0;
+export async function compile() {
+    let index = 0;
 
-let createdComponents = [];
+    let createdComponents = [];
 
-for (const dir of componentDirectories) {
-    const components = new Glob(dir).scanSync();
-    for (const comp of components) {
-        const code = await Bun.file(comp).text();
-        const component = parseComponent(code);
-        const moduleName = path.basename(comp).replace(".component.ts", "");
-        writeFileSync(`./generated/${moduleName}.ts`, createComponentAccessor(component, index));
-        createdComponents.push({ name: component.name, moduleName: moduleName, path: `./ generated / ${moduleName}.ts`, });
-        index++;
-    }
+    for (const dir of componentDirectories) {
+        const components = new Glob(dir).scan();
+        for await (const comp of components) {
+            const code = await readFileSync(comp, "utf-8");
+            const component = parseComponent(code);
+            const moduleName = path.basename(comp).replace(".component.ts", "");
+            writeFileSync(`./generated/${moduleName}.ts`, createComponentAccessor(component, index));
+            createdComponents.push({ name: component.name, moduleName: moduleName, path: `./ generated / ${moduleName}.ts`, });
+            index++;
+        }
 
-    writeFileSync('./generated/index.ts', `
+        writeFileSync('./generated/index.ts', `
         ${SPARSE_SET_DEF}
 
 ${createdComponents.map(c => {
-        return `import { ${c.name} } from "./${c.moduleName}";`
-    }).join("\n")
-        }
+            return `import { ${c.name} } from "./${c.moduleName}";`
+        }).join("\n")
+            }
 
             export const generatedComponents = [
                 ${createdComponents.map(c => {
-            return c.name;
-        }).join(",\n")
-        }
+                return c.name;
+            }).join(",\n")
+            }
             ];
 
             export {
                 ${createdComponents.map(c => {
-            return c.name;
-        }).join(",\n")
-        }
+                return c.name;
+            }).join(",\n")
+            }
         }
 
         export type GeneratedComponent = ${createdComponents.map(c => {
-            return c.name;
-        }).join(" | ")
-        };
+                return c.name;
+            }).join(" | ")
+            };
 
         `)
 
+    }
+    return;
 }
+
+compile()

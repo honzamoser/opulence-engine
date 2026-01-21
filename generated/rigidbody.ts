@@ -1,10 +1,10 @@
 
-import { vec3, Vec3 } from "wgpu-matrix";import { Component } from "../component";import { cold, constructor, hot } from "../component-gen";import {PointerTo} from "../../../component_parsers"
+import { vec3, Vec3 } from "wgpu-matrix";import { Component } from "../component";import { cold, constructor, hot } from "../component-gen";import {PointerTo, SizeOf} from "../../../compiler/component_parsers"
 
 
 import {SparseSet } from "./index"
 
-    type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
+type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
 
 type PropertyDefinition = {
@@ -38,13 +38,14 @@ type ComponentDescription = {
 type RigidbodyComponentSignature = {
     mass: number;
     velocity: Vec3;
-    vertices: PointerTo<Float32Array>;
+    vertices: PointerTo;
+    adasds: SizeOf;
     _componentId: number;}
 
 export class RigidbodyComponent {
-    static STRIDE: number = 32;
+    static STRIDE: number = 160;
     static IDENTIFIER: number = 2;
-    static DESCRIPTION: ComponentDescription = {"name":"RigidbodyComponent","stride":32,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { cold, constructor, hot } from \"../component-gen\";import {PointerTo} from \"../../../component_parsers\"","properties":[{"name":"mass","type":"f32","byteLength":4,"offset":4,"jsType":"number","default":"1"},{"name":"velocity","type":"f32[]","byteLength":12,"length":3,"offset":8,"jsType":"Vec3","default":"vec3.zero()"},{"name":"vertices","type":"&f32[]","byteLength":8,"offset":20,"pointer":true,"jsType":"PointerTo<Float32Array>","default":"{ ptr: undefined, ptr_len: 0 }"},{"name":"_componentId","type":"i32","byteLength":4,"offset":0,"jsType":"number","default":"0"}]}
+    static DESCRIPTION: ComponentDescription = {"name":"RigidbodyComponent","stride":160,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { cold, constructor, hot } from \"../component-gen\";import {PointerTo, SizeOf} from \"../../../compiler/component_parsers\"","properties":[{"name":"mass","type":"f32","byteLength":4,"offset":4,"jsType":"number","default":"1"},{"name":"velocity","type":"f32[]","byteLength":12,"length":3,"offset":8,"jsType":"Vec3","default":"vec3.zero()"},{"name":"vertices","type":"&f32[]","byteLength":8,"offset":20,"pointer":true,"jsType":"PointerTo","default":"{ ptr: undefined, ptr_len: 0 }","typeArgs":["Float32Array"]},{"name":"adasds","type":"SizeOf","byteLength":128,"offset":28,"jsType":"SizeOf","default":"undefined","typeArgs":["string","128"]},{"name":"_componentId","type":"i32","byteLength":4,"offset":0,"jsType":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -58,10 +59,10 @@ export class RigidbodyComponent {
 
 
     static IS_INITIALIZED: boolean = false; 
-    static initialize(v: {vf32: Float32Array,vi32: Int32Array,vu8: Uint8Array}) {
-		RigidbodyComponent.vf32 = v.vf32
-		RigidbodyComponent.vi32 = v.vi32
-		RigidbodyComponent.vu8 = v.vu8
+    static initialize(v: ArrayBuffer) {
+		RigidbodyComponent.vf32 = new Float32Array(v)
+		RigidbodyComponent.vi32 = new Int32Array(v)
+		RigidbodyComponent.vu8 = new Uint8Array(v)
 
 
         RigidbodyComponent.IS_INITIALIZED = true;
@@ -76,14 +77,16 @@ export class RigidbodyComponent {
             mass: v.mass ? v.mass : 1,
 velocity: v.velocity ? v.velocity : vec3.zero(),
 vertices: v.vertices ? v.vertices : { ptr: undefined, ptr_len: 0 },
+adasds: v.adasds ? v.adasds : undefined,
 _componentId: v._componentId ? v._componentId : 0,
     }
-    const base = RigidbodyComponent.MEM_CURSOR * 32;
+    const base = RigidbodyComponent.MEM_CURSOR * 160;
     RigidbodyComponent.vi32[base / 4] = memId;
     RigidbodyComponent.MEM_CURSOR += 1;
     RigidbodyComponent.vf32[base / 4 + 1 + 0] = constructionData.mass;
 RigidbodyComponent.vf32[base / 4 + 2 + 0] = constructionData.velocity[0];RigidbodyComponent.vf32[base / 4 + 2 + 1] = constructionData.velocity[1];RigidbodyComponent.vf32[base / 4 + 2 + 2] = constructionData.velocity[2];
 // throw new Error("Pointers are not yet implemented");
+RigidbodyComponent.undefined[base / 4 + 7 + 0] = constructionData.adasds;
 
     
 
@@ -114,47 +117,53 @@ RigidbodyComponent.vf32[base / 4 + 2 + 0] = constructionData.velocity[0];Rigidbo
     }
 
    static get mass() {
-        return RigidbodyComponent.vf32[1 + RigidbodyComponent.MEM_CURSOR * 8];
+        return RigidbodyComponent.vf32[1 + RigidbodyComponent.MEM_CURSOR * 40];
     } 
     
     static set mass(v: number) {
-        RigidbodyComponent.vf32[1 + RigidbodyComponent.MEM_CURSOR * 8] = v;
+        RigidbodyComponent.vf32[1 + RigidbodyComponent.MEM_CURSOR * 40] = v;
     }   static get velocity() {
-        return RigidbodyComponent.vf32.subarray(2 + RigidbodyComponent.MEM_CURSOR * 8, 5 + RigidbodyComponent.MEM_CURSOR * 8)
+        return RigidbodyComponent.vf32.subarray(2 + RigidbodyComponent.MEM_CURSOR * 40, 5 + RigidbodyComponent.MEM_CURSOR * 40)
     } 
 
     static set velocity(v: Vec3) {
-            RigidbodyComponent.vf32[2 + RigidbodyComponent.MEM_CURSOR * 8] = v[0]
-RigidbodyComponent.vf32[3 + RigidbodyComponent.MEM_CURSOR * 8] = v[1]
-RigidbodyComponent.vf32[4 + RigidbodyComponent.MEM_CURSOR * 8] = v[2]
+            RigidbodyComponent.vf32[2 + RigidbodyComponent.MEM_CURSOR * 40] = v[0]
+RigidbodyComponent.vf32[3 + RigidbodyComponent.MEM_CURSOR * 40] = v[1]
+RigidbodyComponent.vf32[4 + RigidbodyComponent.MEM_CURSOR * 40] = v[2]
 
         }
 
     static cpy_velocity(out: Vec3) {
-          out[0] = RigidbodyComponent.vf32[2 + RigidbodyComponent.MEM_CURSOR * 8]
- out[1] = RigidbodyComponent.vf32[3 + RigidbodyComponent.MEM_CURSOR * 8]
- out[2] = RigidbodyComponent.vf32[4 + RigidbodyComponent.MEM_CURSOR * 8]
+          out[0] = RigidbodyComponent.vf32[2 + RigidbodyComponent.MEM_CURSOR * 40]
+ out[1] = RigidbodyComponent.vf32[3 + RigidbodyComponent.MEM_CURSOR * 40]
+ out[2] = RigidbodyComponent.vf32[4 + RigidbodyComponent.MEM_CURSOR * 40]
 
     }
     
 
 
             static get velocityX () {
-        return RigidbodyComponent.vf32[2 + RigidbodyComponent.MEM_CURSOR * 8];
+        return RigidbodyComponent.vf32[2 + RigidbodyComponent.MEM_CURSOR * 40];
             }
 
             static get velocityY () {
-        return RigidbodyComponent.vf32[3 + RigidbodyComponent.MEM_CURSOR * 8];
+        return RigidbodyComponent.vf32[3 + RigidbodyComponent.MEM_CURSOR * 40];
             }
 
             static get velocityZ () {
-        return RigidbodyComponent.vf32[4 + RigidbodyComponent.MEM_CURSOR * 8];
+        return RigidbodyComponent.vf32[4 + RigidbodyComponent.MEM_CURSOR * 40];
             }
         
-               static get _componentId() {
-        return RigidbodyComponent.vi32[0 + RigidbodyComponent.MEM_CURSOR * 8];
+               static get adasds() {
+        return RigidbodyComponent.vSizeOf[7 + RigidbodyComponent.MEM_CURSOR * 40];
+    } 
+    
+    static set adasds(v: SizeOf) {
+        RigidbodyComponent.vSizeOf[7 + RigidbodyComponent.MEM_CURSOR * 40] = v;
+    }   static get _componentId() {
+        return RigidbodyComponent.vi32[0 + RigidbodyComponent.MEM_CURSOR * 40];
     } 
     
     static set _componentId(v: number) {
-        RigidbodyComponent.vi32[0 + RigidbodyComponent.MEM_CURSOR * 8] = v;
+        RigidbodyComponent.vi32[0 + RigidbodyComponent.MEM_CURSOR * 40] = v;
     }}

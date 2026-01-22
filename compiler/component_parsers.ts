@@ -124,7 +124,13 @@ const typeTransformers: { [key: string | RegExp]: TypeTransformer } = {
 
     "string": (c, p) => {
         return `static get ${p.name}() {
-            return ${c.name}.subarray(${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR, ${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR + 64)
+            let str = "";
+            for (let i = 0; i < 64; i++) {
+                const charCode = ${c.name}.vu8[${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR + i];
+                if (charCode === 0) break;
+                str += String.fromCharCode(charCode);
+            }
+            return str;
         }
             
         static set ${p.name}(v: string) {
@@ -151,6 +157,24 @@ const typeTransformers: { [key: string | RegExp]: TypeTransformer } = {
         if (p.typeArgs && p.typeArgs.length == 2) {
             p.byteLength = parseInt(p.typeArgs[1]);
         }
+
+        return typeTransformers[p.typeArgs[0]](c, p);
+    },
+
+    "PointerTo": (c, p) => {
+        return `static get ${p.name}() {
+            const ptr = ${c.name}.vi32[${p.offset} / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
+            const ptr_len = ${c.name}.vi32[(${p.offset} + 4) / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
+
+            return ${c.name}.ALLOCATOR.get_mem_${getCorrectView(p.typeArgs[0])}(ptr, ptr_len);
+    }
+
+        static set ${p.name}(v: Float32Array | Uint8Array) {
+            let ptr = ${c.name}.vi32[${p.offset} / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
+            const ptr_len = ${c.name}.vi32[(${p.offset} + 4) / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
+            ${c.name}.ALLOCATOR.get_mem_${getCorrectView(p.typeArgs[0])}(ptr, ptr_len).set(v);
+    }
+            `
     },
 
     "Vec3": (c, p) => {
@@ -305,7 +329,7 @@ propertyDecoders.set("SizeOf", (p: PropertyDeclaration, t?: string[]) => {
         byteLength: length,
         type: type,
         name: p.getName(),
-        default: initializer ? initializer : type === "string" ? `new Uint8Array(${length})` : `new ${type} (${length})`,
+        default: initializer ? initializer : type === "string" ? `""` : `new ${type} (${length})`,
         typeArgs: [type, t[1]],
         view: getCorrectView(type),
     }
@@ -372,7 +396,8 @@ propertyDecoders.set("PointerTo", (p: PropertyDeclaration, t: string[]) => {
         name: p.getName(),
         byteLength: 8,
         pointer: true,
-        type: type,
+        type: "PointerTo",
+        typeArgs: [type],
         default: initializer ? initializer : null,
         view: getCorrectView(type),
     };
@@ -518,6 +543,7 @@ export type PropertyDefinition = {
 
 const COMPONENT_BOILERPLATE = (c: ComponentDescription) => `
 import { SparseSet } from "./index"
+import {Allocator} from "../src/ecs/allocator";
 
 type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
@@ -565,12 +591,12 @@ function generateViewsCode() {
 }
 
 function generateInitializator(c: ComponentDescription) {
-    return `static initialize(v: ArrayBuffer) {
+    return `static initialize(v: ArrayBuffer, a: Allocator) {
 ${Object.keys(views).map(x => {
         return `\t\t${c.name}.${x} = new ${views[x]}(v)\n`
     }).join("")
         }
-
+        ${c.name}.ALLOCATOR = a;
         ${c.name}.IS_INITIALIZED = true;
         ${c.name}.SET = new SparseSet();
 } `
@@ -673,6 +699,7 @@ export class ${c.name} {
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
     static NEXT: number = 0;
+    static ALLOCATOR: Allocator;
 
     declare _constructionFootprint: ${c.name}Signature;
     

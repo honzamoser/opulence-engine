@@ -56,8 +56,16 @@ export class Allocator {
     return newPtr;
   }
 
-  get_mem(ptr: number, size: number) {
+  get_mem_vu8(ptr: number, size: number) {
     return this.views.Uint8View.subarray(ptr, ptr + size);
+  }
+
+  get_mem_vf32(ptr: number, size: number) {
+    return this.views.Float32View.subarray(ptr / 4, ptr / 4 + size / 4);
+  }
+
+  get_mem_vi32(ptr: number, size: number) {
+    return this.views.Int32View.subarray(ptr / 4, ptr / 4 + size / 4);
   }
 
   free(ptr: number, size: number) {

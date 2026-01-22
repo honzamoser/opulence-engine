@@ -8,6 +8,5 @@ export default class RigidbodyComponent extends Component {
 
     velocity: Vec3 = vec3.zero();
 
-    vertices: PointerTo<Float32Array> = { ptr: undefined, ptr_len: 0 };
-    adasds: SizeOf<string, 128>
+    vertices: PointerTo<Float32Array>;
 }

@@ -31,7 +31,7 @@ export class ECS {
             const componentType = generatedComponents[i];
             this.componentMemory.push(new ArrayBuffer(componentType.STRIDE * 100));
             this.componentMemory[componentType.IDENTIFIER] = new ArrayBuffer(componentType.STRIDE * 100);
-            componentType.initialize(this.componentMemory[componentType.IDENTIFIER]);
+            componentType.initialize(this.componentMemory[componentType.IDENTIFIER], this.coldAllocator);
         }
     }
 }

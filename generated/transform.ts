@@ -3,6 +3,7 @@ import { mat4, Mat4, vec3, Vec3 } from "wgpu-matrix";import { Component } from "
 
 
 import { SparseSet } from "./index"
+import {Allocator} from "../src/ecs/allocator";
 
 type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
@@ -50,6 +51,7 @@ export class TransformComponent {
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
     static NEXT: number = 0;
+    static ALLOCATOR: Allocator;
 
     declare _constructionFootprint: TransformComponentSignature;
     
@@ -59,12 +61,12 @@ export class TransformComponent {
 
 
     static IS_INITIALIZED: boolean = false; 
-    static initialize(v: ArrayBuffer) {
+    static initialize(v: ArrayBuffer, a: Allocator) {
 		TransformComponent.vf32 = new Float32Array(v)
 		TransformComponent.vi32 = new Int32Array(v)
 		TransformComponent.vu8 = new Uint8Array(v)
 
-
+        TransformComponent.ALLOCATOR = a;
         TransformComponent.IS_INITIALIZED = true;
         TransformComponent.SET = new SparseSet();
 } 

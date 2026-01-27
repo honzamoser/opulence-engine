@@ -45,7 +45,7 @@ type TransformComponentSignature = {
 
 export class TransformComponent {
     static STRIDE: number = 108;
-    static IDENTIFIER: number = 3;
+    static IDENTIFIER: number = 2;
     static DESCRIPTION: ComponentDescription = {"name":"TransformComponent","stride":108,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { constructor, hot } from \"../component-gen\";","properties":[{"name":"position","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":4},{"name":"rotation","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(0, 0, 0)","view":"vf32","offset":16},{"name":"scale","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":28},{"name":"matrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.identity()","view":"vf32","offset":40},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;

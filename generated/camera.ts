@@ -47,7 +47,7 @@ type CameraComponentSignature = {
 
 export class CameraComponent {
     static STRIDE: number = 160;
-    static IDENTIFIER: number = 0;
+    static IDENTIFIER: number = 1;
     static DESCRIPTION: ComponentDescription = {"name":"CameraComponent","stride":160,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { hot } from \"../component-gen\";","properties":[{"byteLength":4,"type":"number","name":"fov","view":"vf32","default":0,"offset":4},{"byteLength":4,"type":"number","name":"near","view":"vf32","default":0,"offset":8},{"byteLength":4,"type":"number","name":"far","view":"vf32","default":0,"offset":12},{"name":"position","byteLength":64,"arrayLength":16,"default":"new Float32Array(16)","type":"Float32Array","view":"vf32","offset":16},{"name":"rotation","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":80},{"name":"projectionMatrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.create()","view":"vf32","offset":92},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;

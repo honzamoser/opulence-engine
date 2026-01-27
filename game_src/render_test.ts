@@ -18,7 +18,7 @@ engine.load().then(() => {
   renderer.initialize().then(() => {
     engine.systems.push(new RenderSystem(renderer));
     engine.systems.push(new PlayerSystem());
-    // engine.systems.push(new PhysicsSystem());
+    engine.systems.push(new PhysicsSystem());
 
     engine.start(); 
   });

@@ -44,6 +44,7 @@ export class Allocator {
       this.resize();
     }
 
+    // Whoever wrote this code i
     // Find a place for the new allocation
     const newPtr = this.cursor;
     this.cursor += newSize;

@@ -56,8 +56,9 @@
 import { CameraComponent } from "./camera";
 import { ColliderComponent } from "./collider";
 import { MeshComponent } from "./mesh";
-import { RigidbodyComponent } from "./rigidbody";
+import { CameraComponent } from "./camera";
 import { TransformComponent } from "./transform";
+import { RigidbodyComponent } from "./rigidbody";
 
     export const generatedComponents = [
         CameraComponent,

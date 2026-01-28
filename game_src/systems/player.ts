@@ -1,4 +1,4 @@
-import { MeshComponent } from "@generated/mesh"
+import { MeshComponent } from "@generated"
 import { System } from "../../src/ecs/system";
 import { Engine } from "../../src/engine";
 import { ColliderComponent, TransformComponent } from "@generated"

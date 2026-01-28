@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import o_config from "./opulenece.config";
 import ecsCodegen from "./plugin/opulence-compiler"
 import path from "path/win32";
+import { fileURLToPath } from "url";
 
 export default defineConfig({
   plugins: [
@@ -11,7 +12,7 @@ export default defineConfig({
 
     // }), 
     // myCustomTransformerPlugin()
-    ecsCodegen(),
+    // ecsCodegen(),
   ],
 
   // swc({
@@ -45,8 +46,9 @@ export default defineConfig({
     target: "es2022",
   },
   resolve: {
-    alias: {
-      "@generated": path.resolve(__dirname, "./generated"),
-    }
+    alias: [
+      {find: "@generated", replacement: fileURLToPath(new URL("./generated/index.ts", import.meta.url))} 
+      // "@generated/*": path.resolve(__dirname, "./generated/*"),
+    ]
   }
 });

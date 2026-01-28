@@ -1,13 +1,10 @@
 import { Engine } from "../../engine";
-import RigidbodyComponent from "../components/rigidbody.component";
-import TransformComponent from "../components/transform.component";
+import { ColliderComponent, RigidbodyComponent, TransformComponent } from "@generated";
 import { System } from "../system";
 
 export default class PhysicsSystem extends System {
     public update(entities: Array<number[]>, delta: number, engine: Engine): void {
-        const rigidBodies = engine.query(RigidbodyComponent, TransformComponent);
-
-    
+        const rigidBodies = engine.query(RigidbodyComponent, TransformComponent, ColliderComponent);
 
         for (const entityId of rigidBodies) {
             this.simulateRigidBody(entityId, delta, engine);
@@ -16,32 +13,29 @@ export default class PhysicsSystem extends System {
     }
 
     simulateRigidBody(entityId: number, delta: number, engine: Engine) {
-        const rigidBody = engine.ecs.getComponent(RigidbodyComponent, entityId);
-        const transform = engine.ecs.getComponent(TransformComponent, entityId);
-        
+        const rigidBody = RigidbodyComponent.to(entityId);
+
+        //TODO: Collisions
+
+        if (rigidBody.isStatic) return;
+
+        const transform = TransformComponent.to(entityId);
+        const collider = ColliderComponent.to(entityId);
 
         // Update position based on velocity
-        engine.ecs.setComponentValue(
-            engine.entities[entityId][TransformComponent.id],
-            TransformComponent,
-            "position",
-            new Float32Array([
-                transform.position[0] + rigidBody.velocity[0] * delta,
-                transform.position[1] + rigidBody.velocity[1] * delta,
-                transform.position[2] + rigidBody.velocity[2] * delta,
-            ]),
-        );
+        transform.positionX += rigidBody.velocityX * delta;
+        transform.positionY += rigidBody.velocityY * delta;
+        transform.positionZ += rigidBody.velocityZ * delta;
 
-        engine.ecs.setComponentValue(
-            engine.entities[entityId][RigidbodyComponent.id],
-            RigidbodyComponent,
-            "velocity",
-            new Float32Array([
-                rigidBody.velocity[0],
-                rigidBody.velocity[1] - .0981 * delta, // Gravity effect
-                rigidBody.velocity[2],
-            ]),
-        );
-        
+        if (transform.positionY < -4) {
+            // transform.positionY = 0;
+            rigidBody.velocityY = -0.5 * rigidBody.velocityY; // simple bounce with energy loss
+            transform.positionY = -4;
+        } else {
+            rigidBody.velocityY -= 1.81 * delta;
+        }
+
+        // Simple gravity effect
+
     }
 }

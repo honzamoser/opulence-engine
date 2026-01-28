@@ -213,7 +213,17 @@ const typeTransformers: { [key: string | RegExp]: TypeTransformer } = {
     static cpy_${p.name}(out: Mat4) {
         out.set(${c.name}.vf32.subarray((${p.offset} / 4) + (${c.stride} / 4) * ${c.name}.MEM_CURSOR, (${p.offset} / 4) + ${c.stride} / 4 * ${c.name}.MEM_CURSOR + 16));
     }`
+    },
+    "boolean": (c, p) => {
+        return `static get ${p.name}() {
+            return ${c.name}.vu8[${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR] === 1;
+        }
+
+        static set ${p.name}(v: boolean) {
+            ${c.name}.vu8[${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR] = v ? 1 : 0;
+        }`
     }
+
 
 }
 
@@ -288,6 +298,14 @@ const typeMap: { [key: string]: PropertyDefinition } = {
         offset: null,
         type: "SizeOf",
         default: "undefined"
+    },
+    "boolean": {
+        name: null,
+        type: "boolean",
+        byteLength: 1,
+        offset: null,
+        default: "false",
+        view: "vu8",
     }
 }
 
@@ -403,6 +421,16 @@ propertyDecoders.set("PointerTo", (p: PropertyDeclaration, t: string[]) => {
     };
 })
 
+propertyDecoders.set("boolean", (p: PropertyDeclaration) => {
+    return {
+        name: p.getName(),
+        byteLength: 1,
+        type: "boolean",
+        default: "false",
+        view: "vu8",
+    }
+});
+
 
 
 
@@ -418,6 +446,8 @@ function parseComponent(code: string) {
         return parseClass(c);
     });
 
+    console.log(components[0].stride)
+
     return components[0];
 }
 
@@ -427,17 +457,20 @@ function parseClass(cls: ClassDeclaration): ComponentDescription {
     let offset = 4;
 
     const properties = cls.getProperties().map((p) => {
-        let propDef = { ...parseProperty(p), offset };
+        let propDef = { ...parseProperty(p)};
 
         if (p.getName() === "_componentId") {
             throw new Error("_componentId is a reserved property name");
         }
 
-        offset += propDef.byteLength;
-
-        console.log(propDef)
 
         return propDef;
+    });
+
+    properties.sort((a, b) => b.byteLength - a.byteLength);
+    properties.forEach((p) => {
+        p.offset = offset;
+        offset += p.byteLength;
     });
 
     const entityIdProperty: PropertyDefinition = {
@@ -450,10 +483,14 @@ function parseClass(cls: ClassDeclaration): ComponentDescription {
 
     return {
         name: cls.getNameOrThrow(),
-        stride: properties[properties.length - 1].offset + properties[properties.length - 1].byteLength + 4,
+        stride: padded(properties[properties.length - 1].offset + properties[properties.length - 1].byteLength + 4),
         importStatement: getImportStatement(cls),
         properties: [...properties, entityIdProperty],
     }
+}
+
+function padded(s: number) {
+    return s % 4 === 0 ? s : s + (4 - (s % 4));
 }
 
 function getImportStatement(cls: ClassDeclaration): string {
@@ -639,8 +676,12 @@ function getCorrectView(type: string) {
 function generateComponentConstructor(c: ComponentDescription) {
     return `static new (v: Partial < ${c.name}Signature >) {
     const elId = ${c.name}.NEXT;
+    
     ${c.name}.NEXT += 1;
     const memId = ${c.name}.SET.add(elId);
+
+    ${c.name}.CURSOR = elId;
+    ${c.name}.MEM_CURSOR = memId;
 
     const constructionData: ${c.name}Signature = {
         ${c.properties.map(p => {
@@ -684,6 +725,8 @@ return memId;
 }
 
 function createComponentAccessor(c: ComponentDescription, id: number) {
+
+
     let code = `
 ${c.importStatement}
 

@@ -16,40 +16,43 @@ export default class RenderSystem extends System {
   }
 
   public override async update(entities: number[][], delta: number, engine: Engine) {
-    this.renderer.render(delta);
 
     engine.query(MeshComponent, TransformComponent).forEach((entity) => {
-
       const meshId = engine.entities[entity][MeshComponent.IDENTIFIER];
       const transformId = engine.entities[entity][TransformComponent.IDENTIFIER];
 
+      
       const transform = TransformComponent.to(
         transformId
       );
       const mesh = MeshComponent.to(
         meshId
       );
+      
 
-      if (mesh.meshId === 0) {
+      if (mesh.rendererdInstasnceId === 0) {
         this.instantiate(engine, entity);
         return;
       }
 
 
       this.calculateTransformMatrix(transform);
-      this.renderer._updateMatrix(mesh.meshId, this.calculateTransformMatrix_Scratchpad.matrix);
+      this.renderer._updateMatrix(mesh.rendererdInstasnceId, this.calculateTransformMatrix_Scratchpad.matrix);
 
       transform.matrix = this.calculateTransformMatrix_Scratchpad.matrix;
     });
+
+    this.renderer.render(delta);
+
 
   }
 
   public async start(engine: Engine) {
     const meshEntities = engine.query(MeshComponent, TransformComponent);
 
-    meshEntities.forEach((entity) => {
-      this.instantiate(engine, entity);
-    });
+    // meshEntities.forEach((entity) => {
+    //   this.instantiate(engine, entity);
+    // });
   }
 
   instantiatScratchpad = {
@@ -61,9 +64,10 @@ export default class RenderSystem extends System {
     const transform = TransformComponent.to(transformId);
     const mesh = MeshComponent.to(engine.entities[entity][MeshComponent.IDENTIFIER])
 
+    
     this.calculateTransformMatrix(transform);
     transform.cpy_matrix(this.instantiatScratchpad.matrix);
-    mesh.meshId = this.renderer._instantiate(
+    mesh.rendererdInstasnceId = this.renderer._instantiate(
       0,
       this.instantiatScratchpad.matrix,
       new Float32Array([1, 1, 1, 1])
@@ -105,10 +109,10 @@ export default class RenderSystem extends System {
   ) {
     // const translationMatrix = mat4.translation(t.position, mat4.create());
 
+    
     t.cpy_position(this.calculateTransformMatrix_Scratchpad.positionVec3);
     t.cpy_rotation(this.calculateTransformMatrix_Scratchpad.rotationVec3);
     t.cpy_scale(this.calculateTransformMatrix_Scratchpad.scaleVec3);
-
 
     const translationMatrix = mat4.translation(this.calculateTransformMatrix_Scratchpad.positionVec3, this.calculateTransformMatrix_Scratchpad.translationMatrix);
     const rotationXMatrix = mat4.rotationX(this.calculateTransformMatrix_Scratchpad.rotationVec3[0], this.calculateTransformMatrix_Scratchpad.rotationXMatrix);

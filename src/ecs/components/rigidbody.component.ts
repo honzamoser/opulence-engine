@@ -5,8 +5,7 @@ import {PointerTo, SizeOf} from "../../../compiler/component_parsers"
 
 export default class RigidbodyComponent extends Component {
     mass: number = 1;
+    isStatic: boolean = false;
 
     velocity: Vec3 = vec3.zero();
-
-    vertices: PointerTo<Float32Array>;
 }

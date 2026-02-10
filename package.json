@@ -8,6 +8,7 @@
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
+		"@dimforge/rapier3d": "^0.19.3",
 		"ts-morph": "^27.0.2",
 		"wgpu-matrix": "^3.4.0"
 	}

@@ -42,13 +42,13 @@ type ColliderComponentSignature = {
     offset: Vec3;
     boundingBoxMin: Vec3;
     boundingBoxMax: Vec3;
-    vertices: PointerTo;
+    vertices: Float32Array;
     _componentId: number;}
 
 export class ColliderComponent {
     static STRIDE: number = 128;
-    static IDENTIFIER: number = 1;
-    static DESCRIPTION: ComponentDescription = {"name":"ColliderComponent","stride":128,"importStatement":"import { PointerTo } from \"compiler/component_parsers\";import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";","properties":[{"name":"matrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.create()","view":"vf32","offset":4},{"name":"size","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":68},{"name":"offset","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(0, 0, 0)","view":"vf32","offset":80},{"name":"boundingBoxMin","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n        Number.POSITIVE_INFINITY,\r\n        Number.POSITIVE_INFINITY,\r\n        Number.POSITIVE_INFINITY,\r\n    )","view":"vf32","offset":92},{"name":"boundingBoxMax","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n        Number.NEGATIVE_INFINITY,\r\n        Number.NEGATIVE_INFINITY,\r\n        Number.NEGATIVE_INFINITY,\r\n    )","view":"vf32","offset":104},{"name":"vertices","byteLength":8,"pointer":true,"type":"PointerTo","typeArgs":["Float32Array"],"default":null,"view":"vf32","offset":116},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
+    static IDENTIFIER: number = 2;
+    static DESCRIPTION: ComponentDescription = {"name":"ColliderComponent","stride":128,"importStatement":"import { PointerTo } from \"compiler/component_parsers\";import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";","properties":[{"name":"matrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.create()","view":"vf32","offset":4},{"name":"size","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":68},{"name":"offset","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(0, 0, 0)","view":"vf32","offset":80},{"name":"boundingBoxMin","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\n        Number.POSITIVE_INFINITY,\n        Number.POSITIVE_INFINITY,\n        Number.POSITIVE_INFINITY,\n    )","view":"vf32","offset":92},{"name":"boundingBoxMax","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\n        Number.NEGATIVE_INFINITY,\n        Number.NEGATIVE_INFINITY,\n        Number.NEGATIVE_INFINITY,\n    )","view":"vf32","offset":104},{"name":"vertices","byteLength":8,"pointer":true,"type":"PointerTo","typeArgs":["Float32Array"],"default":null,"view":"vf32","offset":116},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -106,7 +106,7 @@ ColliderComponent.size = constructionData.size;
 ColliderComponent.offset = constructionData.offset;
 ColliderComponent.boundingBoxMin = constructionData.boundingBoxMin;
 ColliderComponent.boundingBoxMax = constructionData.boundingBoxMax;
-// throw new Error("Pointers are not yet implemented");
+if (constructionData.vertices) { ColliderComponent.vertices = constructionData.vertices; }
 
 
 
@@ -287,13 +287,22 @@ static get boundingBoxMaxZ() {
 static get vertices() {
             const ptr = ColliderComponent.vi32[116 / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
             const ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
+            if (ptr === 0) return undefined;
 
             return ColliderComponent.ALLOCATOR.get_mem_vf32(ptr, ptr_len);
     }
 
-        static set vertices(v: Float32Array | Uint8Array) {
+        static set vertices(v: Float32Array) {
             let ptr = ColliderComponent.vi32[116 / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
-            const ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
+            let ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
+            
+            if (ptr === 0 || ptr_len < v.byteLength) {
+                ptr = ColliderComponent.ALLOCATOR.alloc(v.byteLength);
+                ptr_len = v.byteLength;
+                ColliderComponent.vi32[116 / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR] = ptr;
+                ColliderComponent.vi32[(116 + 4) / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR] = ptr_len;
+            }
+
             ColliderComponent.ALLOCATOR.get_mem_vf32(ptr, ptr_len).set(v);
     }
             

@@ -162,17 +162,27 @@ const typeTransformers: { [key: string | RegExp]: TypeTransformer } = {
     },
 
     "PointerTo": (c, p) => {
+        const type = p.typeArgs?.[0] || "Float32Array";
         return `static get ${p.name}() {
             const ptr = ${c.name}.vi32[${p.offset} / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
             const ptr_len = ${c.name}.vi32[(${p.offset} + 4) / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
+            if (ptr === 0) return undefined;
 
-            return ${c.name}.ALLOCATOR.get_mem_${getCorrectView(p.typeArgs[0])}(ptr, ptr_len);
+            return ${c.name}.ALLOCATOR.get_mem_${getCorrectView(type)}(ptr, ptr_len);
     }
 
-        static set ${p.name}(v: Float32Array | Uint8Array) {
+        static set ${p.name}(v: ${type}) {
             let ptr = ${c.name}.vi32[${p.offset} / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
-            const ptr_len = ${c.name}.vi32[(${p.offset} + 4) / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
-            ${c.name}.ALLOCATOR.get_mem_${getCorrectView(p.typeArgs[0])}(ptr, ptr_len).set(v);
+            let ptr_len = ${c.name}.vi32[(${p.offset} + 4) / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
+            
+            if (ptr === 0 || ptr_len < v.byteLength) {
+                ptr = ${c.name}.ALLOCATOR.alloc(v.byteLength);
+                ptr_len = v.byteLength;
+                ${c.name}.vi32[${p.offset} / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR] = ptr;
+                ${c.name}.vi32[(${p.offset} + 4) / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR] = ptr_len;
+            }
+
+            ${c.name}.ALLOCATOR.get_mem_${getCorrectView(type)}(ptr, ptr_len).set(v);
     }
             `
     },
@@ -642,7 +652,8 @@ ${Object.keys(views).map(x => {
 function generateComponentConstructionSignature(c: ComponentDescription) {
     return `type ${c.name}Signature = {
     ${c.properties.map(p => {
-        return `    ${p.name}: ${p.type};`
+        const type = p.pointer ? (p.typeArgs?.[0] || "Float32Array") : p.type;
+        return `    ${p.name}: ${type};`
     }).join("\n")
         }}`
 }
@@ -698,10 +709,12 @@ const base = ${c.name}.MEM_CURSOR * ${c.stride};
             }
 
             let out = ""
-            if (!x.pointer) {
-                out += `${c.name}.${x.name} = constructionData.${x.name};`
+            // Directly assign. The setter logic we fixed handles allocation.
+            if (x.pointer) {
+                 // For pointers, ensure check for undefined/null if partial
+                 out += `if (constructionData.${x.name}) { ${c.name}.${x.name} = constructionData.${x.name}; }`
             } else {
-                return `// throw new Error("Pointers are not yet implemented");`
+                 out += `${c.name}.${x.name} = constructionData.${x.name};`
             }
             return out;
         }).join("\n")

@@ -6,6 +6,7 @@ import { createCube, createPlane } from "../../src/renderer/primitive";
 import { namespace } from "../../src/ecs/component-gen";
 import {RigidbodyComponent} from "@generated";
 import { log_component, log_entity } from "../../src/debug/ecs_debug";
+import { Collider } from "@dimforge/rapier3d";
 
 
 @namespace("game.PlayerSystem")
@@ -41,6 +42,10 @@ export class PlayerSystem extends System {
     engine.addComponent<RigidbodyComponent>(this.c_playerEnt, RigidbodyComponent, { mass: 1 }); // Přidáme komponentu RigidbodyComponent s hmotností 1
     engine.addComponent<ColliderComponent>(this.c_playerEnt, ColliderComponent, { size: new Float32Array([1, 1, 1]), offset: new Float32Array([0, 0, 0]) }); // Přidáme komponentu ColliderComponent s velikostí a offsetem
 
+    ColliderComponent.vertices = cube.vertices;
+    console.log(ColliderComponent.CURSOR, ColliderComponent.vertices);
+
+
     // ColliderComponent.vertices = cube.vertices;
     // TODO: Implement verticy uploading to the indirect memory via PointerTo (Allocator)
 
@@ -51,6 +56,9 @@ export class PlayerSystem extends System {
     engine.addComponent<RigidbodyComponent>(floorEnt, RigidbodyComponent, { isStatic: true }); // Přidáme komponentu TransformComponent s pozicí podlahy
     engine.addComponent<ColliderComponent>(floorEnt, ColliderComponent, { size: new Float32Array([20, 1, 20]), offset: new Float32Array([0, 0, 0]) }); // Přidáme komponentu ColliderComponent s velikostí a offsetem
     console.log(TransformComponent.CURSOR, TransformComponent.NEXT, TransformComponent.positionZ);
+
+    ColliderComponent.vertices = floor.vertices;
+    console.log(ColliderComponent.CURSOR, ColliderComponent.vertices);
 
     console.log("Player Entity Created:", RigidbodyComponent.velocity);
     }

@@ -1,9 +1,9 @@
 
-import { vec3, Vec3 } from "wgpu-matrix"; import { constructor, hot } from "../component-gen"; import { Component } from "../component"; import { SizeOf } from "compiler/component_parsers";
+import { vec3, Vec3 } from "wgpu-matrix";import { constructor, hot } from "../component-gen";import { Component } from "../component";import { SizeOf } from "compiler/component_parsers";
 
 
 import { SparseSet } from "./index"
-import { Allocator } from "../src/ecs/allocator";
+import {Allocator} from "../src/ecs/allocator";
 
 type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
@@ -55,17 +55,17 @@ export class MeshComponent {
     static ALLOCATOR: Allocator;
 
     declare _constructionFootprint: MeshComponentSignature;
+    
+	static vf32: Float32Array; 
+	static vi32: Int32Array; 
+	static vu8: Uint8Array; 
 
-    static vf32: Float32Array;
-    static vi32: Int32Array;
-    static vu8: Uint8Array;
 
-
-    static IS_INITIALIZED: boolean = false;
+    static IS_INITIALIZED: boolean = false; 
     static initialize(v: ArrayBuffer, a: Allocator) {
-        MeshComponent.vf32 = new Float32Array(v)
-        MeshComponent.vi32 = new Int32Array(v)
-        MeshComponent.vu8 = new Uint8Array(v)
+		MeshComponent.vf32 = new Float32Array(v)
+		MeshComponent.vi32 = new Int32Array(v)
+		MeshComponent.vu8 = new Uint8Array(v)
 
         MeshComponent.ALLOCATOR = a;
         MeshComponent.IS_INITIALIZED = true;
@@ -96,10 +96,8 @@ meshId: v.meshId ? v.meshId : 0,
 rendererdInstasnceId: v.rendererdInstasnceId ? v.rendererdInstasnceId : 0,
 _componentId: v._componentId ? v._componentId : 0,
     }
-    static new(v: Partial<MeshComponentSignature>) {
-        const elId = MeshComponent.NEXT;
-        MeshComponent.NEXT += 1;
-        const memId = MeshComponent.SET.add(elId);
+const base = MeshComponent.MEM_CURSOR * 104;
+    MeshComponent.vi32[base / 4] = memId;
 
     MeshComponent.resourceIdentifier = constructionData.resourceIdentifier;
 MeshComponent.boundingBoxMin = constructionData.boundingBoxMin;
@@ -109,19 +107,19 @@ MeshComponent.rendererdInstasnceId = constructionData.rendererdInstasnceId;
 
 
 
-        return memId;
+return memId;
     }
-
-    static delete() {
-        //    if (MeshComponent.CURSOR < MeshComponent.SET.length) {
-        //     MeshComponent.SET[MeshComponent.SET.length - 1] = MeshComponent.SET[MeshComponent.CURSOR]; 
-        //     MeshComponent.SET[MeshComponent.CURSOR] = undefined;
-        //     MeshComponent.MEM_CURSOR = MeshComponent.SET[MeshComponent.CURSOR];
-        //    } 
+        
+    static delete () {
+    //    if (MeshComponent.CURSOR < MeshComponent.SET.length) {
+    //     MeshComponent.SET[MeshComponent.SET.length - 1] = MeshComponent.SET[MeshComponent.CURSOR]; 
+    //     MeshComponent.SET[MeshComponent.CURSOR] = undefined;
+    //     MeshComponent.MEM_CURSOR = MeshComponent.SET[MeshComponent.CURSOR];
+    //    } 
 
         // move data from last component in dense array to the deleted component's position
         MeshComponent.SET.remove(MeshComponent.CURSOR);
-    }
+}
 
 
     static to(cId: number) {
@@ -162,59 +160,15 @@ static get resourceIdentifier() {
 static get boundingBoxMin() {
             return MeshComponent.vf32.subarray((68 / 4) + (104 / 4) * MeshComponent.MEM_CURSOR, (68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 3)
     }
-
-    static get meshId() {
-        return MeshComponent.vf32[1 + 104 * MeshComponent.MEM_CURSOR]
-    }
-
-    static set meshId(v: number) {
-        MeshComponent.vf32[1 + 104 * MeshComponent.MEM_CURSOR] = v;
-    }
-
-    static get rendererdInstasnceId() {
-        return MeshComponent.vf32[2 + 104 * MeshComponent.MEM_CURSOR]
-    }
-
-    static set rendererdInstasnceId(v: number) {
-        MeshComponent.vf32[2 + 104 * MeshComponent.MEM_CURSOR] = v;
-    }
-
-    static get resourceIdentifier() {
-        let str = "";
-        for (let i = 0; i < 64; i++) {
-            const charCode = MeshComponent.vu8[12 + 104 * MeshComponent.MEM_CURSOR + i];
-            if (charCode === 0) break;
-            str += String.fromCharCode(charCode);
-        }
-        return str;
-    }
-
-    static set resourceIdentifier(v: string) {
-        for (let i = 0; i < 64; i++) {
-            if (v[i]) {
-                MeshComponent.vu8[12 + 104 * MeshComponent.MEM_CURSOR + i] = v.charCodeAt(i);
-            } else {
-                MeshComponent.vu8[12 + 104 * MeshComponent.MEM_CURSOR + i] = 0
-            }
-        }
-    }
-
-    static cpy_resourceIdentifier(out: Uint8Array) {
-        out.set(MeshComponent.vu8, 12 + 104 * MeshComponent.MEM_CURSOR);
-    }
-
-    static get boundingBoxMin() {
-        return MeshComponent.vf32.subarray((76 / 4) + (104 / 4) * MeshComponent.MEM_CURSOR, (76 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 3)
-    }
-
+            
     static set boundingBoxMin(v: Vec3 | Float32Array) {
         MeshComponent.vf32.set(v, (68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR);
     }
-
+        
     static cpy_boundingBoxMin(out: Vec3) {
         out.set(MeshComponent.vf32.subarray((68 / 4) + (104 / 4) * MeshComponent.MEM_CURSOR, (68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 3));
     }
-
+        
     static get boundingBoxMinX() {
         return MeshComponent.vf32[(68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 0];
     }
@@ -240,15 +194,15 @@ static get boundingBoxMinZ() {
 static get boundingBoxMax() {
             return MeshComponent.vf32.subarray((80 / 4) + (104 / 4) * MeshComponent.MEM_CURSOR, (80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 3)
     }
-
+            
     static set boundingBoxMax(v: Vec3 | Float32Array) {
         MeshComponent.vf32.set(v, (80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR);
     }
-
+        
     static cpy_boundingBoxMax(out: Vec3) {
         out.set(MeshComponent.vf32.subarray((80 / 4) + (104 / 4) * MeshComponent.MEM_CURSOR, (80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 3));
     }
-
+        
     static get boundingBoxMaxX() {
         return MeshComponent.vf32[(80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 0];
     }

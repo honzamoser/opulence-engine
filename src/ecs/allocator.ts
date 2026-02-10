@@ -15,6 +15,7 @@ export class Allocator {
       Uint8View: new Uint8Array(this.heap),
       Float32View: new Float32Array(this.heap),
       Int32View: new Int32Array(this.heap),
+      Uint32View: new Uint32Array(this.heap),
     };
   }
 
@@ -26,6 +27,7 @@ export class Allocator {
       Uint8View: new Uint8Array(this.heap),
       Float32View: new Float32Array(this.heap),
       Int32View: new Int32Array(this.heap),
+      Uint32View: new Uint32Array(this.heap),
     };
   }
 
@@ -62,11 +64,15 @@ export class Allocator {
   }
 
   get_mem_vf32(ptr: number, size: number) {
-    return this.views.Float32View.subarray(ptr / 4, ptr / 4 + size / 4);
+    return (this.views.Float32View as Float32Array).subarray(ptr / 4, ptr / 4 + size / 4);
   }
 
   get_mem_vi32(ptr: number, size: number) {
     return this.views.Int32View.subarray(ptr / 4, ptr / 4 + size / 4);
+  }
+
+  get_mem_vu32(ptr: number, size: number) {
+    return this.views.Uint32View.subarray(ptr / 4, ptr / 4 + size / 4);
   }
 
   free(ptr: number, size: number) {

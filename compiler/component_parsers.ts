@@ -171,8 +171,25 @@ const typeTransformers: { [key: string | RegExp]: TypeTransformer } = {
 
         static set ${p.name}(v: Float32Array | Uint8Array) {
             let ptr = ${c.name}.vi32[${p.offset} / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
-            const ptr_len = ${c.name}.vi32[(${p.offset} + 4) / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
+            let ptr_len = ${c.name}.vi32[(${p.offset} + 4) / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR];
+            
+            if (ptr === 0 || ptr_len !== v.byteLength) {
+                if (ptr !== 0) {
+                     ${c.name}.ALLOCATOR.free(ptr, ptr_len);
+                }
+                
+                ptr = ${c.name}.ALLOCATOR.alloc(v.byteLength);
+                ${c.name}.vi32[${p.offset} / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR] = ptr;
+                ${c.name}.vi32[(${p.offset} + 4) / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR] = v.byteLength;
+                ptr_len = v.byteLength;
+            }
+
             ${c.name}.ALLOCATOR.get_mem_${getCorrectView(p.typeArgs[0])}(ptr, ptr_len).set(v);
+    }
+
+    static set_ptr_${p.name}(ptr: number, ptr_len: number) {
+            ${c.name}.vi32[${p.offset} / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR] = ptr;
+            ${c.name}.vi32[(${p.offset} + 4) / 4 + ${c.stride} / 4 * ${c.name}.MEM_CURSOR] = ptr_len;
     }
             `
     },
@@ -457,7 +474,7 @@ function parseClass(cls: ClassDeclaration): ComponentDescription {
     let offset = 4;
 
     const properties = cls.getProperties().map((p) => {
-        let propDef = { ...parseProperty(p)};
+        let propDef = { ...parseProperty(p) };
 
         if (p.getName() === "_componentId") {
             throw new Error("_componentId is a reserved property name");
@@ -528,7 +545,7 @@ function parseProperty(p: PropertyDeclaration): Omit<PropertyDefinition, "offset
     console.log("t:", typeStructure)
 
     const matchType = propertyDecoders.get(typeStructure[0])?.(p, typeStructure.splice(1));
-
+    matchType.default = getInitializer(p) ? getInitializer(p) : matchType.default;
 
     if (!matchType)
         throw new Error(`Type ${typeStructure[0]} is not supported`);
@@ -665,6 +682,8 @@ function getCorrectView(type: string) {
             return "vf32";
         case "Int32Array":
             return "vi32";
+        case "Uint32Array":
+            return "vu32";
         case "string":
         case "Int8Array":
             return "vu8";
@@ -701,7 +720,12 @@ const base = ${c.name}.MEM_CURSOR * ${c.stride};
             if (!x.pointer) {
                 out += `${c.name}.${x.name} = constructionData.${x.name};`
             } else {
-                return `// throw new Error("Pointers are not yet implemented");`
+                out += `if (constructionData.${x.name} !== null) {
+                ${c.name}.set_ptr_${x.name}(${c.name}.ALLOCATOR.alloc(constructionData.${x.name}.byteLength), constructionData.${x.name}.ptr_len);
+                ${c.name}.${x.name} = constructionData.${x.name};
+            } else {
+                ${c.name}.set_ptr_${x.name}(${c.name}.ALLOCATOR.alloc(64), 0);
+}`
             }
             return out;
         }).join("\n")
@@ -795,6 +819,7 @@ function isArray(f: PropertyDefinition) {
 }
 
 import { Glob } from "bun"
+import { match } from "node:assert";
 
 export async function compile() {
     let index = 0;

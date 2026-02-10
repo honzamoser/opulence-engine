@@ -21,4 +21,6 @@ export class ColliderComponent {
     matrix: Mat4 = mat4.create();
 
     vertices: PointerTo<Float32Array>;
+    indices: PointerTo<Uint32Array>;
+    shapeType: number = 0; // 0 = box, 1 = plane, 2 = mesh
 }

@@ -37,15 +37,15 @@ type ComponentDescription = {
 
 
 type RigidbodyComponentSignature = {
-        velocity: Vec3;
-    mass: number;
+        mass: number;
+    bodyId: number;
     isStatic: boolean;
     _componentId: number;}
 
 export class RigidbodyComponent {
-    static STRIDE: number = 28;
+    static STRIDE: number = 20;
     static IDENTIFIER: number = 3;
-    static DESCRIPTION: ComponentDescription = {"name":"RigidbodyComponent","stride":28,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { cold, constructor, hot } from \"../component-gen\";import {PointerTo, SizeOf} from \"../../../compiler/component_parsers\"","properties":[{"name":"velocity","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":4},{"byteLength":4,"type":"number","name":"mass","view":"vf32","default":0,"offset":16},{"name":"isStatic","byteLength":1,"type":"boolean","default":"false","view":"vu8","offset":20},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
+    static DESCRIPTION: ComponentDescription = {"name":"RigidbodyComponent","stride":20,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { cold, constructor, hot } from \"../component-gen\";import {PointerTo, SizeOf} from \"../../../compiler/component_parsers\"","properties":[{"byteLength":4,"type":"number","name":"mass","view":"vf32","default":"1","offset":4},{"byteLength":4,"type":"number","name":"bodyId","view":"vf32","default":"-1","offset":8},{"name":"isStatic","byteLength":1,"type":"boolean","default":"false","view":"vu8","offset":12},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -79,16 +79,16 @@ export class RigidbodyComponent {
     RigidbodyComponent.MEM_CURSOR = memId;
 
     const constructionData: RigidbodyComponentSignature = {
-        velocity: v.velocity ? v.velocity : vec3.zero(),
-mass: v.mass ? v.mass : 0,
+        mass: v.mass ? v.mass : 1,
+bodyId: v.bodyId ? v.bodyId : -1,
 isStatic: v.isStatic ? v.isStatic : false,
 _componentId: v._componentId ? v._componentId : 0,
     }
-const base = RigidbodyComponent.MEM_CURSOR * 28;
+const base = RigidbodyComponent.MEM_CURSOR * 20;
     RigidbodyComponent.vi32[base / 4] = memId;
 
-    RigidbodyComponent.velocity = constructionData.velocity;
-RigidbodyComponent.mass = constructionData.mass;
+    RigidbodyComponent.mass = constructionData.mass;
+RigidbodyComponent.bodyId = constructionData.bodyId;
 RigidbodyComponent.isStatic = constructionData.isStatic;
 
 
@@ -119,62 +119,36 @@ return memId;
         return RigidbodyComponent;
     } 
 
-static get velocity() {
-            return RigidbodyComponent.vf32.subarray((4 / 4) + (28 / 4) * RigidbodyComponent.MEM_CURSOR, (4 / 4) + 28 / 4 * RigidbodyComponent.MEM_CURSOR + 3)
-    }
-            
-    static set velocity(v: Vec3 | Float32Array) {
-        RigidbodyComponent.vf32.set(v, (4 / 4) + 28 / 4 * RigidbodyComponent.MEM_CURSOR);
-    }
-        
-    static cpy_velocity(out: Vec3) {
-        out.set(RigidbodyComponent.vf32.subarray((4 / 4) + (28 / 4) * RigidbodyComponent.MEM_CURSOR, (4 / 4) + 28 / 4 * RigidbodyComponent.MEM_CURSOR + 3));
-    }
-        
-    static get velocityX() {
-        return RigidbodyComponent.vf32[(4 / 4) + 28 / 4 * RigidbodyComponent.MEM_CURSOR + 0];
-    }
-
-    static set velocityX(v: number) {
-        RigidbodyComponent.vf32[(4 / 4) + 28 / 4 * RigidbodyComponent.MEM_CURSOR + 0] = v;
-    }
-static get velocityY() {
-        return RigidbodyComponent.vf32[(4 / 4) + 28 / 4 * RigidbodyComponent.MEM_CURSOR + 1];
-    }
-
-    static set velocityY(v: number) {
-        RigidbodyComponent.vf32[(4 / 4) + 28 / 4 * RigidbodyComponent.MEM_CURSOR + 1] = v;
-    }
-static get velocityZ() {
-        return RigidbodyComponent.vf32[(4 / 4) + 28 / 4 * RigidbodyComponent.MEM_CURSOR + 2];
-    }
-
-    static set velocityZ(v: number) {
-        RigidbodyComponent.vf32[(4 / 4) + 28 / 4 * RigidbodyComponent.MEM_CURSOR + 2] = v;
-    }
-
 static get mass() {
-            return RigidbodyComponent.vf32[4 + 28 * RigidbodyComponent.MEM_CURSOR]
+            return RigidbodyComponent.vf32[1 + 20 * RigidbodyComponent.MEM_CURSOR]
         } 
             
         static set mass(v: number) {
-            RigidbodyComponent.vf32[4 + 28 * RigidbodyComponent.MEM_CURSOR] = v;
+            RigidbodyComponent.vf32[1 + 20 * RigidbodyComponent.MEM_CURSOR] = v;
+        }
+
+static get bodyId() {
+            return RigidbodyComponent.vf32[2 + 20 * RigidbodyComponent.MEM_CURSOR]
+        } 
+            
+        static set bodyId(v: number) {
+            RigidbodyComponent.vf32[2 + 20 * RigidbodyComponent.MEM_CURSOR] = v;
         }
 
 static get isStatic() {
-            return RigidbodyComponent.vu8[20 + 28 * RigidbodyComponent.MEM_CURSOR] === 1;
+            return RigidbodyComponent.vu8[12 + 20 * RigidbodyComponent.MEM_CURSOR] === 1;
         }
 
         static set isStatic(v: boolean) {
-            RigidbodyComponent.vu8[20 + 28 * RigidbodyComponent.MEM_CURSOR] = v ? 1 : 0;
+            RigidbodyComponent.vu8[12 + 20 * RigidbodyComponent.MEM_CURSOR] = v ? 1 : 0;
         }
 
 static get _componentId() {
-            return RigidbodyComponent.vf32[0 + 28 * RigidbodyComponent.MEM_CURSOR]
+            return RigidbodyComponent.vf32[0 + 20 * RigidbodyComponent.MEM_CURSOR]
         } 
             
         static set _componentId(v: number) {
-            RigidbodyComponent.vf32[0 + 28 * RigidbodyComponent.MEM_CURSOR] = v;
+            RigidbodyComponent.vf32[0 + 20 * RigidbodyComponent.MEM_CURSOR] = v;
         }
 
 }

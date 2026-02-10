@@ -121,23 +121,28 @@ export function createCube(): {
   };
 }
 
-// export function createPlane(material: Material) {
-//   const vertices = new Float32Array([
-//     // Vertex 0: Position(-1, 0, -1), Normal(0, 1, 0), Color(0.5, 0.5, 0.5, 1)
-//     -1, 0, -1, 0, 1, 0, 0.5, 0.5, 0.5, 1,
-//     // Vertex 1: Position(1, 0, -1), Normal(0, 1, 0), Color(0.5, 0.5, 0.5, 1)
-//     1, 0, -1, 0, 1, 0, 0.5, 0.5, 0.5, 1,
-//     // Vertex 2: Position(1, 0, 1), Normal(0, 1, 0), Color(0.5, 0.5, 0.5, 1)
-//     1, 0, 1, 0, 1, 0, 0.5, 0.5, 0.5, 1,
-//     // Vertex 3: Position(-1, 0, 1), Normal(0, 1, 0), Color(0.5, 0.5, 0.5, 1)
-//     -1, 0, 1, 0, 1, 0, 0.5, 0.5, 0.5, 1,
-//   ]);
+export function createPlane(): {
+  vertices: Float32Array;
+  indices: Uint32Array;
+  normals: Float32Array;
+} {
+  const vertices = new Float32Array([
+    -0.5, 0, -0.5, 0.5, 0, -0.5, 0.5, 0, 0.5, -0.5, 0, 0.5,
+  ]);
 
-//   const indices = new Uint16Array([0, 2, 1, 0, 3, 2]);
+  const indices = new Uint32Array([0, 1, 2, 0, 2, 3]);
 
-//   return new Mesh(vertices, indices, material);
-// }
-//
+  const normals = new Float32Array([
+    0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+  ]);
+
+  return {
+    vertices,
+    indices,
+    normals,
+  };
+}
+
 export function createPyramid(): {
   vertices: Float32Array;
   indices: Uint32Array;

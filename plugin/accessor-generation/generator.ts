@@ -212,7 +212,7 @@ function generatePointerAccessors(field: FieldSchema, stride: number): { code: s
         const ptr = this.i32[base];
         const ptr_len = this.i32[base + 1];
 
-        if(v.byteLength > ptr_len) {
+        if(v.length * 4 > ptr_len) {
             throw new Error("Pointer overflow: trying to write more data than allocated.");
         }
 
@@ -312,7 +312,7 @@ export function generateAccessorsCode() {
         path: string;
     }[] = [];
 
-    let classImportsGLobal: Map<string, {path: string, imports: string[]} > = new Map();
+    let classImportsGlobal: Array<{ path: string, import: string, origin: string }> = new Array();
 
     sourceFiles.forEach(sourceFile => {
         sourceFile.getClasses().forEach(classDeclaration => {
@@ -323,19 +323,15 @@ export function generateAccessorsCode() {
                     const name = nImp.getName();
                     const path = imp.getModuleSpecifierValue();
 
-                    if (classImportsGLobal.has(path)) {
-                        const existing = classImportsGLobal.get(path)!;
-                        if (!existing.includes(name)) {
-                            existing.push(name);
-                            classImportsGLobal.set(path, existing);
-                        }
-                    } else {
-                        classImportsGLobal.set(path, [name]);
-                    }
+                    classImportsGlobal.push({
+                        import: name,
+                        path,
+                        origin: sourceFile.getFilePath()
+                    });
                 });
             });
 
-
+            console.log()
 
             const { className, schema, stride } = parseComponent(classDeclaration);
 
@@ -344,6 +340,8 @@ export function generateAccessorsCode() {
 
             importStatements.push({ name: className, path: sourceFile.getFilePath() });
             generatedClasses.push(className + "Accessor");
+
+            console.log(generatedClasses)
 
             outputCode += generateClassHeader(className, stride, sourceFile.getFilePath());
 
@@ -363,9 +361,15 @@ export function generateAccessorsCode() {
         });
     });
 
+
     outputCode += `\nexport const generatedComponents = [${generatedClasses.join(", ")}];\n`;
 
-
+    classImportsGlobal = [...new Map(classImportsGlobal.map(item => [item.import, item])).values()];
+    importStatements = importStatements.filter((value, index, self) =>
+        index === self.findIndex((t) => (
+            t.name === value.name && t.path === value.path
+        ))
+    );
 
 
     const refCode = reflectComponents();
@@ -383,15 +387,16 @@ export function generateAccessorsCode() {
         skipAddingFilesFromTsConfig: true, // Don't load your whole project (speed)
     });
 
-    outputCode = importStatements.map(i => `import ${i.name} from "${i.path}";\n`).join('') + '\n' + Array.from(classImportsGLobal.entries()).map(([_path, names]) => `import { ${names.join(', ')} } from "${(() => {
-        if (_path.startsWith(cwd())) {
-            return _path.replace(/\\/g, "/");
-        }
-        return _path;
-    })()}";`).join('\n') + '\n' + outputCode;
+    const globalImportString = classImportsGlobal.map(imp => {
+        const isPath = imp.path.startsWith(".") || imp.path.startsWith("/");
+        const importPath = isPath ? path.join(path.dirname(imp.origin), imp.path) : imp.path;
+        return `import { ${imp.import} } from "${importPath}";`
+    }).join('\n');
 
-    const sourceFile = typeproject.createSourceFile("virtual-temp.ts", outputCode, { overwrite: true });
-    const emitOutput = sourceFile.getEmitOutput();
+    outputCode = importStatements.map(i => `import ${i.name} from "${i.path}";\n`).join('') + '\n' + globalImportString + '\n' + outputCode;
+
+    const dtssourceFile = typeproject.createSourceFile("virtual-temp.ts", outputCode, { overwrite: true });
+    const emitOutput = dtssourceFile.getEmitOutput();
     const rawDts = emitOutput.getOutputFiles().find(f => f.getFilePath().endsWith('.d.ts'))?.getText();
 
     if (!rawDts) throw new Error("Failed to generate d.ts");
@@ -418,6 +423,7 @@ export function generateAccessorsCode() {
 
 
 
+
     // 4. Reconstruct the file correctly
     let wrappedDts = `declare module "virtual:ecs" {
     
@@ -426,8 +432,13 @@ ${body.join('\n')}
 `;
 
     wrappedDts = importStatements.map(i => `type ${i.name} = import("${i.path}").default;`).join('\n') + '\n\n' + wrappedDts;
+    // replace all "typeof X" with "X"
+    wrappedDts = wrappedDts.replace(/typeof (\w+)/g, '$1');
+
+
     return {
-        outputCode, types: wrappedDts
+        outputCode,
+        types: wrappedDts
 
     };
 }

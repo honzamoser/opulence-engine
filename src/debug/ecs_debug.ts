@@ -32,7 +32,7 @@ export function log_component<T extends Component>(
 ) {
   const componentTypeid = c.id;
   const componentInstanceId = engine.entities[entityId][componentTypeid];
-  const component = engine.ecs.getComponentValues(componentInstanceId, c);
+  const component = engine.ecs.getAccesor(componentInstanceId, c);
   console.log("-".repeat(8) + ` Component readout ${entityId}`);
 
   console.log(

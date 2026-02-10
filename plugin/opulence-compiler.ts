@@ -7,12 +7,12 @@ import { reflectComponents } from "./accessor-generation/reflection";
 export default function ecsVirtualPlugin(): Plugin {
   const virtualModuleId = "virtual:ecs";
   const resolvedVirtualModuleId = "\0virtual:ecs.ts"
-  const dtsPath = "src/generated/ecs.d.ts" // <--- The physical file
+  const dtsPath = "generated/ecs.d.ts" // <--- The physical file
 
   // Helper to run codegen and save types
   const update = () => {
     try {
-      const { outputCode, types } = generateAccessorsCode();
+     
       
 
 

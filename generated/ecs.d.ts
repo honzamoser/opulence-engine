@@ -1,5 +1,5 @@
-type MeshComponent = import("/workspaces/legends-of-league/src/ecs/components/mesh.component.ts").default;
-type TransformComponent = import("/workspaces/legends-of-league/src/ecs/components/transform.component.ts").default;
+type MeshComponent = import("D:/projects/opulence/opulence-engine/src/ecs/components/mesh.component.ts").default;
+type TransformComponent = import("D:/projects/opulence/opulence-engine/src/ecs/components/transform.component.ts").default;
 
 declare module "virtual:ecs" {
     

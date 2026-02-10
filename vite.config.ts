@@ -1,6 +1,10 @@
 import { defineConfig } from "vite";
 import o_config from "./opulenece.config";
 import ecsCodegen from "./plugin/opulence-compiler"
+import path from "path/win32";
+import { fileURLToPath } from "url";
+import wasm from "vite-plugin-wasm";
+import { format } from "path";
 
 export default defineConfig({
   plugins: [
@@ -10,8 +14,13 @@ export default defineConfig({
 
     // }), 
     // myCustomTransformerPlugin()
-    ecsCodegen(),
+    // ecsCodegen(),
+    wasm(),
   ],
+  worker: {
+    plugins: () => [wasm()],
+    format: "es",
+  }
 
   // swc({
   //   sourceMaps: true,
@@ -42,5 +51,11 @@ export default defineConfig({
   publicDir: "resources",
   esbuild: {
     target: "es2022",
+  },
+  resolve: {
+    alias: [
+      {find: "@generated", replacement: fileURLToPath(new URL("./generated/index.ts", import.meta.url))} 
+      // "@generated/*": path.resolve(__dirname, "./generated/*"),
+    ]
   }
 });

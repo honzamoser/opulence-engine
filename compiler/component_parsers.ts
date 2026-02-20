@@ -232,8 +232,7 @@ const typeTransformers: { [key: string | RegExp]: TypeTransformer } = {
         static set ${p.name}(v: boolean) {
             ${c.name}.vu8[${p.offset} + ${c.stride} * ${c.name}.MEM_CURSOR] = v ? 1 : 0;
         }`
-    }
-
+    },
 
 }
 

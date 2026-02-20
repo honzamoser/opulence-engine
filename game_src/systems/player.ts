@@ -37,7 +37,7 @@ export class PlayerSystem extends System {
     TransformComponent.CURSOR = 0;
     TransformComponent.NEXT = 0;
 
-    engine.addComponent<MeshComponent>(this.c_playerEnt, MeshComponent, { meshId: cubeMesh }); // Přidáme komponentu MeshComponent s krychlí
+    engine.addComponent<MeshComponent>(this.c_playerEnt, MeshComponent, { meshId: cubeMesh, color: new Float32Array([0.5, 1, 0.5]) }); // Přidáme komponentu MeshComponent s krychlí
     engine.addComponent<TransformComponent>(this.c_playerEnt, TransformComponent, { position: new Float32Array([0, 0, -10]), rotation: new Float32Array([0, 45 / 180 * Math.PI, 0]), scale: new Float32Array([1, 1, 1]) }); // Přidáme komponentu TransformComponent s počáteční pozicí, rotací a škálou
     engine.addComponent<RigidbodyComponent>(this.c_playerEnt, RigidbodyComponent, { mass: 1 }); // Přidáme komponentu RigidbodyComponent s hmotností 1
     engine.addComponent<ColliderComponent>(this.c_playerEnt, ColliderComponent, { size: new Float32Array([1, 1, 1]), offset: new Float32Array([0, 0, 0]) }); // Přidáme komponentu ColliderComponent s velikostí a offsetem
@@ -51,7 +51,7 @@ export class PlayerSystem extends System {
 
     console.log(TransformComponent.CURSOR, TransformComponent.NEXT, TransformComponent.positionZ);
     
-    engine.addComponent<MeshComponent>(floorEnt, MeshComponent, { meshId: floorMesh }); // Přidáme komponentu MeshComponent s podlahou
+    engine.addComponent<MeshComponent>(floorEnt, MeshComponent, { meshId: floorMesh, color: new Float32Array([0.5, 0.5, 0.5]) }); // Přidáme komponentu MeshComponent s podlahou
     engine.addComponent<TransformComponent>(floorEnt, TransformComponent, { position: new Float32Array([0, -5, -10]), rotation: new Float32Array([0, 0, 0]), scale: new Float32Array([20, 1, 20]) }); // Přidáme komponentu TransformComponent s pozicí podlahy
     engine.addComponent<RigidbodyComponent>(floorEnt, RigidbodyComponent, { isStatic: true }); // Přidáme komponentu TransformComponent s pozicí podlahy
     engine.addComponent<ColliderComponent>(floorEnt, ColliderComponent, { size: new Float32Array([20, 1, 20]), offset: new Float32Array([0, 0, 0]) }); // Přidáme komponentu ColliderComponent s velikostí a offsetem

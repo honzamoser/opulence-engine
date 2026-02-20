@@ -31,7 +31,7 @@ export default class RenderSystem extends System {
       
 
       if (mesh.rendererdInstasnceId === 0) {
-        this.instantiate(engine, entity);
+        this.instantiate(engine, entity, mesh.color);
         return;
       }
 
@@ -59,7 +59,7 @@ export default class RenderSystem extends System {
     matrix: mat4.create(),
   }
 
-  private instantiate(engine: Engine, entity: number) {
+  private instantiate(engine: Engine, entity: number, color?: Float32Array) {
     const transformId = engine.entities[entity][TransformComponent.IDENTIFIER];
     const transform = TransformComponent.to(transformId);
     const mesh = MeshComponent.to(engine.entities[entity][MeshComponent.IDENTIFIER])
@@ -70,7 +70,7 @@ export default class RenderSystem extends System {
     mesh.rendererdInstasnceId = this.renderer._instantiate(
       0,
       this.instantiatScratchpad.matrix,
-      new Float32Array([1, 1, 1, 1])
+      color ? new Float32Array([...color, 1]) : new Float32Array([1, 1, 1, 1])
     ) + 1;
   }
 

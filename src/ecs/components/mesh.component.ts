@@ -8,6 +8,8 @@ export default class MeshComponent extends Component {
 
   rendererdInstasnceId: number;
 
+  color: Vec3;
+
   resourceIdentifier: SizeOf<string, 64>;
 
   boundingBoxMin: Vec3 = vec3.create(

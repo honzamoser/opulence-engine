@@ -47,9 +47,9 @@ type MeshComponentSignature = {
     _componentId: number;}
 
 export class MeshComponent {
-    static STRIDE: number = 104;
+    static STRIDE: number = 128;
     static IDENTIFIER: number = 2;
-    static DESCRIPTION: ComponentDescription = {"name":"MeshComponent","stride":104,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { constructor, hot } from \"../component-gen\";import { Component } from \"../component\";import { SizeOf } from \"compiler/component_parsers\";","properties":[{"byteLength":64,"type":"string","name":"resourceIdentifier","default":"\"\"","typeArgs":["string","64"],"view":"vu8","offset":4},{"name":"boundingBoxMin","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n    Number.POSITIVE_INFINITY,\r\n    Number.POSITIVE_INFINITY,\r\n    Number.POSITIVE_INFINITY,\r\n  )","view":"vf32","offset":68},{"name":"boundingBoxMax","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n    Number.NEGATIVE_INFINITY,\r\n    Number.NEGATIVE_INFINITY,\r\n    Number.NEGATIVE_INFINITY,\r\n  )","view":"vf32","offset":80},{"byteLength":4,"type":"number","name":"meshId","view":"vf32","default":0,"offset":92},{"byteLength":4,"type":"number","name":"rendererdInstasnceId","view":"vf32","default":0,"offset":96},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
+    static DESCRIPTION: ComponentDescription = {"name":"MeshComponent","stride":128,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { constructor, hot } from \"../component-gen\";import { Component } from \"../component\";import { SizeOf } from \"compiler/component_parsers\";","properties":[{"byteLength":64,"type":"string","name":"resourceIdentifier","default":"\"\"","typeArgs":["string","64"],"view":"vu8","offset":4},{"name":"color","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":68},{"name":"boundingBoxMin","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n    Number.POSITIVE_INFINITY,\r\n    Number.POSITIVE_INFINITY,\r\n    Number.POSITIVE_INFINITY,\r\n  )","view":"vf32","offset":80},{"name":"boundingBoxMax","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n    Number.NEGATIVE_INFINITY,\r\n    Number.NEGATIVE_INFINITY,\r\n    Number.NEGATIVE_INFINITY,\r\n  )","view":"vf32","offset":92},{"name":"color","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":104},{"byteLength":4,"type":"number","name":"meshId","view":"vf32","default":0,"offset":116},{"byteLength":4,"type":"number","name":"rendererdInstasnceId","view":"vf32","default":0,"offset":120},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -100,7 +100,7 @@ meshId: v.meshId ? v.meshId : 0,
 rendererdInstasnceId: v.rendererdInstasnceId ? v.rendererdInstasnceId : 0,
 _componentId: v._componentId ? v._componentId : 0,
     }
-const base = MeshComponent.MEM_CURSOR * 116;
+const base = MeshComponent.MEM_CURSOR * 128;
     MeshComponent.vi32[base / 4] = memId;
 
     MeshComponent.resourceIdentifier = constructionData.resourceIdentifier;
@@ -142,7 +142,7 @@ return memId;
 static get resourceIdentifier() {
             let str = "";
             for (let i = 0; i < 64; i++) {
-                const charCode = MeshComponent.vu8[4 + 116 * MeshComponent.MEM_CURSOR + i];
+                const charCode = MeshComponent.vu8[4 + 128 * MeshComponent.MEM_CURSOR + i];
                 if (charCode === 0) break;
                 str += String.fromCharCode(charCode);
             }
@@ -152,151 +152,175 @@ static get resourceIdentifier() {
         static set resourceIdentifier(v: string) {
             for (let i = 0; i < 64; i++) {
                 if(v[i]) {
-                    MeshComponent.vu8[4 + 116 * MeshComponent.MEM_CURSOR + i] = v.charCodeAt(i);
+                    MeshComponent.vu8[4 + 128 * MeshComponent.MEM_CURSOR + i] = v.charCodeAt(i);
                 } else {
-                    MeshComponent.vu8[4 + 116 * MeshComponent.MEM_CURSOR + i] = 0
+                    MeshComponent.vu8[4 + 128 * MeshComponent.MEM_CURSOR + i] = 0
                 }
             }
         }
             
         static cpy_resourceIdentifier(out: Uint8Array) {
-            out.set(MeshComponent.vu8, 4 + 116 * MeshComponent.MEM_CURSOR);
+            out.set(MeshComponent.vu8, 4 + 128 * MeshComponent.MEM_CURSOR);
         }
+
+static get color() {
+            return MeshComponent.vf32.subarray((68 / 4) + (128 / 4) * MeshComponent.MEM_CURSOR, (68 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 3)
+    }
+            
+    static set color(v: Vec3 | Float32Array) {
+        MeshComponent.vf32.set(v, (68 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR);
+    }
+        
+    static cpy_color(out: Vec3) {
+        out.set(MeshComponent.vf32.subarray((68 / 4) + (128 / 4) * MeshComponent.MEM_CURSOR, (68 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 3));
+    }
+        
+    static get colorX() {
+        return MeshComponent.vf32[(68 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 0];
+    }
+
+    static set colorX(v: number) {
+        MeshComponent.vf32[(68 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 0] = v;
+    }
+static get colorY() {
+        return MeshComponent.vf32[(68 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 1];
+    }
+
+    static set colorY(v: number) {
+        MeshComponent.vf32[(68 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 1] = v;
+    }
+static get colorZ() {
+        return MeshComponent.vf32[(68 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 2];
+    }
+
+    static set colorZ(v: number) {
+        MeshComponent.vf32[(68 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 2] = v;
+    }
 
 static get boundingBoxMin() {
-            return MeshComponent.vf32.subarray((68 / 4) + (104 / 4) * MeshComponent.MEM_CURSOR, (68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 3)
-    }
-
-    static get meshId() {
-        return MeshComponent.vf32[1 + 104 * MeshComponent.MEM_CURSOR]
-    }
-
-    static set meshId(v: number) {
-        MeshComponent.vf32[1 + 104 * MeshComponent.MEM_CURSOR] = v;
-    }
-
-    static get rendererdInstasnceId() {
-        return MeshComponent.vf32[2 + 104 * MeshComponent.MEM_CURSOR]
-    }
-
-    static set rendererdInstasnceId(v: number) {
-        MeshComponent.vf32[2 + 104 * MeshComponent.MEM_CURSOR] = v;
-    }
-
-    static get resourceIdentifier() {
-        let str = "";
-        for (let i = 0; i < 64; i++) {
-            const charCode = MeshComponent.vu8[12 + 104 * MeshComponent.MEM_CURSOR + i];
-            if (charCode === 0) break;
-            str += String.fromCharCode(charCode);
-        }
-        return str;
-    }
-
-    static set resourceIdentifier(v: string) {
-        for (let i = 0; i < 64; i++) {
-            if (v[i]) {
-                MeshComponent.vu8[12 + 104 * MeshComponent.MEM_CURSOR + i] = v.charCodeAt(i);
-            } else {
-                MeshComponent.vu8[12 + 104 * MeshComponent.MEM_CURSOR + i] = 0
-            }
-        }
-    }
-
-    static cpy_resourceIdentifier(out: Uint8Array) {
-        out.set(MeshComponent.vu8, 12 + 104 * MeshComponent.MEM_CURSOR);
-    }
-
-    static get boundingBoxMin() {
-        return MeshComponent.vf32.subarray((76 / 4) + (104 / 4) * MeshComponent.MEM_CURSOR, (76 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 3)
+            return MeshComponent.vf32.subarray((80 / 4) + (128 / 4) * MeshComponent.MEM_CURSOR, (80 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 3)
     }
             
     static set boundingBoxMin(v: Vec3 | Float32Array) {
-        MeshComponent.vf32.set(v, (68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR);
+        MeshComponent.vf32.set(v, (80 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR);
     }
         
     static cpy_boundingBoxMin(out: Vec3) {
-        out.set(MeshComponent.vf32.subarray((68 / 4) + (104 / 4) * MeshComponent.MEM_CURSOR, (68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 3));
+        out.set(MeshComponent.vf32.subarray((80 / 4) + (128 / 4) * MeshComponent.MEM_CURSOR, (80 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 3));
     }
         
     static get boundingBoxMinX() {
-        return MeshComponent.vf32[(68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 0];
+        return MeshComponent.vf32[(80 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 0];
     }
 
     static set boundingBoxMinX(v: number) {
-        MeshComponent.vf32[(68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 0] = v;
+        MeshComponent.vf32[(80 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 0] = v;
     }
 static get boundingBoxMinY() {
-        return MeshComponent.vf32[(68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 1];
+        return MeshComponent.vf32[(80 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 1];
     }
 
     static set boundingBoxMinY(v: number) {
-        MeshComponent.vf32[(68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 1] = v;
+        MeshComponent.vf32[(80 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 1] = v;
     }
 static get boundingBoxMinZ() {
-        return MeshComponent.vf32[(68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 2];
+        return MeshComponent.vf32[(80 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 2];
     }
 
     static set boundingBoxMinZ(v: number) {
-        MeshComponent.vf32[(68 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 2] = v;
+        MeshComponent.vf32[(80 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 2] = v;
     }
 
 static get boundingBoxMax() {
-            return MeshComponent.vf32.subarray((80 / 4) + (104 / 4) * MeshComponent.MEM_CURSOR, (80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 3)
+            return MeshComponent.vf32.subarray((92 / 4) + (128 / 4) * MeshComponent.MEM_CURSOR, (92 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 3)
     }
             
     static set boundingBoxMax(v: Vec3 | Float32Array) {
-        MeshComponent.vf32.set(v, (80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR);
+        MeshComponent.vf32.set(v, (92 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR);
     }
         
     static cpy_boundingBoxMax(out: Vec3) {
-        out.set(MeshComponent.vf32.subarray((80 / 4) + (104 / 4) * MeshComponent.MEM_CURSOR, (80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 3));
+        out.set(MeshComponent.vf32.subarray((92 / 4) + (128 / 4) * MeshComponent.MEM_CURSOR, (92 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 3));
     }
         
     static get boundingBoxMaxX() {
-        return MeshComponent.vf32[(80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 0];
+        return MeshComponent.vf32[(92 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 0];
     }
 
     static set boundingBoxMaxX(v: number) {
-        MeshComponent.vf32[(80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 0] = v;
+        MeshComponent.vf32[(92 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 0] = v;
     }
 static get boundingBoxMaxY() {
-        return MeshComponent.vf32[(80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 1];
+        return MeshComponent.vf32[(92 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 1];
     }
 
     static set boundingBoxMaxY(v: number) {
-        MeshComponent.vf32[(80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 1] = v;
+        MeshComponent.vf32[(92 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 1] = v;
     }
 static get boundingBoxMaxZ() {
-        return MeshComponent.vf32[(80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 2];
+        return MeshComponent.vf32[(92 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 2];
     }
 
     static set boundingBoxMaxZ(v: number) {
-        MeshComponent.vf32[(80 / 4) + 104 / 4 * MeshComponent.MEM_CURSOR + 2] = v;
+        MeshComponent.vf32[(92 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 2] = v;
+    }
+
+static get color() {
+            return MeshComponent.vf32.subarray((104 / 4) + (128 / 4) * MeshComponent.MEM_CURSOR, (104 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 3)
+    }
+            
+    static set color(v: Vec3 | Float32Array) {
+        MeshComponent.vf32.set(v, (104 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR);
+    }
+        
+    static cpy_color(out: Vec3) {
+        out.set(MeshComponent.vf32.subarray((104 / 4) + (128 / 4) * MeshComponent.MEM_CURSOR, (104 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 3));
+    }
+        
+    static get colorX() {
+        return MeshComponent.vf32[(104 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 0];
+    }
+
+    static set colorX(v: number) {
+        MeshComponent.vf32[(104 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 0] = v;
+    }
+static get colorY() {
+        return MeshComponent.vf32[(104 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 1];
+    }
+
+    static set colorY(v: number) {
+        MeshComponent.vf32[(104 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 1] = v;
+    }
+static get colorZ() {
+        return MeshComponent.vf32[(104 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 2];
+    }
+
+    static set colorZ(v: number) {
+        MeshComponent.vf32[(104 / 4) + 128 / 4 * MeshComponent.MEM_CURSOR + 2] = v;
     }
 
 static get meshId() {
-            return MeshComponent.vf32[26 + 116 * MeshComponent.MEM_CURSOR]
+            return MeshComponent.vf32[29 + 128 * MeshComponent.MEM_CURSOR]
         } 
             
         static set meshId(v: number) {
-            MeshComponent.vf32[26 + 116 * MeshComponent.MEM_CURSOR] = v;
+            MeshComponent.vf32[29 + 128 * MeshComponent.MEM_CURSOR] = v;
         }
 
 static get rendererdInstasnceId() {
-            return MeshComponent.vf32[27 + 116 * MeshComponent.MEM_CURSOR]
+            return MeshComponent.vf32[30 + 128 * MeshComponent.MEM_CURSOR]
         } 
             
         static set rendererdInstasnceId(v: number) {
-            MeshComponent.vf32[27 + 116 * MeshComponent.MEM_CURSOR] = v;
+            MeshComponent.vf32[30 + 128 * MeshComponent.MEM_CURSOR] = v;
         }
 
 static get _componentId() {
-            return MeshComponent.vf32[0 + 116 * MeshComponent.MEM_CURSOR]
+            return MeshComponent.vf32[0 + 128 * MeshComponent.MEM_CURSOR]
         } 
             
         static set _componentId(v: number) {
-            MeshComponent.vf32[0 + 116 * MeshComponent.MEM_CURSOR] = v;
+            MeshComponent.vf32[0 + 128 * MeshComponent.MEM_CURSOR] = v;
         }
 
 }

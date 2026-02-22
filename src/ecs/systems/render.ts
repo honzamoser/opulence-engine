@@ -70,7 +70,7 @@ export default class RenderSystem extends System {
     mesh.rendererdInstasnceId = this.renderer._instantiate(
       0,
       this.instantiatScratchpad.matrix,
-      new Float32Array([1, 1, 1, 1])
+      new Float32Array([...mesh.color, 1])
     ) + 1;
   }
 

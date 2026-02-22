@@ -22,4 +22,6 @@ export default class MeshComponent extends Component {
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
   );
+
+  color: Vec3 = vec3.create(1, 1, 1);
 }

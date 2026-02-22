@@ -53,6 +53,7 @@
     }
 }
 
+import { MeshComponent } from "./mesh";
 import { CameraComponent } from "./camera";
 import { ColliderComponent } from "./collider";
 import { MeshComponent } from "./mesh";
@@ -60,20 +61,20 @@ import { RigidbodyComponent } from "./rigidbody";
 import { TransformComponent } from "./transform";
 
     export const generatedComponents = [
-        CameraComponent,
+        MeshComponent,
+CameraComponent,
 ColliderComponent,
-MeshComponent,
-RigidbodyComponent,
-TransformComponent
+TransformComponent,
+RigidbodyComponent
     ];
 
     export {
-        CameraComponent,
+        MeshComponent,
+CameraComponent,
 ColliderComponent,
-MeshComponent,
-RigidbodyComponent,
-TransformComponent
+TransformComponent,
+RigidbodyComponent
 }
 
-export type GeneratedComponent = CameraComponent | ColliderComponent | MeshComponent | RigidbodyComponent | TransformComponent;
+export type GeneratedComponent = MeshComponent | CameraComponent | ColliderComponent | TransformComponent | RigidbodyComponent;
 

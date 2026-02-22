@@ -8,7 +8,10 @@ export default class PhysicsSystem extends System {
 
         for (const entityId of rigidBodies) {
             this.simulateRigidBody(entityId, delta, engine);
+            ColliderComponent.to(entityId)
+            
 
+            // console.log(ColliderComponent.CURSOR, ColliderComponent.vertices)
         }
     }
 

@@ -4,7 +4,8 @@ import { ComponentBufferViews } from "./ecs";
 export class Allocator {
   heap: ArrayBuffer;
 
-  cursor: number = 0;
+  // Reserve 0 as NULL pointer
+  cursor: number = 8;
   buckets: number[][] = [];
 
   views: ComponentBufferViews;
@@ -30,6 +31,10 @@ export class Allocator {
   }
 
   alloc(size: number) {
+    // Ensure 4-byte alignment
+    const padding = this.cursor % 4 === 0 ? 0 : 4 - (this.cursor % 4);
+    this.cursor += padding;
+
     if (this.cursor + size > this.heap.byteLength) {
       this.resize();
     }
@@ -40,6 +45,10 @@ export class Allocator {
   }
 
   resize_alloc(ptr: number, size: number, newSize: number) {
+    // Ensure 4-byte alignment
+    const padding = this.cursor % 4 === 0 ? 0 : 4 - (this.cursor % 4);
+    this.cursor += padding;
+
     if (this.cursor + newSize > this.heap.byteLength) {
       this.resize();
     }

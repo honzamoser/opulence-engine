@@ -44,7 +44,7 @@ type RigidbodyComponentSignature = {
 
 export class RigidbodyComponent {
     static STRIDE: number = 28;
-    static IDENTIFIER: number = 3;
+    static IDENTIFIER: number = 4;
     static DESCRIPTION: ComponentDescription = {"name":"RigidbodyComponent","stride":28,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { cold, constructor, hot } from \"../component-gen\";import {PointerTo, SizeOf} from \"../../../compiler/component_parsers\"","properties":[{"name":"velocity","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":4},{"byteLength":4,"type":"number","name":"mass","view":"vf32","default":0,"offset":16},{"name":"isStatic","byteLength":1,"type":"boolean","default":"false","view":"vu8","offset":20},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;

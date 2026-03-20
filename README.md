@@ -21,7 +21,20 @@ The engine has an API for querying the entities that the system wants. It is to 
 
 For the rendering, there is a rendering ECS System that needs to be created. It instantiates the rendering engine inside. The rendering engine is a very basic renderer that supports meshes, lights and a basic camera. Much is planned for the futurue, including materials (maybe even PBR), shadows, post-processing, etc.
 
-The vision for the far future, once this Typescript version can be said to be done, is to rewrite this in a langauge that then compiles to WebAssembly and run it off that.
+The vision for the far future, once this Typescript version can be said to be done, is to rewrite this in a language that then compiles to WebAssembly and run it off that.
+
+## Documentation
+
+A full technical reference (theoretical background + practical how-to guide) is available in [DOCUMENTATION.md](DOCUMENTATION.md).
+
+**How to download / access the documentation:**
+
+| Method | Command / URL |
+|--------|--------------|
+| **View online** | Open [`DOCUMENTATION.md`](DOCUMENTATION.md) directly in GitHub – it renders as formatted Markdown. |
+| **Download raw file** | `curl -L -O https://raw.githubusercontent.com/honzamoser/opulence-engine/main/DOCUMENTATION.md` |
+| **Clone the whole repo** (includes docs) | `git clone https://github.com/honzamoser/opulence-engine.git` |
+| **Download a ZIP of the repo** | Click **Code → Download ZIP** on the GitHub repository page. |
 
 ## Contributing
 Feel free to open issues or PRs if you want to contribute! Any help is much appreciated as I am solo on this venture.

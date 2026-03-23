@@ -3,6 +3,8 @@ import o_config from "./opulenece.config";
 import ecsCodegen from "./plugin/opulence-compiler"
 import path from "path/win32";
 import { fileURLToPath } from "url";
+import wasm from "vite-plugin-wasm";
+import { format } from "path";
 
 export default defineConfig({
   plugins: [
@@ -13,7 +15,12 @@ export default defineConfig({
     // }), 
     // myCustomTransformerPlugin()
     // ecsCodegen(),
+    wasm(),
   ],
+  worker: {
+    plugins: () => [wasm()],
+    format: "es",
+  }
 
   // swc({
   //   sourceMaps: true,

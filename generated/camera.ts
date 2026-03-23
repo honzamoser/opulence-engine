@@ -48,7 +48,7 @@ type CameraComponentSignature = {
 export class CameraComponent {
     static STRIDE: number = 160;
     static IDENTIFIER: number = 0;
-    static DESCRIPTION: ComponentDescription = {"name":"CameraComponent","stride":160,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { hot } from \"../component-gen\";","properties":[{"name":"position","byteLength":64,"arrayLength":16,"default":"new Float32Array(16)","type":"Float32Array","view":"vf32","offset":4},{"name":"projectionMatrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.create()","view":"vf32","offset":68},{"name":"rotation","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":132},{"byteLength":4,"type":"number","name":"fov","view":"vf32","default":0,"offset":144},{"byteLength":4,"type":"number","name":"near","view":"vf32","default":0,"offset":148},{"byteLength":4,"type":"number","name":"far","view":"vf32","default":0,"offset":152},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
+    static DESCRIPTION: ComponentDescription = {"name":"CameraComponent","stride":160,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { hot } from \"../component-gen\";","properties":[{"name":"position","byteLength":64,"arrayLength":16,"default":"new Float32Array(16)","type":"Float32Array","view":"vf32","offset":4},{"name":"projectionMatrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.create()","view":"vf32","offset":68},{"name":"rotation","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":132},{"byteLength":4,"type":"number","name":"fov","view":"vf32","default":"Math.PI / 2","offset":144},{"byteLength":4,"type":"number","name":"near","view":"vf32","default":"0.1","offset":148},{"byteLength":4,"type":"number","name":"far","view":"vf32","default":"1000","offset":152},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -85,9 +85,9 @@ export class CameraComponent {
         position: v.position ? v.position : new Float32Array(16),
 projectionMatrix: v.projectionMatrix ? v.projectionMatrix : mat4.create(),
 rotation: v.rotation ? v.rotation : vec3.zero(),
-fov: v.fov ? v.fov : 0,
-near: v.near ? v.near : 0,
-far: v.far ? v.far : 0,
+fov: v.fov ? v.fov : Math.PI / 2,
+near: v.near ? v.near : 0.1,
+far: v.far ? v.far : 1000,
 _componentId: v._componentId ? v._componentId : 0,
     }
 const base = CameraComponent.MEM_CURSOR * 160;

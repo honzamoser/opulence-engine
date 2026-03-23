@@ -11,6 +11,9 @@ export default class RenderSystem extends System {
   renderer: Helios2Renderer;
   matCalcScratchpad: Float32Array = new Float32Array(16);
 
+  cameraPosition = vec3.create(0, 5, 5);
+  cameraRotation = vec3.create(0, 0, 0);
+
   update_scratchPad = {
     matrix: mat4.create(),
   }
@@ -41,6 +44,11 @@ export default class RenderSystem extends System {
 
       transform.matrix = this.calculateTransformMatrix_Scratchpad.matrix;
     });
+
+    
+
+    this.renderer.cameraPosition = this.cameraPosition;
+    this.renderer.cameraRotation = this.cameraRotation;
 
     this.renderer.render(delta);
 

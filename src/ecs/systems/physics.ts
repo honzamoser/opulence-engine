@@ -11,63 +11,12 @@ export default class PhysicsSystem extends System {
     public update(entities: Array<number[]>, delta: number, engine: Engine): void {
         const rigidBodies = engine.query(RigidbodyComponent, TransformComponent, ColliderComponent);
 
-        this.world.fixedStep();
+        for (const entityId of rigidBodies) {
+            this.simulateRigidBody(entityId, delta, engine);
+            ColliderComponent.to(entityId)
+            
 
-        for (const entity of rigidBodies) {
-            const rbCompId = engine.entities[entity][RigidbodyComponent.IDENTIFIER];
-            const transformCompId = engine.entities[entity][TransformComponent.IDENTIFIER];
-            const colliderCompId = engine.entities[entity][ColliderComponent.IDENTIFIER];
-
-            const rbComp = RigidbodyComponent.to(rbCompId);
-            const transformComp = TransformComponent.to(transformCompId);
-            const colliderComp = ColliderComponent.to(colliderCompId);
-
-            if (rbComp.bodyId === -1) {
-                rbComp.bodyId = this.initializeEntity();
-            } else {
-                const body = this.world.bodies.find(b => b.id === rbComp.bodyId);
-                if (body) {
-                    // Update position and rotation from physics simulation
-                    transformComp.positionX = body.position.x;
-                    transformComp.positionY = body.position.y;
-                    transformComp.positionZ = body.position.z;
-
-                    const EulerRotation = new CANNON.Vec3();
-                    body.quaternion.toEuler(EulerRotation)
-
-                    transformComp.rotationX = EulerRotation.x;
-                    transformComp.rotationY = EulerRotation.y;
-                    transformComp.rotationZ = EulerRotation.z;
-                }
-            }
-        }
-    }
-
-    validateMesh(vertices, indices) {
-        // 1. Check Vertex Count
-        if (vertices.length % 3 !== 0) {
-            console.error(`⚠️ Vertex array length (${vertices.length}) is not a multiple of 3! You have partial data.`);
-        }
-
-        // 2. Check for NaNs or Undefined in Vertices
-        for (let i = 0; i < vertices.length; i++) {
-            if (vertices[i] === undefined || isNaN(vertices[i])) {
-                console.error(`⚠️ Found BAD DATA in vertices at index ${i}:`, vertices[i]);
-                return false;
-            }
-        }
-
-        // 3. Check Indices Range
-        const maxVertexIndex = (vertices.length / 3) - 1;
-        for (let i = 0; i < indices.length; i++) {
-            if (indices[i] > maxVertexIndex) {
-                console.error(`⚠️ Face Index Out of Bounds! Index ${indices[i]} requested, but max vertex is ${maxVertexIndex}.`);
-                return false;
-            }
-            if (indices[i] < 0) {
-                console.error(`⚠️ Negative Index Found: ${indices[i]}`);
-                return false;
-            }
+            // console.log(ColliderComponent.CURSOR, ColliderComponent.vertices)
         }
 
         console.log("✅ Mesh Data looks safe.");

@@ -42,9 +42,7 @@ type ColliderComponentSignature = {
     offset: Vec3;
     boundingBoxMin: Vec3;
     boundingBoxMax: Vec3;
-    vertices: PointerTo;
-    indices: PointerTo;
-    shapeType: number;
+    vertices: Float32Array;
     _componentId: number;}
 
 export class ColliderComponent {
@@ -301,25 +299,22 @@ static get boundingBoxMaxZ() {
     }
 
 static get vertices() {
-            const ptr = ColliderComponent.vi32[116 / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
-            const ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
+            const ptr = ColliderComponent.vi32[116 / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
+            const ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
+            if (ptr === 0) return undefined;
 
             return ColliderComponent.ALLOCATOR.get_mem_vf32(ptr, ptr_len);
     }
 
-        static set vertices(v: Float32Array | Uint8Array) {
-            let ptr = ColliderComponent.vi32[116 / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
-            let ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
+        static set vertices(v: Float32Array) {
+            let ptr = ColliderComponent.vi32[116 / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
+            let ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
             
-            if (ptr === 0 || ptr_len !== v.byteLength) {
-                if (ptr !== 0) {
-                     ColliderComponent.ALLOCATOR.free(ptr, ptr_len);
-                }
-                
+            if (ptr === 0 || ptr_len < v.byteLength) {
                 ptr = ColliderComponent.ALLOCATOR.alloc(v.byteLength);
-                ColliderComponent.vi32[116 / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR] = ptr;
-                ColliderComponent.vi32[(116 + 4) / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR] = v.byteLength;
                 ptr_len = v.byteLength;
+                ColliderComponent.vi32[116 / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR] = ptr;
+                ColliderComponent.vi32[(116 + 4) / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR] = ptr_len;
             }
 
             ColliderComponent.ALLOCATOR.get_mem_vf32(ptr, ptr_len).set(v);

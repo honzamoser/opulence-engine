@@ -4,12 +4,10 @@ import { Component } from "../component";
 import { SizeOf } from "compiler/component_parsers";
 
 export default class MeshComponent extends Component {
-  meshId: number;
-
   rendererdInstasnceId: number;
-
+  
+  meshId: number;
   color: Vec3;
-
   resourceIdentifier: SizeOf<string, 64>;
 
   boundingBoxMin: Vec3 = vec3.create(
@@ -24,4 +22,5 @@ export default class MeshComponent extends Component {
     Number.NEGATIVE_INFINITY,
     Number.NEGATIVE_INFINITY,
   );
+
 }

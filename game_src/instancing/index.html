@@ -27,10 +27,22 @@
             ">
     </canvas>
 
+    <div id="cullingViewportBox" style="
+                position: fixed;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                border: 2px solid rgba(255, 60, 60, 0.95);
+                box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+                pointer-events: none;
+                z-index: 20;
+            "></div>
+
     <script src="render_test.ts" type="module" defer></script>
 
-    <div style="position: fixed; top: 10px; left: 10px; color: white; font-family: sans-serif; pointer-events: none; display: flex; flex-direction: column;">
-        
+    <div
+        style="position: fixed; top: 10px; left: 10px; color: white; font-family: sans-serif; pointer-events: none; display: flex; flex-direction: column;">
+
         <input id="cullingFovScaleSlider" type="range" min="0.2" max="1.0" step="0.01" value="1.00"
             style="pointer-events: auto;">
         <label for="cullingFovScaleSlider">culling_fov_scale: <span id="cullingFovScaleValue">1.00</span></label>
@@ -39,7 +51,8 @@
             style="pointer-events: auto;">
         <label for="instanceTargetSlider">instance_target: <span id="instanceTargetValue">250</span></label>
 
-        <div style="margin-top: 10px; font-size: 12px; line-height: 1.4; background: rgba(0,0,0,0.45); padding: 8px; border-radius: 6px;">
+        <div
+            style="margin-top: 10px; font-size: 12px; line-height: 1.4; background: rgba(0,0,0,0.45); padding: 8px; border-radius: 6px;">
             <div>Total instances: <span id="diagTotal">0</span></div>
             <div>Visible instances: <span id="diagVisible">0</span></div>
             <div>Culled instances: <span id="diagCulled">0</span></div>
@@ -51,9 +64,10 @@
     </div>
 
     <script>
-       
+
         const cullingFovScaleSlider = document.getElementById("cullingFovScaleSlider");
         const cullingFovScaleValue = document.getElementById("cullingFovScaleValue");
+        const cullingViewportBox = document.getElementById("cullingViewportBox");
         const instanceTargetSlider = document.getElementById("instanceTargetSlider");
         const instanceTargetValue = document.getElementById("instanceTargetValue");
         const diagTotal = document.getElementById("diagTotal");
@@ -62,18 +76,23 @@
         const diagRatio = document.getElementById("diagRatio");
         const diagFrame = document.getElementById("diagFrame");
 
-       
+
 
         window.plug = window.plug || {};
         window.plug.instance_target = 250;
 
-
+        const updateCullingViewportBox = (scale) => {
+            const clamped = Math.max(0.2, Math.min(1.0, scale));
+            cullingViewportBox.style.width = `${(window.innerWidth * clamped).toFixed(0)}px`;
+            cullingViewportBox.style.height = `${(window.innerHeight * clamped).toFixed(0)}px`;
+        };
 
 
         cullingFovScaleSlider.addEventListener("input", (e) => {
             const scale = parseFloat(e.target.value);
             window.plug.culling_fov_scale = scale;
             cullingFovScaleValue.textContent = scale.toFixed(2);
+            updateCullingViewportBox(scale);
         });
 
         instanceTargetSlider.addEventListener("input", (e) => {

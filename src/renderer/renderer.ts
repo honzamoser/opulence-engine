@@ -119,7 +119,7 @@ export class Helios2Renderer {
   public fov: number = 70;
   public cullingFovScale: number = 1;
   public frustrumRadius: number = 1;
-  private readonly diagnosticsReadIntervalMs = 1000;
+  private readonly diagnosticsReadIntervalMs = 200;
   private lastDiagnosticsReadAt = 0;
   private diagnosticsReadInFlight = false;
 
@@ -135,7 +135,7 @@ export class Helios2Renderer {
       degToRad(this.fov),
       this.aspect,
       0.1,
-      100.0,
+      1000.0,
       this.projectionMatrix,
     );
 
@@ -395,7 +395,7 @@ export class Helios2Renderer {
       degToRad(cullingFov),
       this.aspect,
       0.1,
-      100.0,
+      1000.0,
       this.cullingProjectionMatrix,
     );
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Testovací scéna</title>
+    <title>Testovaci scena</title>
 
     <style>
         html,
@@ -14,54 +14,115 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .panel {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            width: min(360px, calc(100vw - 24px));
+            color: #eef4ff;
+            background: linear-gradient(155deg, rgba(16, 25, 45, 0.82), rgba(12, 18, 33, 0.6));
+            border: 1px solid rgba(126, 163, 230, 0.35);
+            border-radius: 14px;
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #9db7df;
+        }
+
+        .group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(147, 179, 232, 0.2);
+        }
+
+        .group:first-of-type {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        label {
+            font-size: 12px;
+            color: #d6e5ff;
+        }
+
+        input[type="range"] {
+            pointer-events: auto;
+            accent-color: #ff6b6b;
+        }
+
+        .diag {
+            font-size: 12px;
+            line-height: 1.45;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.24);
+            padding: 8px;
         }
     </style>
 </head>
 
 <body>
-    <canvas id="main" style="
-                width: 100%;
-                height: 100%;
-                display: block;
-                pointer-events: none;
-            ">
-    </canvas>
+    <canvas id="main" style="width: 100%; height: 100%; display: block; pointer-events: none;"></canvas>
 
-    <div id="cullingViewportBox" style="
-                position: fixed;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                border: 2px solid rgba(255, 60, 60, 0.95);
-                box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
-                pointer-events: none;
-                z-index: 20;
-            "></div>
+    <div id="cullingViewportBox" style="position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 2px solid rgba(255, 60, 60, 0.95); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35); pointer-events: none; z-index: 20;"></div>
 
     <script src="render_test.ts" type="module" defer></script>
 
-    <div style="position: fixed; top: 10px; left: 10px; color: white; font-family: sans-serif; pointer-events: none; display: flex; flex-direction: column;">
-    
-        <input id="frustrumRadiusSlider" type="range" min="0" max="10" step="0.1" value="1.0"
-            style="pointer-events: auto;">
-        <label for="frustrumRadiusSlider">frustrum_radius: <span id="frustrumRadiusValue">1.0</span></label>
+    <div class="panel">
+        <p class="title">Camera Controls</p>
+        <div class="group">
+            <label for="orbitRadiusSlider">orbitRadius: <span id="orbitRadiusValue">20.0</span></label>
+            <input id="orbitRadiusSlider" type="range" min="2" max="80" step="0.5" value="20">
 
-        <input id="cullingFovScaleSlider" type="range" min="0.2" max="1.0" step="0.01" value="1.00"
-            style="pointer-events: auto;">
-        <label for="cullingFovScaleSlider">culling_fov_scale: <span id="cullingFovScaleValue">1.00</span></label>
+            <label for="orbitSpeedSlider">speed: <span id="orbitSpeedValue">0.50</span></label>
+            <input id="orbitSpeedSlider" type="range" min="0" max="3" step="0.01" value="0.50">
 
-        <div style="margin-top: 10px; font-size: 12px; line-height: 1.4; background: rgba(0,0,0,0.45); padding: 8px; border-radius: 6px;">
+            <label for="cameraFovSlider">real camera FOV: <span id="cameraFovValue">70</span></label>
+            <input id="cameraFovSlider" type="range" min="20" max="120" step="1" value="70">
+        </div>
+
+        <p class="title">Culling Controls</p>
+        <div class="group">
+            <label for="frustrumRadiusSlider">frustrum_radius: <span id="frustrumRadiusValue">1.0</span></label>
+            <input id="frustrumRadiusSlider" type="range" min="0" max="10" step="0.1" value="1.0">
+
+            <label for="cullingFovScaleSlider">culling_fov_scale: <span id="cullingFovScaleValue">1.00</span></label>
+            <input id="cullingFovScaleSlider" type="range" min="0.2" max="1.0" step="0.01" value="1.00">
+        </div>
+
+        <div class="diag">
             <div>Total instances: <span id="diagTotal">0</span></div>
             <div>Visible instances: <span id="diagVisible">0</span></div>
             <div>Culled instances: <span id="diagCulled">0</span></div>
             <div>Visible ratio: <span id="diagRatio">0%</span></div>
             <div>Frame: <span id="diagFrame">0</span></div>
         </div>
-
     </div>
 
     <script>
-        
+        const orbitRadiusSlider = document.getElementById("orbitRadiusSlider");
+        const orbitRadiusValue = document.getElementById("orbitRadiusValue");
+        const orbitSpeedSlider = document.getElementById("orbitSpeedSlider");
+        const orbitSpeedValue = document.getElementById("orbitSpeedValue");
+        const cameraFovSlider = document.getElementById("cameraFovSlider");
+        const cameraFovValue = document.getElementById("cameraFovValue");
         const frustrumRadiusSlider = document.getElementById("frustrumRadiusSlider");
         const frustrumRadiusValue = document.getElementById("frustrumRadiusValue");
         const cullingFovScaleSlider = document.getElementById("cullingFovScaleSlider");
@@ -73,9 +134,12 @@
         const diagRatio = document.getElementById("diagRatio");
         const diagFrame = document.getElementById("diagFrame");
 
-      
-
         window.plug = window.plug || {};
+        window.plug.orbitRadius = 20;
+        window.plug.orbitSpeed = 0.5;
+        window.plug.camera_fov = 70;
+        window.plug.frustrum_radius = 1;
+        window.plug.culling_fov_scale = 1;
 
         const updateCullingViewportBox = (scale) => {
             const clamped = Math.max(0.2, Math.min(1.0, scale));
@@ -83,27 +147,41 @@
             cullingViewportBox.style.height = `${(window.innerHeight * clamped).toFixed(0)}px`;
         };
 
+        orbitRadiusSlider.addEventListener("input", (e) => {
+            const value = parseFloat(e.target.value);
+            window.plug.orbitRadius = value;
+            orbitRadiusValue.textContent = value.toFixed(1);
+        });
 
-       
+        orbitSpeedSlider.addEventListener("input", (e) => {
+            const value = parseFloat(e.target.value);
+            window.plug.orbitSpeed = value;
+            orbitSpeedValue.textContent = value.toFixed(2);
+        });
+
+        cameraFovSlider.addEventListener("input", (e) => {
+            const value = parseInt(e.target.value, 10);
+            window.plug.camera_fov = value;
+            cameraFovValue.textContent = String(value);
+        });
+
         frustrumRadiusSlider.addEventListener("input", (e) => {
-            const radius = parseFloat(e.target.value);
-            window.plug.frustrum_radius = radius;
-            frustrumRadiusValue.textContent = radius.toFixed(1);
+            const value = parseFloat(e.target.value);
+            window.plug.frustrum_radius = value;
+            frustrumRadiusValue.textContent = value.toFixed(1);
         });
 
         cullingFovScaleSlider.addEventListener("input", (e) => {
-            const scale = parseFloat(e.target.value);
-            window.plug.culling_fov_scale = scale;
-            cullingFovScaleValue.textContent = scale.toFixed(2);
-            updateCullingViewportBox(scale);
+            const value = parseFloat(e.target.value);
+            window.plug.culling_fov_scale = value;
+            cullingFovScaleValue.textContent = value.toFixed(2);
+            updateCullingViewportBox(value);
         });
 
         window.addEventListener("resize", () => {
-            const scale = window.plug.culling_fov_scale || parseFloat(cullingFovScaleSlider.value);
-            updateCullingViewportBox(scale);
+            updateCullingViewportBox(window.plug.culling_fov_scale);
         });
 
-        window.plug.culling_fov_scale = parseFloat(cullingFovScaleSlider.value);
         updateCullingViewportBox(window.plug.culling_fov_scale);
 
         setInterval(() => {

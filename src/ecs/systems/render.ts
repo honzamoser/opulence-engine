@@ -27,8 +27,21 @@ export default class RenderSystem extends System {
   private disabledEntities: Set<number> = new Set();
 
   private orbitRadius = 20;
+  private orbitSpeed = 0.5;
 
   public override async update(entities: number[][], delta: number, engine: Engine) {
+    const plug = (window as any).plug;
+    if (plug) {
+      if (typeof plug.orbitRadius === "number") {
+        this.orbitRadius = Math.max(1, Math.min(500, plug.orbitRadius));
+      }
+      if (typeof plug.orbitSpeed === "number") {
+        this.orbitSpeed = Math.max(0, Math.min(10, plug.orbitSpeed));
+      }
+      if (typeof plug.camera_fov === "number") {
+        this.renderer.fov = Math.max(5, Math.min(170, plug.camera_fov));
+      }
+    }
 
     this.batchScratchpad.groups.clear();
 
@@ -86,8 +99,7 @@ export default class RenderSystem extends System {
     // Orbit camera around the world origin and keep it looking at the center.
 
     const orbitHeight = 2;
-    const orbitSpeed = 0.5; // radians per second
-    const orbitAngle = (Date.now() / 1000) * orbitSpeed;
+    const orbitAngle = (Date.now() / 1000) * this.orbitSpeed;
 
     this.cameraPosition[0] = Math.sin(orbitAngle) * this.orbitRadius;
     this.cameraPosition[1] = orbitHeight;
@@ -117,6 +129,10 @@ export default class RenderSystem extends System {
     const meshEntities = engine.query(MeshComponent, TransformComponent);
 
     const plug = (window as any).plug ?? ((window as any).plug = {});
+    if (typeof plug.orbitRadius !== "number") plug.orbitRadius = this.orbitRadius;
+    if (typeof plug.orbitSpeed !== "number") plug.orbitSpeed = this.orbitSpeed;
+    if (typeof plug.camera_fov !== "number") plug.camera_fov = this.renderer.fov;
+
     plug.changeColor = (meshId: number, color: Float32Array) => {
       const mesh = MeshComponent.to(meshId);
       mesh.color = color;

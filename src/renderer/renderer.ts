@@ -362,6 +362,14 @@ export class Helios2Renderer {
       this.cullingFovScale = Math.max(0.2, Math.min(1.0, debugPlug.culling_fov_scale));
     }
 
+    mat4.perspective(
+      degToRad(this.fov),
+      this.aspect,
+      0.1,
+      1000.0,
+      this.projectionMatrix,
+    );
+
     mat4.identity(this.viewMatrix);
 
     mat4.rotateX(

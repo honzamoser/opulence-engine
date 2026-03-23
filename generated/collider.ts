@@ -43,6 +43,8 @@ type ColliderComponentSignature = {
     boundingBoxMin: Vec3;
     boundingBoxMax: Vec3;
     vertices: Float32Array;
+    indices: Uint32Array;
+    shapeType: number;
     _componentId: number;}
 
 export class ColliderComponent {
@@ -108,18 +110,8 @@ ColliderComponent.size = constructionData.size;
 ColliderComponent.offset = constructionData.offset;
 ColliderComponent.boundingBoxMin = constructionData.boundingBoxMin;
 ColliderComponent.boundingBoxMax = constructionData.boundingBoxMax;
-if (constructionData.vertices !== null) {
-                ColliderComponent.set_ptr_vertices(ColliderComponent.ALLOCATOR.alloc(constructionData.vertices.byteLength), constructionData.vertices.ptr_len);
-                ColliderComponent.vertices = constructionData.vertices;
-            } else {
-                ColliderComponent.set_ptr_vertices(ColliderComponent.ALLOCATOR.alloc(64), 0);
-}
-if (constructionData.indices !== null) {
-                ColliderComponent.set_ptr_indices(ColliderComponent.ALLOCATOR.alloc(constructionData.indices.byteLength), constructionData.indices.ptr_len);
-                ColliderComponent.indices = constructionData.indices;
-            } else {
-                ColliderComponent.set_ptr_indices(ColliderComponent.ALLOCATOR.alloc(64), 0);
-}
+if (constructionData.vertices) { ColliderComponent.vertices = constructionData.vertices; }
+if (constructionData.indices) { ColliderComponent.indices = constructionData.indices; }
 ColliderComponent.shapeType = constructionData.shapeType;
 
 
@@ -299,22 +291,22 @@ static get boundingBoxMaxZ() {
     }
 
 static get vertices() {
-            const ptr = ColliderComponent.vi32[116 / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
-            const ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
+            const ptr = ColliderComponent.vi32[116 / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
+            const ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
             if (ptr === 0) return undefined;
 
             return ColliderComponent.ALLOCATOR.get_mem_vf32(ptr, ptr_len);
     }
 
         static set vertices(v: Float32Array) {
-            let ptr = ColliderComponent.vi32[116 / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
-            let ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR];
+            let ptr = ColliderComponent.vi32[116 / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
+            let ptr_len = ColliderComponent.vi32[(116 + 4) / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
             
             if (ptr === 0 || ptr_len < v.byteLength) {
                 ptr = ColliderComponent.ALLOCATOR.alloc(v.byteLength);
                 ptr_len = v.byteLength;
-                ColliderComponent.vi32[116 / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR] = ptr;
-                ColliderComponent.vi32[(116 + 4) / 4 + 128 / 4 * ColliderComponent.MEM_CURSOR] = ptr_len;
+                ColliderComponent.vi32[116 / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR] = ptr;
+                ColliderComponent.vi32[(116 + 4) / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR] = ptr_len;
             }
 
             ColliderComponent.ALLOCATOR.get_mem_vf32(ptr, ptr_len).set(v);
@@ -329,23 +321,20 @@ static get vertices() {
 static get indices() {
             const ptr = ColliderComponent.vi32[124 / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
             const ptr_len = ColliderComponent.vi32[(124 + 4) / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
+            if (ptr === 0) return undefined;
 
             return ColliderComponent.ALLOCATOR.get_mem_vu32(ptr, ptr_len);
     }
 
-        static set indices(v: Float32Array | Uint8Array) {
+        static set indices(v: Uint32Array) {
             let ptr = ColliderComponent.vi32[124 / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
             let ptr_len = ColliderComponent.vi32[(124 + 4) / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR];
             
-            if (ptr === 0 || ptr_len !== v.byteLength) {
-                if (ptr !== 0) {
-                     ColliderComponent.ALLOCATOR.free(ptr, ptr_len);
-                }
-                
+            if (ptr === 0 || ptr_len < v.byteLength) {
                 ptr = ColliderComponent.ALLOCATOR.alloc(v.byteLength);
-                ColliderComponent.vi32[124 / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR] = ptr;
-                ColliderComponent.vi32[(124 + 4) / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR] = v.byteLength;
                 ptr_len = v.byteLength;
+                ColliderComponent.vi32[124 / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR] = ptr;
+                ColliderComponent.vi32[(124 + 4) / 4 + 140 / 4 * ColliderComponent.MEM_CURSOR] = ptr_len;
             }
 
             ColliderComponent.ALLOCATOR.get_mem_vu32(ptr, ptr_len).set(v);
@@ -358,19 +347,19 @@ static get indices() {
             
 
 static get shapeType() {
-            return ColliderComponent.vf32[33 + 140 * ColliderComponent.MEM_CURSOR]
+            return ColliderComponent.vf32[33 + 140 / 4 * ColliderComponent.MEM_CURSOR]
         } 
             
         static set shapeType(v: number) {
-            ColliderComponent.vf32[33 + 140 * ColliderComponent.MEM_CURSOR] = v;
+            ColliderComponent.vf32[33 + 140 / 4 * ColliderComponent.MEM_CURSOR] = v;
         }
 
 static get _componentId() {
-            return ColliderComponent.vf32[0 + 140 * ColliderComponent.MEM_CURSOR]
+            return ColliderComponent.vf32[0 + 140 / 4 * ColliderComponent.MEM_CURSOR]
         } 
             
         static set _componentId(v: number) {
-            ColliderComponent.vf32[0 + 140 * ColliderComponent.MEM_CURSOR] = v;
+            ColliderComponent.vf32[0 + 140 / 4 * ColliderComponent.MEM_CURSOR] = v;
         }
 
 }

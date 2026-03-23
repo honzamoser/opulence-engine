@@ -114,11 +114,11 @@ const target_path = path.join(cwd(), OUT_PATH);
 const typeTransformers: { [key: string | RegExp]: TypeTransformer } = {
     "number": (c, p) => {
         return `static get ${p.name}() {
-            return ${c.name}.vf32[${p.offset / 4} + ${c.stride} * ${c.name}.MEM_CURSOR]
+            return ${c.name}.vf32[${p.offset / 4} + ${c.stride} / 4 * ${c.name}.MEM_CURSOR]
         } 
             
         static set ${p.name}(v: number) {
-            ${c.name}.vf32[${p.offset / 4} + ${c.stride} * ${c.name}.MEM_CURSOR] = v;
+            ${c.name}.vf32[${p.offset / 4} + ${c.stride} / 4 * ${c.name}.MEM_CURSOR] = v;
         }`
     },
 

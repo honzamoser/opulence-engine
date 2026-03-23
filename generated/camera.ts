@@ -189,35 +189,35 @@ static get rotationZ() {
     }
 
 static get fov() {
-            return CameraComponent.vf32[36 + 160 * CameraComponent.MEM_CURSOR]
+            return CameraComponent.vf32[36 + 160 / 4 * CameraComponent.MEM_CURSOR]
         } 
             
         static set fov(v: number) {
-            CameraComponent.vf32[36 + 160 * CameraComponent.MEM_CURSOR] = v;
+            CameraComponent.vf32[36 + 160 / 4 * CameraComponent.MEM_CURSOR] = v;
         }
 
 static get near() {
-            return CameraComponent.vf32[37 + 160 * CameraComponent.MEM_CURSOR]
+            return CameraComponent.vf32[37 + 160 / 4 * CameraComponent.MEM_CURSOR]
         } 
             
         static set near(v: number) {
-            CameraComponent.vf32[37 + 160 * CameraComponent.MEM_CURSOR] = v;
+            CameraComponent.vf32[37 + 160 / 4 * CameraComponent.MEM_CURSOR] = v;
         }
 
 static get far() {
-            return CameraComponent.vf32[38 + 160 * CameraComponent.MEM_CURSOR]
+            return CameraComponent.vf32[38 + 160 / 4 * CameraComponent.MEM_CURSOR]
         } 
             
         static set far(v: number) {
-            CameraComponent.vf32[38 + 160 * CameraComponent.MEM_CURSOR] = v;
+            CameraComponent.vf32[38 + 160 / 4 * CameraComponent.MEM_CURSOR] = v;
         }
 
 static get _componentId() {
-            return CameraComponent.vf32[0 + 160 * CameraComponent.MEM_CURSOR]
+            return CameraComponent.vf32[0 + 160 / 4 * CameraComponent.MEM_CURSOR]
         } 
             
         static set _componentId(v: number) {
-            CameraComponent.vf32[0 + 160 * CameraComponent.MEM_CURSOR] = v;
+            CameraComponent.vf32[0 + 160 / 4 * CameraComponent.MEM_CURSOR] = v;
         }
 
 }

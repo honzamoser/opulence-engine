@@ -1,7 +1,7 @@
 import { Component } from "../ecs/component";
 
 import { PointerManager } from "./arrayBufferPointer";
-import { TestComponent } from "../../game_src/components/testComponent";
+import { TestComponent } from "../../game_src/rotating_cube_physics/components/testComponent";
 
 // Serialize basic types to bytes
 // arrays, strings and arraybuffers should be assigned to ArrayBufferPointers

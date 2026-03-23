@@ -300,27 +300,27 @@ static get colorZ() {
     }
 
 static get meshId() {
-            return MeshComponent.vf32[29 + 128 * MeshComponent.MEM_CURSOR]
+            return MeshComponent.vf32[29 + 128 / 4 * MeshComponent.MEM_CURSOR]
         } 
             
         static set meshId(v: number) {
-            MeshComponent.vf32[29 + 128 * MeshComponent.MEM_CURSOR] = v;
+            MeshComponent.vf32[29 + 128 / 4 * MeshComponent.MEM_CURSOR] = v;
         }
 
 static get rendererdInstasnceId() {
-            return MeshComponent.vf32[30 + 128 * MeshComponent.MEM_CURSOR]
+            return MeshComponent.vf32[30 + 128 / 4 * MeshComponent.MEM_CURSOR]
         } 
             
         static set rendererdInstasnceId(v: number) {
-            MeshComponent.vf32[30 + 128 * MeshComponent.MEM_CURSOR] = v;
+            MeshComponent.vf32[30 + 128 / 4 * MeshComponent.MEM_CURSOR] = v;
         }
 
 static get _componentId() {
-            return MeshComponent.vf32[0 + 128 * MeshComponent.MEM_CURSOR]
+            return MeshComponent.vf32[0 + 128 / 4 * MeshComponent.MEM_CURSOR]
         } 
             
         static set _componentId(v: number) {
-            MeshComponent.vf32[0 + 128 * MeshComponent.MEM_CURSOR] = v;
+            MeshComponent.vf32[0 + 128 / 4 * MeshComponent.MEM_CURSOR] = v;
         }
 
 }

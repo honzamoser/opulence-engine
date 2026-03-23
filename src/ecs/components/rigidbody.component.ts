@@ -8,4 +8,5 @@ export default class RigidbodyComponent extends Component {
     isStatic: boolean = false;
 
     bodyId: number = -1;
+    velocity: Vec3 = vec3.create();
 }

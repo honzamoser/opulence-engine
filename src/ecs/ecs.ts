@@ -22,6 +22,7 @@ type FieldSchema = {
 
 export class ECS {
     coldAllocator = new Allocator(2 ** 12);
+    private static readonly COMPONENT_CAPACITY = 10_000;
 
     componentMemory: ArrayBuffer[] = [];
     
@@ -29,8 +30,9 @@ export class ECS {
 
         for (let i = 0; i < generatedComponents.length; i++) {
             const componentType = generatedComponents[i];
-            this.componentMemory.push(new ArrayBuffer(componentType.STRIDE * 100));
-            this.componentMemory[componentType.IDENTIFIER] = new ArrayBuffer(componentType.STRIDE * 100);
+            this.componentMemory[componentType.IDENTIFIER] = new ArrayBuffer(
+                componentType.STRIDE * ECS.COMPONENT_CAPACITY,
+            );
             componentType.initialize(this.componentMemory[componentType.IDENTIFIER], this.coldAllocator);
         }
     }

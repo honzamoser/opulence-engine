@@ -2,6 +2,19 @@ import { mat4, Mat4, Vec3, vec3, Vec4 } from "wgpu-matrix";
 import shaderCode from "./shader.wgsl?raw";
 import MeshComponent from "../ecs/components/mesh.component";
 
+type RendererDiagnostics = {
+  totalInstances: number;
+  visibleInstances: number;
+  frame: number;
+  updatedAt: number;
+};
+
+declare global {
+  interface Window {
+    diagnostics?: RendererDiagnostics;
+  }
+}
+
 export type Helios2_Buffers = {
   vertex: GPUBuffer; // Vertices
   index: GPUBuffer; // Indices
@@ -26,7 +39,7 @@ export class Helios2Renderer {
     index: 4, // uint16
     indirect: 5 * 4, // 5 uint32
     instance: (16 + 4 + 4) * 4, // Mat4 (16) + Vec4 (4)
-    uniform: (16 + 24 + 4) * 4, // viewProj (16) + planes (24) + time (1) + instanceCount (1) + padding (2)
+    uniform: (16 + 24 + 4) * 4, // viewProj (16) + planes (24) + time (1) + instanceCount (1) + frustrumRadius (1) + padding (1)
     visible: 4, // uint32
   };
 
@@ -96,13 +109,19 @@ export class Helios2Renderer {
   public cameraRotation: Vec3 = vec3.create(0, 0, 0);
 
   private projectionMatrix: Mat4 = mat4.identity();
+  private cullingProjectionMatrix: Mat4 = mat4.identity();
   private viewMatrix: Mat4 = mat4.identity();
 
   private frustrumPlanes: Float32Array = new Float32Array(24); // 6 planes * 4 components
 
   private aspect: number;
 
-  private slider: HTMLInputElement;
+  public fov: number = 70;
+  public cullingFovScale: number = 1;
+  public frustrumRadius: number = 1;
+  private readonly diagnosticsReadIntervalMs = 1000;
+  private lastDiagnosticsReadAt = 0;
+  private diagnosticsReadInFlight = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -110,12 +129,10 @@ export class Helios2Renderer {
     this.canvas.width = document.body.clientWidth * devicePixelRatio;
     this.canvas.height = document.body.clientHeight * devicePixelRatio;
 
-    this.slider = document.getElementById("fov") as HTMLInputElement;
-
     this.aspect = this.canvas.width / this.canvas.height;
 
     mat4.perspective(
-      degToRad(90),
+      degToRad(this.fov),
       this.aspect,
       0.1,
       100.0,
@@ -132,24 +149,41 @@ export class Helios2Renderer {
     //   this.projectionMatrix,
     // );
 
-    setInterval(() => {
-      const readBack = this.device.createCommandEncoder();
-      const copySize = 4;
-      readBack.copyBufferToBuffer(
-        this.debugBuffer,
-        0,
-        this.readbackBuf,
-        0,
-        1024,
-      );
-      this.device.queue.submit([readBack.finish()]);
+  }
 
-      this.readbackBuf.mapAsync(GPUMapMode.READ).then(() => {
-        const array = new Uint32Array(this.readbackBuf.getMappedRange());
-        // console.log("Culled draw calls: ", Uint32Array.from(array));
+  private maybePublishDiagnostics() {
+    if (!this._ready || this.diagnosticsReadInFlight) return;
+
+    const now = performance.now();
+    if (now - this.lastDiagnosticsReadAt < this.diagnosticsReadIntervalMs) return;
+    this.lastDiagnosticsReadAt = now;
+    this.diagnosticsReadInFlight = true;
+
+    const readBack = this.device.createCommandEncoder();
+    readBack.copyBufferToBuffer(
+      this.debugBuffer,
+      0,
+      this.readbackBuf,
+      0,
+      16,
+    );
+    this.device.queue.submit([readBack.finish()]);
+
+    this.readbackBuf
+      .mapAsync(GPUMapMode.READ)
+      .then(() => {
+        const data = new Uint32Array(this.readbackBuf.getMappedRange());
+        window.diagnostics = {
+          totalInstances: data[0] ?? 0,
+          visibleInstances: data[1] ?? 0,
+          frame: data[2] ?? 0,
+          updatedAt: Date.now(),
+        };
         this.readbackBuf.unmap();
+      })
+      .finally(() => {
+        this.diagnosticsReadInFlight = false;
       });
-    }, 1000);
   }
 
   private _getMeshData(meshIndex: number): {
@@ -272,6 +306,17 @@ export class Helios2Renderer {
     return startInstance;
   }
 
+  public _changeInstanceColor(instanceId: number, color: Vec4) {
+    const offset = (instanceId - 1) * Helios2Renderer.BUFFERS_STRIDES_BYTES.instance + 16 * 4;
+    this.device.queue.writeBuffer(
+      this.buffers.instance,
+      offset,
+      new Float32Array(color).buffer,
+      0,
+      16
+    );
+  }
+
   public _updateMatrix(instanceId: number, matrix: Mat4) {
     const offset = (instanceId - 1) * Helios2Renderer.BUFFERS_STRIDES_BYTES.instance;
     const matrixData = new Float32Array(matrix);
@@ -285,9 +330,38 @@ export class Helios2Renderer {
     );
   }
 
+  public _setInstanceEnabled(
+    instanceId: number,
+    enabled: boolean,
+    restoreMatrix?: Mat4 | Float32Array,
+  ) {
+    if (enabled) {
+      if (restoreMatrix) {
+        this._updateMatrix(instanceId, restoreMatrix as Mat4);
+      }
+      return;
+    }
+
+    const hiddenMatrix = new Float32Array([
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      1_000_000, 1_000_000, 1_000_000, 1,
+    ]);
+    this._updateMatrix(instanceId, hiddenMatrix as unknown as Mat4);
+  }
+
   private culling_pass() {}
 
   private updateUniforms(t: number) {
+    const debugPlug = (window as any).plug;
+    if (debugPlug && typeof debugPlug.frustrum_radius === "number") {
+      this.frustrumRadius = debugPlug.frustrum_radius;
+    }
+    if (debugPlug && typeof debugPlug.culling_fov_scale === "number") {
+      this.cullingFovScale = Math.max(0.2, Math.min(1.0, debugPlug.culling_fov_scale));
+    }
+
     mat4.identity(this.viewMatrix);
 
     mat4.rotateX(
@@ -316,7 +390,21 @@ export class Helios2Renderer {
       this.viewMatrix,
     );
 
-    this.frustrumPlanes = extractFrustumPlanes(viewProjectionMatrix);
+    const cullingFov = Math.max(5, Math.min(170, this.fov * this.cullingFovScale));
+    mat4.perspective(
+      degToRad(cullingFov),
+      this.aspect,
+      0.1,
+      100.0,
+      this.cullingProjectionMatrix,
+    );
+
+    const cullingViewProjectionMatrix = mat4.mul(
+      this.cullingProjectionMatrix,
+      this.viewMatrix,
+    );
+
+    this.frustrumPlanes = extractFrustumPlanes(cullingViewProjectionMatrix);
 
     const uniformBuffer = new ArrayBuffer(
       Helios2Renderer.BUFFERS_STRIDES_BYTES.uniform,
@@ -328,6 +416,7 @@ export class Helios2Renderer {
     f32.set(this.frustrumPlanes, 16);
     f32[40] = t;
     u32[41] = this.instances.instanceCount;
+    f32[42] = this.frustrumRadius;
 
     this.device.queue.writeBuffer(this.buffers.uniform, 0, uniformBuffer);
   }
@@ -344,6 +433,7 @@ export class Helios2Renderer {
     resetPass.setPipeline(this.resetPipeline);
     resetPass.setBindGroup(0, this.UniformBindGroup);
     resetPass.setBindGroup(1, this.IndicrectComputeBindGroup);
+    resetPass.setBindGroup(2, this.debugBindGroup);
     resetPass.dispatchWorkgroups(Math.ceil(this.meshes.commandsCursor / 64));
     resetPass.end();
 
@@ -393,6 +483,7 @@ export class Helios2Renderer {
     renderPass.end();
 
     this.device.queue.submit([commandEncoder.finish()]);
+    this.maybePublishDiagnostics();
 
     // if (this.readbackBuf.mapState === "unmapped") {
     //   this.readbackBuf.mapAsync(GPUMapMode.READ).then(() => {
@@ -661,7 +752,11 @@ export class Helios2Renderer {
 
     this.resetPipeline = this.device.createComputePipeline({
       layout: this.device.createPipelineLayout({
-        bindGroupLayouts: [this.UniformLayout, this.IndicrectComputeLayout],
+        bindGroupLayouts: [
+          this.UniformLayout,
+          this.IndicrectComputeLayout,
+          this.debugLayout,
+        ],
       }),
       compute: {
         module: shaderModule,
@@ -693,6 +788,13 @@ export class Helios2Renderer {
     });
 
     this.depthTextureView = this.depthTexture.createView();
+
+    window.diagnostics = {
+      totalInstances: 0,
+      visibleInstances: 0,
+      frame: 0,
+      updatedAt: Date.now(),
+    };
 
     this._ready = true;
   }
@@ -757,7 +859,6 @@ export class Helios2Renderer {
   debugLayout: GPUBindGroupLayout;
   debugBindGroup: GPUBindGroup;
   debugBuffer: GPUBuffer;
-  readbackBuffer: GPUBuffer;
 }
 
 function extractFrustumPlanes(m) {
@@ -791,8 +892,8 @@ function extractFrustumPlanes(m) {
   // Top: R3 - R1
   setPlane(3, m[3] - m[1], m[7] - m[5], m[11] - m[9], m[15] - m[13]);
 
-  // Near: R3 + R2 (See note below about WebGPU vs OpenGL ranges)
-  setPlane(4, m[3] + m[2], m[7] + m[6], m[11] + m[10], m[15] + m[14]);
+  // Near (WebGPU clip space z in [0, w]): use R2 directly
+  setPlane(4, m[2], m[6], m[10], m[14]);
 
   // Far: R3 - R2
   setPlane(5, m[3] - m[2], m[7] - m[6], m[11] - m[10], m[15] - m[14]);

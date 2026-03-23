@@ -3,6 +3,7 @@ struct Uniforms {
     frustrumPlanes: array<vec4<f32>, 6>,
     time : f32,
     instanceCount: u32,
+    frustrumRadius: f32,
 };
 
 struct Instances {
@@ -30,7 +31,7 @@ struct IndirectCommand {
 @group(1) @binding(1) var<storage, read_write> visibleInstancesWrite: array<u32>;
 @group(1) @binding(2) var<storage, read> ComputeInstanceBuffer: array<Instances>;
 
-@group(2) @binding(0) var<storage, read_write> debugBugger: array<u32>;
+@group(2) @binding(0) var<storage, read_write> debugBuffer: array<atomic<u32>>;
 
 struct VertexOutput {
     @builtin(position) Position : vec4<f32>,
@@ -53,6 +54,13 @@ fn checkFrustrum(center: vec3<f32>, radius: f32, planes: array<vec4<f32>, 6>) ->
 @compute @workgroup_size(64)
 fn reset_main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let index = GlobalInvocationID.x;
+
+    if(index == 0u) {
+        atomicStore(&debugBuffer[0], uniforms.instanceCount);
+        atomicStore(&debugBuffer[1], 0u);
+        _ = atomicAdd(&debugBuffer[2], 1u);
+    }
+
     if(index >= arrayLength(&commands)) {
         return;
     }
@@ -72,13 +80,7 @@ fn cull_main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     let commandIndex = u32(ComputeInstanceBuffer[index].commandId);
     let firstInstance = commands[commandIndex].firstInstance;
 
-    let debugIndexPosition = index * 2u;
-    let debugCommandIdPosition = index * 2u + 1;
-    
-    debugBugger[debugIndexPosition] = index;
-    debugBugger[debugCommandIdPosition] = commandIndex;
-
-    let radius = 3.0;
+    let radius = uniforms.frustrumRadius;
 
     let isVisible = checkFrustrum(center, radius, uniforms.frustrumPlanes);
     // let isVisible = true;
@@ -86,6 +88,7 @@ fn cull_main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     if(isVisible) {
         let outIndex = atomicAdd(&commands[commandIndex].instanceCount, 1u);
         visibleInstancesWrite[firstInstance + outIndex] = index;
+        _ = atomicAdd(&debugBuffer[1], 1u);
     }
 }
 @vertex
@@ -119,7 +122,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
                         10.0, // * sin(uniforms.time / 1000)
                     );
                     let lightColor = vec3<f32>(1.0, 1.0, 1.0);
-                    let lightRange = 100.0;
+                    let lightRange = 1000.0;
                     let ambient = vec3<f32>(0.1, 0.1, 0.1);
 
                     // Calculate Vector from Fragment World Pos to Light

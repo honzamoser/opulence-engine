@@ -20,7 +20,7 @@ export default defineConfig({
   worker: {
     plugins: () => [wasm()],
     format: "es",
-  }
+  },
 
   // swc({
   //   sourceMaps: true,

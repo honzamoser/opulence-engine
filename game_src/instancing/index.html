@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Testovací scéna</title>
+
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="main" style="
+                width: 100%;
+                height: 100%;
+                display: block;
+                pointer-events: none;
+            ">
+    </canvas>
+
+    <script src="render_test.ts" type="module" defer></script>
+
+    <div style="position: fixed; top: 10px; left: 10px; color: white; font-family: sans-serif; pointer-events: none; display: flex; flex-direction: column;">
+        
+        <input id="cullingFovScaleSlider" type="range" min="0.2" max="1.0" step="0.01" value="1.00"
+            style="pointer-events: auto;">
+        <label for="cullingFovScaleSlider">culling_fov_scale: <span id="cullingFovScaleValue">1.00</span></label>
+
+        <input id="instanceTargetSlider" type="range" min="10" max="10000" step="1" value="250"
+            style="pointer-events: auto;">
+        <label for="instanceTargetSlider">instance_target: <span id="instanceTargetValue">250</span></label>
+
+        <div style="margin-top: 10px; font-size: 12px; line-height: 1.4; background: rgba(0,0,0,0.45); padding: 8px; border-radius: 6px;">
+            <div>Total instances: <span id="diagTotal">0</span></div>
+            <div>Visible instances: <span id="diagVisible">0</span></div>
+            <div>Culled instances: <span id="diagCulled">0</span></div>
+            <div>Visible ratio: <span id="diagRatio">0%</span></div>
+            <div>Frame: <span id="diagFrame">0</span></div>
+        </div>
+
+
+    </div>
+
+    <script>
+       
+        const cullingFovScaleSlider = document.getElementById("cullingFovScaleSlider");
+        const cullingFovScaleValue = document.getElementById("cullingFovScaleValue");
+        const instanceTargetSlider = document.getElementById("instanceTargetSlider");
+        const instanceTargetValue = document.getElementById("instanceTargetValue");
+        const diagTotal = document.getElementById("diagTotal");
+        const diagVisible = document.getElementById("diagVisible");
+        const diagCulled = document.getElementById("diagCulled");
+        const diagRatio = document.getElementById("diagRatio");
+        const diagFrame = document.getElementById("diagFrame");
+
+       
+
+        window.plug = window.plug || {};
+        window.plug.instance_target = 250;
+
+
+
+
+        cullingFovScaleSlider.addEventListener("input", (e) => {
+            const scale = parseFloat(e.target.value);
+            window.plug.culling_fov_scale = scale;
+            cullingFovScaleValue.textContent = scale.toFixed(2);
+        });
+
+        instanceTargetSlider.addEventListener("input", (e) => {
+            const target = parseInt(e.target.value, 10);
+            window.plug.instance_target = target;
+            instanceTargetValue.textContent = String(target);
+        });
+
+
+
+        setInterval(() => {
+            const diagnostics = window.diagnostics;
+            if (!diagnostics) return;
+
+            const total = diagnostics.totalInstances || 0;
+            const visible = diagnostics.visibleInstances || 0;
+            const culled = Math.max(0, total - visible);
+            const ratio = total > 0 ? (visible / total) * 100 : 0;
+
+            diagTotal.textContent = String(total);
+            diagVisible.textContent = String(visible);
+            diagCulled.textContent = String(culled);
+            diagRatio.textContent = `${ratio.toFixed(1)}%`;
+            diagFrame.textContent = String(diagnostics.frame || 0);
+        }, 250);
+    </script>
+
+</body>
+
+</html>

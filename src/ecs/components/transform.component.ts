@@ -17,4 +17,6 @@ export default class TransformComponent extends Component {
 
   @hot.float32Array(16)
   matrix: Mat4 = mat4.identity();
+
+  batch: boolean = false;
 }

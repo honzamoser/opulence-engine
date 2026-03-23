@@ -46,7 +46,7 @@ type RigidbodyComponentSignature = {
 export class RigidbodyComponent {
     static STRIDE: number = 32;
     static IDENTIFIER: number = 3;
-    static DESCRIPTION: ComponentDescription = {"name":"RigidbodyComponent","stride":32,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { cold, constructor, hot } from \"../component-gen\";import {PointerTo, SizeOf} from \"../../../compiler/component_parsers\"","properties":[{"name":"velocity","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create()","view":"vf32","offset":4},{"byteLength":4,"type":"number","name":"mass","view":"vf32","default":"1","offset":16},{"byteLength":4,"type":"number","name":"bodyId","view":"vf32","default":"-1","offset":20},{"name":"isStatic","byteLength":1,"type":"boolean","default":"false","view":"vu8","offset":24},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
+    static DESCRIPTION: ComponentDescription = {"name":"RigidbodyComponent","stride":32,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { cold, constructor, hot } from \"../component-gen\";import {PointerTo, SizeOf} from \"../../../compiler/component_parsers\"","properties":[{"name":"velocity","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create()","view":"vf32","offset":4},{"byteLength":4,"type":"number","name":"mass","view":"vf32","default":"1","offset":16},{"byteLength":4,"type":"number","name":"bodyId","view":"vf32","default":"-1","offset":20},{"name":"isStatic","byteLength":1,"type":"boolean","default":"false","view":"vu8","offset":24},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0","view":"vf32"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -58,6 +58,7 @@ export class RigidbodyComponent {
 	static vf32: Float32Array; 
 	static vi32: Int32Array; 
 	static vu8: Uint8Array; 
+	static vu32: Uint32Array; 
 
 
     static IS_INITIALIZED: boolean = false; 
@@ -65,6 +66,7 @@ export class RigidbodyComponent {
 		RigidbodyComponent.vf32 = new Float32Array(v)
 		RigidbodyComponent.vi32 = new Int32Array(v)
 		RigidbodyComponent.vu8 = new Uint8Array(v)
+		RigidbodyComponent.vu32 = new Uint32Array(v)
 
         RigidbodyComponent.ALLOCATOR = a;
         RigidbodyComponent.IS_INITIALIZED = true;

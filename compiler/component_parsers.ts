@@ -111,7 +111,7 @@ export type TypeTransformer = (c: ComponentDescription, p: PropertyDefinition) =
 
 const target_path = path.join(cwd(), OUT_PATH);
 
-const typeTransformers: { [key: string | RegExp]: TypeTransformer } = {
+const typeTransformers: Record<string, TypeTransformer> = {
     "number": (c, p) => {
         return `static get ${p.name}() {
             return ${c.name}.vf32[${p.offset / 4} + ${c.stride} / 4 * ${c.name}.MEM_CURSOR]
@@ -243,85 +243,6 @@ const typeTransformers: { [key: string | RegExp]: TypeTransformer } = {
 
 
 
-const typeMap: { [key: string]: PropertyDefinition } = {
-    "number": {
-        name: null,
-        type: "f32",
-        byteLength: 4,
-        offset: null,
-        type: "number",
-        default: "0"
-    },
-    "Vec3": {
-        name: null,
-        type: "f32[]",
-        byteLength: 12,
-        length: 3,
-        offset: null,
-        type: "Vec3",
-        default: "vec3.zero()"
-    },
-    "Mat4": {
-        name: null,
-        type: "f32[]",
-        byteLength: 64,
-        length: 16,
-        offset: null,
-        type: "Mat4",
-        default: "mat4.identity()"
-    },
-    "PointerTo<Uint8Array>": {
-        name: null,
-        type: "&u8[]",
-        byteLength: 8,
-        offset: null,
-        pointer: true,
-        type: "PointerTo<Uint8Array>",
-        default: "{ ptr: undefined, ptr_len: 0 }"
-    },
-    "PointerTo": {
-        name: null,
-        type: "&f32[]",
-        byteLength: 8,
-        offset: null,
-        pointer: true,
-        type: "PointerTo",
-        default: "{ ptr: undefined, ptr_len: 0 }"
-    },
-    "string": {
-        name: null,
-        type: "u8[]",
-        byteLength: 64,
-        offset: null,
-        pointer: false,
-        type: "string",
-        default: ""
-    },
-    "Float32Array": {
-        name: null,
-        type: "f32[]",
-        byteLength: 0, // to be filled
-        offset: null,
-        type: "Float32Array",
-        default: "new Float32Array(16)"
-    },
-    "SizeOf": {
-        name: null,
-        type: "SizeOf",
-        byteLength: 0,
-        offset: null,
-        type: "SizeOf",
-        default: "undefined"
-    },
-    "boolean": {
-        name: null,
-        type: "boolean",
-        byteLength: 1,
-        offset: null,
-        default: "false",
-        view: "vu8",
-    }
-}
 
 const propertyDecoders = new Map<string, (p: PropertyDeclaration, t?: string[]) => Omit<PropertyDefinition, "offset">>();
 
@@ -470,8 +391,8 @@ function parseClass(cls: ClassDeclaration): ComponentDescription {
 
     let offset = 4;
 
-    const properties = cls.getProperties().map((p) => {
-        let propDef = { ...parseProperty(p) };
+    const properties: PropertyDefinition[] = cls.getProperties().map((p) => {
+        let propDef: PropertyDefinition = { ...parseProperty(p), offset: 0 };
 
         if (p.getName() === "_componentId") {
             throw new Error("_componentId is a reserved property name");
@@ -492,7 +413,8 @@ function parseClass(cls: ClassDeclaration): ComponentDescription {
         byteLength: 4,
         offset: 0,
         type: "number",
-        default: "0"
+        default: "0",
+        view: "vf32",
     }
 
     return {
@@ -538,14 +460,17 @@ function getInitializer(p: PropertyDeclaration) {
 function parseProperty(p: PropertyDeclaration): Omit<PropertyDefinition, "offset"> {
     const typeNode = p.getTypeNodeOrThrow();
     const typeStructure = recuresiveTypeParse(typeNode);
+    const [rootType, ...typeArgs] = typeStructure;
 
     console.log("t:", typeStructure)
 
-    const matchType = propertyDecoders.get(typeStructure[0])?.(p, typeStructure.splice(1));
+    const decoder = propertyDecoders.get(rootType);
+    if (!decoder)
+        throw new Error(`Type ${rootType} is not supported`);
+
+    const matchType = decoder(p, typeArgs);
     matchType.default = getInitializer(p) ? getInitializer(p) : matchType.default;
 
-    if (!matchType)
-        throw new Error(`Type ${typeStructure[0]} is not supported`);
     return structuredClone(matchType)
 }
 
@@ -584,11 +509,11 @@ export type PropertyDefinition = {
     type: string,
     byteLength: number,
     offset: number,
-    view: "vf32" | "vi32" | "vu8",
+    view: "vf32" | "vi32" | "vu8" | "vu32",
 
     arrayLength?: number,
     pointer?: boolean,
-    default?: string,
+    default?: string | number | null,
     typeArgs?: string[]
 }
 
@@ -631,6 +556,7 @@ const views = {
     "vf32": "Float32Array",
     "vi32": "Int32Array",
     "vu8": "Uint8Array",
+    "vu32": "Uint32Array",
 }
 
 function generateViewsCode() {
@@ -667,7 +593,7 @@ function getCorrectView(type: string) {
     if (type.endsWith("32")) {
         return "vf32";
     } else if (type.endsWith("16")) {
-        return "vi16";
+        return "vi32";
     } else if (type.endsWith("8") || type.startsWith("char")) {
         return "vu8";
     }

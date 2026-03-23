@@ -49,7 +49,7 @@ type MeshComponentSignature = {
 export class MeshComponent {
     static STRIDE: number = 128;
     static IDENTIFIER: number = 2;
-    static DESCRIPTION: ComponentDescription = {"name":"MeshComponent","stride":128,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { constructor, hot } from \"../component-gen\";import { Component } from \"../component\";import { SizeOf } from \"compiler/component_parsers\";","properties":[{"byteLength":64,"type":"string","name":"resourceIdentifier","default":"\"\"","typeArgs":["string","64"],"view":"vu8","offset":4},{"name":"color","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":68},{"name":"boundingBoxMin","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n    Number.POSITIVE_INFINITY,\r\n    Number.POSITIVE_INFINITY,\r\n    Number.POSITIVE_INFINITY,\r\n  )","view":"vf32","offset":80},{"name":"boundingBoxMax","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n    Number.NEGATIVE_INFINITY,\r\n    Number.NEGATIVE_INFINITY,\r\n    Number.NEGATIVE_INFINITY,\r\n  )","view":"vf32","offset":92},{"name":"color","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":104},{"byteLength":4,"type":"number","name":"meshId","view":"vf32","default":0,"offset":116},{"byteLength":4,"type":"number","name":"rendererdInstasnceId","view":"vf32","default":0,"offset":120},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
+    static DESCRIPTION: ComponentDescription = {"name":"MeshComponent","stride":128,"importStatement":"import { vec3, Vec3 } from \"wgpu-matrix\";import { constructor, hot } from \"../component-gen\";import { Component } from \"../component\";import { SizeOf } from \"compiler/component_parsers\";","properties":[{"byteLength":64,"type":"string","name":"resourceIdentifier","default":"\"\"","typeArgs":["string","64"],"view":"vu8","offset":4},{"name":"color","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":68},{"name":"boundingBoxMin","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n    Number.POSITIVE_INFINITY,\r\n    Number.POSITIVE_INFINITY,\r\n    Number.POSITIVE_INFINITY,\r\n  )","view":"vf32","offset":80},{"name":"boundingBoxMax","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n    Number.NEGATIVE_INFINITY,\r\n    Number.NEGATIVE_INFINITY,\r\n    Number.NEGATIVE_INFINITY,\r\n  )","view":"vf32","offset":92},{"name":"color","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":104},{"byteLength":4,"type":"number","name":"meshId","view":"vf32","default":0,"offset":116},{"byteLength":4,"type":"number","name":"rendererdInstasnceId","view":"vf32","default":0,"offset":120},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0","view":"vf32"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -61,6 +61,7 @@ export class MeshComponent {
 	static vf32: Float32Array; 
 	static vi32: Int32Array; 
 	static vu8: Uint8Array; 
+	static vu32: Uint32Array; 
 
 
     static IS_INITIALIZED: boolean = false; 
@@ -68,6 +69,7 @@ export class MeshComponent {
 		MeshComponent.vf32 = new Float32Array(v)
 		MeshComponent.vi32 = new Int32Array(v)
 		MeshComponent.vu8 = new Uint8Array(v)
+		MeshComponent.vu32 = new Uint32Array(v)
 
         MeshComponent.ALLOCATOR = a;
         MeshComponent.IS_INITIALIZED = true;

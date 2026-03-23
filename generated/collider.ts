@@ -50,7 +50,7 @@ type ColliderComponentSignature = {
 export class ColliderComponent {
     static STRIDE: number = 140;
     static IDENTIFIER: number = 1;
-    static DESCRIPTION: ComponentDescription = {"name":"ColliderComponent","stride":140,"importStatement":"import { PointerTo } from \"compiler/component_parsers\";import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";","properties":[{"name":"matrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.create()","view":"vf32","offset":4},{"name":"size","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":68},{"name":"offset","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(0, 0, 0)","view":"vf32","offset":80},{"name":"boundingBoxMin","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n        Number.POSITIVE_INFINITY,\r\n        Number.POSITIVE_INFINITY,\r\n        Number.POSITIVE_INFINITY,\r\n    )","view":"vf32","offset":92},{"name":"boundingBoxMax","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n        Number.NEGATIVE_INFINITY,\r\n        Number.NEGATIVE_INFINITY,\r\n        Number.NEGATIVE_INFINITY,\r\n    )","view":"vf32","offset":104},{"name":"vertices","byteLength":8,"pointer":true,"type":"PointerTo","typeArgs":["Float32Array"],"default":null,"view":"vf32","offset":116},{"name":"indices","byteLength":8,"pointer":true,"type":"PointerTo","typeArgs":["Uint32Array"],"default":null,"view":"vu32","offset":124},{"byteLength":4,"type":"number","name":"shapeType","view":"vf32","default":"0","offset":132},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
+    static DESCRIPTION: ComponentDescription = {"name":"ColliderComponent","stride":140,"importStatement":"import { PointerTo } from \"compiler/component_parsers\";import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";","properties":[{"name":"matrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.create()","view":"vf32","offset":4},{"name":"size","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":68},{"name":"offset","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(0, 0, 0)","view":"vf32","offset":80},{"name":"boundingBoxMin","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n        Number.POSITIVE_INFINITY,\r\n        Number.POSITIVE_INFINITY,\r\n        Number.POSITIVE_INFINITY,\r\n    )","view":"vf32","offset":92},{"name":"boundingBoxMax","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(\r\n        Number.NEGATIVE_INFINITY,\r\n        Number.NEGATIVE_INFINITY,\r\n        Number.NEGATIVE_INFINITY,\r\n    )","view":"vf32","offset":104},{"name":"vertices","byteLength":8,"pointer":true,"type":"PointerTo","typeArgs":["Float32Array"],"default":null,"view":"vf32","offset":116},{"name":"indices","byteLength":8,"pointer":true,"type":"PointerTo","typeArgs":["Uint32Array"],"default":null,"view":"vu32","offset":124},{"byteLength":4,"type":"number","name":"shapeType","view":"vf32","default":"0","offset":132},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0","view":"vf32"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -62,6 +62,7 @@ export class ColliderComponent {
 	static vf32: Float32Array; 
 	static vi32: Int32Array; 
 	static vu8: Uint8Array; 
+	static vu32: Uint32Array; 
 
 
     static IS_INITIALIZED: boolean = false; 
@@ -69,6 +70,7 @@ export class ColliderComponent {
 		ColliderComponent.vf32 = new Float32Array(v)
 		ColliderComponent.vi32 = new Int32Array(v)
 		ColliderComponent.vu8 = new Uint8Array(v)
+		ColliderComponent.vu32 = new Uint32Array(v)
 
         ColliderComponent.ALLOCATOR = a;
         ColliderComponent.IS_INITIALIZED = true;

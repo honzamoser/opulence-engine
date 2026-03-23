@@ -48,7 +48,7 @@ type CameraComponentSignature = {
 export class CameraComponent {
     static STRIDE: number = 160;
     static IDENTIFIER: number = 0;
-    static DESCRIPTION: ComponentDescription = {"name":"CameraComponent","stride":160,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { hot } from \"../component-gen\";","properties":[{"name":"position","byteLength":64,"arrayLength":16,"default":"new Float32Array(16)","type":"Float32Array","view":"vf32","offset":4},{"name":"projectionMatrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.create()","view":"vf32","offset":68},{"name":"rotation","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":132},{"byteLength":4,"type":"number","name":"fov","view":"vf32","default":"Math.PI / 2","offset":144},{"byteLength":4,"type":"number","name":"near","view":"vf32","default":"0.1","offset":148},{"byteLength":4,"type":"number","name":"far","view":"vf32","default":"1000","offset":152},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
+    static DESCRIPTION: ComponentDescription = {"name":"CameraComponent","stride":160,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { hot } from \"../component-gen\";","properties":[{"name":"position","byteLength":64,"arrayLength":16,"default":"new Float32Array(16)","type":"Float32Array","view":"vf32","offset":4},{"name":"projectionMatrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.create()","view":"vf32","offset":68},{"name":"rotation","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":132},{"byteLength":4,"type":"number","name":"fov","view":"vf32","default":"Math.PI / 2","offset":144},{"byteLength":4,"type":"number","name":"near","view":"vf32","default":"0.1","offset":148},{"byteLength":4,"type":"number","name":"far","view":"vf32","default":"1000","offset":152},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0","view":"vf32"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -60,6 +60,7 @@ export class CameraComponent {
 	static vf32: Float32Array; 
 	static vi32: Int32Array; 
 	static vu8: Uint8Array; 
+	static vu32: Uint32Array; 
 
 
     static IS_INITIALIZED: boolean = false; 
@@ -67,6 +68,7 @@ export class CameraComponent {
 		CameraComponent.vf32 = new Float32Array(v)
 		CameraComponent.vi32 = new Int32Array(v)
 		CameraComponent.vu8 = new Uint8Array(v)
+		CameraComponent.vu32 = new Uint32Array(v)
 
         CameraComponent.ALLOCATOR = a;
         CameraComponent.IS_INITIALIZED = true;

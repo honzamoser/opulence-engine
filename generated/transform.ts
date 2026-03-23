@@ -47,7 +47,7 @@ type TransformComponentSignature = {
 export class TransformComponent {
     static STRIDE: number = 112;
     static IDENTIFIER: number = 4;
-    static DESCRIPTION: ComponentDescription = {"name":"TransformComponent","stride":112,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { constructor, hot } from \"../component-gen\";","properties":[{"name":"matrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.identity()","view":"vf32","offset":4},{"name":"position","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":68},{"name":"rotation","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(0, 0, 0)","view":"vf32","offset":80},{"name":"scale","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":92},{"name":"batch","byteLength":1,"type":"boolean","default":"false","view":"vu8","offset":104},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0"}]}
+    static DESCRIPTION: ComponentDescription = {"name":"TransformComponent","stride":112,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { constructor, hot } from \"../component-gen\";","properties":[{"name":"matrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.identity()","view":"vf32","offset":4},{"name":"position","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":68},{"name":"rotation","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(0, 0, 0)","view":"vf32","offset":80},{"name":"scale","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":92},{"name":"batch","byteLength":1,"type":"boolean","default":"false","view":"vu8","offset":104},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0","view":"vf32"}]}
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -59,6 +59,7 @@ export class TransformComponent {
 	static vf32: Float32Array; 
 	static vi32: Int32Array; 
 	static vu8: Uint8Array; 
+	static vu32: Uint32Array; 
 
 
     static IS_INITIALIZED: boolean = false; 
@@ -66,6 +67,7 @@ export class TransformComponent {
 		TransformComponent.vf32 = new Float32Array(v)
 		TransformComponent.vi32 = new Int32Array(v)
 		TransformComponent.vu8 = new Uint8Array(v)
+		TransformComponent.vu32 = new Uint32Array(v)
 
         TransformComponent.ALLOCATOR = a;
         TransformComponent.IS_INITIALIZED = true;

@@ -5,8 +5,6 @@ import { ColliderComponent, TransformComponent } from "@generated"
 import { createCube, createPlane } from "../../../src/renderer/primitive";
 import { namespace } from "../../../src/ecs/component-gen";
 import {RigidbodyComponent} from "@generated";
-import { log_component, log_entity } from "../../../src/debug/ecs_debug";
-import { Collider } from "@dimforge/rapier3d";
 
 
 @namespace("game.PlayerSystem")

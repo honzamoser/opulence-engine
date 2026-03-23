@@ -16,7 +16,7 @@ engine.renderer = renderer;
 
 engine.load().then(() => {
   renderer.initialize().then(() => {
-    engine.systems.push(new RenderSystem(renderer));
+    engine.systems.push(new RenderSystem(renderer, 35));
     engine.systems.push(new PlayerSystem());
     engine.systems.push(new PhysicsSystem());
 

@@ -1,9 +1,9 @@
 
-import { mat4, Mat4, vec3, Vec3 } from "wgpu-matrix";import { Component } from "../component";import { constructor, hot } from "../component-gen";
+import { mat4, Mat4, vec3, Vec3 } from "wgpu-matrix"; import { Component } from "../component"; import { constructor, hot } from "../component-gen";
 
 
 import { SparseSet } from "./index"
-import {Allocator} from "../src/ecs/allocator";
+import { Allocator } from "../src/ecs/allocator";
 
 type PropertyType = "u8" | "i16" | "u16" | "i32" | "u32" | "f32" | "char" | "Vec2" | "Vec3" | "Mat3" | "Mat4"
     | "u8[]" | "i16[]" | "u16[]" | "i32[]" | "u32[]" | "f32[]" | "char[]" | "&u8[]" | "&i16[]" | "&u16[]" | "&i32[]" | "&u32[]" | "&f32[]" | "&char[]";
@@ -37,17 +37,18 @@ type ComponentDescription = {
 
 
 type TransformComponentSignature = {
-        matrix: Mat4;
+    matrix: Mat4;
     position: Vec3;
     rotation: Vec3;
     scale: Vec3;
     batch: boolean;
-    _componentId: number;}
+    _componentId: number;
+}
 
 export class TransformComponent {
     static STRIDE: number = 112;
     static IDENTIFIER: number = 4;
-    static DESCRIPTION: ComponentDescription = {"name":"TransformComponent","stride":112,"importStatement":"import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { constructor, hot } from \"../component-gen\";","properties":[{"name":"matrix","byteLength":64,"arrayLength":16,"type":"Mat4","default":"mat4.identity()","view":"vf32","offset":4},{"name":"position","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.zero()","view":"vf32","offset":68},{"name":"rotation","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(0, 0, 0)","view":"vf32","offset":80},{"name":"scale","byteLength":12,"arrayLength":3,"type":"Vec3","default":"vec3.create(1, 1, 1)","view":"vf32","offset":92},{"name":"batch","byteLength":1,"type":"boolean","default":"false","view":"vu8","offset":104},{"name":"_componentId","byteLength":4,"offset":0,"type":"number","default":"0","view":"vf32"}]}
+    static DESCRIPTION: ComponentDescription = { "name": "TransformComponent", "stride": 112, "importStatement": "import { mat4, Mat4, vec3, Vec3 } from \"wgpu-matrix\";import { Component } from \"../component\";import { constructor, hot } from \"../component-gen\";", "properties": [{ "name": "matrix", "byteLength": 64, "arrayLength": 16, "type": "Mat4", "default": "mat4.identity()", "view": "vf32", "offset": 4 }, { "name": "position", "byteLength": 12, "arrayLength": 3, "type": "Vec3", "default": "vec3.zero()", "view": "vf32", "offset": 68 }, { "name": "rotation", "byteLength": 12, "arrayLength": 3, "type": "Vec3", "default": "vec3.create(0, 0, 0)", "view": "vf32", "offset": 80 }, { "name": "scale", "byteLength": 12, "arrayLength": 3, "type": "Vec3", "default": "vec3.create(1, 1, 1)", "view": "vf32", "offset": 92 }, { "name": "batch", "byteLength": 1, "type": "boolean", "default": "false", "view": "vu8", "offset": 104 }, { "name": "_componentId", "byteLength": 4, "offset": 0, "type": "number", "default": "0", "view": "vf32" }] }
     static CURSOR: number = 0;
     static MEM_CURSOR: number = 0;
     static SET: SparseSet;
@@ -55,65 +56,65 @@ export class TransformComponent {
     static ALLOCATOR: Allocator;
 
     declare _constructionFootprint: TransformComponentSignature;
-    
-	static vf32: Float32Array; 
-	static vi32: Int32Array; 
-	static vu8: Uint8Array; 
-	static vu32: Uint32Array; 
+
+    static vf32: Float32Array;
+    static vi32: Int32Array;
+    static vu8: Uint8Array;
+    static vu32: Uint32Array;
 
 
-    static IS_INITIALIZED: boolean = false; 
+    static IS_INITIALIZED: boolean = false;
     static initialize(v: ArrayBuffer, a: Allocator) {
-		TransformComponent.vf32 = new Float32Array(v)
-		TransformComponent.vi32 = new Int32Array(v)
-		TransformComponent.vu8 = new Uint8Array(v)
-		TransformComponent.vu32 = new Uint32Array(v)
+        TransformComponent.vf32 = new Float32Array(v)
+        TransformComponent.vi32 = new Int32Array(v)
+        TransformComponent.vu8 = new Uint8Array(v)
+        TransformComponent.vu32 = new Uint32Array(v)
 
         TransformComponent.ALLOCATOR = a;
         TransformComponent.IS_INITIALIZED = true;
         TransformComponent.SET = new SparseSet();
-} 
-    static new (v: Partial < TransformComponentSignature >) {
-    const elId = TransformComponent.NEXT;
-    
-    TransformComponent.NEXT += 1;
-    const memId = TransformComponent.SET.add(elId);
-
-    TransformComponent.CURSOR = elId;
-    TransformComponent.MEM_CURSOR = memId;
-
-    const constructionData: TransformComponentSignature = {
-        matrix: v.matrix ? v.matrix : mat4.identity(),
-position: v.position ? v.position : vec3.zero(),
-rotation: v.rotation ? v.rotation : vec3.create(0, 0, 0),
-scale: v.scale ? v.scale : vec3.create(1, 1, 1),
-batch: v.batch ? v.batch : false,
-_componentId: v._componentId ? v._componentId : 0,
     }
-const base = TransformComponent.MEM_CURSOR * 112;
-    TransformComponent.vi32[base / 4] = memId;
+    static new(v: Partial<TransformComponentSignature>) {
+        const elId = TransformComponent.NEXT;
 
-    TransformComponent.matrix = constructionData.matrix;
-TransformComponent.position = constructionData.position;
-TransformComponent.rotation = constructionData.rotation;
-TransformComponent.scale = constructionData.scale;
-TransformComponent.batch = constructionData.batch;
+        TransformComponent.NEXT += 1;
+        const memId = TransformComponent.SET.add(elId);
+
+        TransformComponent.CURSOR = elId;
+        TransformComponent.MEM_CURSOR = memId;
+
+        const constructionData: TransformComponentSignature = {
+            matrix: v.matrix ? v.matrix : mat4.identity(),
+            position: v.position ? v.position : vec3.zero(),
+            rotation: v.rotation ? v.rotation : vec3.create(0, 0, 0),
+            scale: v.scale ? v.scale : vec3.create(1, 1, 1),
+            batch: v.batch ? v.batch : false,
+            _componentId: v._componentId ? v._componentId : 0,
+        }
+        const base = TransformComponent.MEM_CURSOR * 112;
+        TransformComponent.vi32[base / 4] = memId;
+
+        TransformComponent.matrix = constructionData.matrix;
+        TransformComponent.position = constructionData.position;
+        TransformComponent.rotation = constructionData.rotation;
+        TransformComponent.scale = constructionData.scale;
+        TransformComponent.batch = constructionData.batch;
 
 
 
-return memId;
+        return memId;
     }
-        
-    static delete () {
-    //    if (TransformComponent.CURSOR < TransformComponent.SET.length) {
-    //     TransformComponent.SET[TransformComponent.SET.length - 1] = TransformComponent.SET[TransformComponent.CURSOR]; 
-    //     TransformComponent.SET[TransformComponent.CURSOR] = undefined;
-    //     TransformComponent.MEM_CURSOR = TransformComponent.SET[TransformComponent.CURSOR];
-    //    } 
+
+    static delete() {
+        //    if (TransformComponent.CURSOR < TransformComponent.SET.length) {
+        //     TransformComponent.SET[TransformComponent.SET.length - 1] = TransformComponent.SET[TransformComponent.CURSOR]; 
+        //     TransformComponent.SET[TransformComponent.CURSOR] = undefined;
+        //     TransformComponent.MEM_CURSOR = TransformComponent.SET[TransformComponent.CURSOR];
+        //    } 
 
         // move data from last component in dense array to the deleted component's position
         TransformComponent.SET.remove(TransformComponent.CURSOR);
-}
+    }
 
 
     static to(cId: number) {
@@ -125,32 +126,32 @@ return memId;
         TransformComponent.MEM_CURSOR = TransformComponent.SET.getValue(cId);
         TransformComponent.CURSOR = cId;
         return TransformComponent;
-    } 
-
-static get matrix() {
-            return TransformComponent.vf32.subarray((4 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR, (4 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 16)
     }
-            
+
+    static get matrix() {
+        return TransformComponent.vf32.subarray((4 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR, (4 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 16)
+    }
+
     static set matrix(v: Mat4 | Float32Array) {
         TransformComponent.vf32.set(v, (4 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR);
     }
-        
+
     static cpy_matrix(out: Mat4) {
         out.set(TransformComponent.vf32.subarray((4 / 4) + (112 / 4) * TransformComponent.MEM_CURSOR, (4 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 16));
     }
 
-static get position() {
-            return TransformComponent.vf32.subarray((68 / 4) + (112 / 4) * TransformComponent.MEM_CURSOR, (68 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 3)
+    static get position() {
+        return TransformComponent.vf32.subarray((68 / 4) + (112 / 4) * TransformComponent.MEM_CURSOR, (68 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 3)
     }
-            
+
     static set position(v: Vec3 | Float32Array) {
         TransformComponent.vf32.set(v, (68 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR);
     }
-        
+
     static cpy_position(out: Vec3) {
         out.set(TransformComponent.vf32.subarray((68 / 4) + (112 / 4) * TransformComponent.MEM_CURSOR, (68 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 3));
     }
-        
+
     static get positionX() {
         return TransformComponent.vf32[(68 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 0];
     }
@@ -158,14 +159,14 @@ static get position() {
     static set positionX(v: number) {
         TransformComponent.vf32[(68 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 0] = v;
     }
-static get positionY() {
+    static get positionY() {
         return TransformComponent.vf32[(68 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 1];
     }
 
     static set positionY(v: number) {
         TransformComponent.vf32[(68 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 1] = v;
     }
-static get positionZ() {
+    static get positionZ() {
         return TransformComponent.vf32[(68 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 2];
     }
 
@@ -173,18 +174,18 @@ static get positionZ() {
         TransformComponent.vf32[(68 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 2] = v;
     }
 
-static get rotation() {
-            return TransformComponent.vf32.subarray((80 / 4) + (112 / 4) * TransformComponent.MEM_CURSOR, (80 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 3)
+    static get rotation() {
+        return TransformComponent.vf32.subarray((80 / 4) + (112 / 4) * TransformComponent.MEM_CURSOR, (80 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 3)
     }
-            
+
     static set rotation(v: Vec3 | Float32Array) {
         TransformComponent.vf32.set(v, (80 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR);
     }
-        
+
     static cpy_rotation(out: Vec3) {
         out.set(TransformComponent.vf32.subarray((80 / 4) + (112 / 4) * TransformComponent.MEM_CURSOR, (80 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 3));
     }
-        
+
     static get rotationX() {
         return TransformComponent.vf32[(80 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 0];
     }
@@ -192,14 +193,14 @@ static get rotation() {
     static set rotationX(v: number) {
         TransformComponent.vf32[(80 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 0] = v;
     }
-static get rotationY() {
+    static get rotationY() {
         return TransformComponent.vf32[(80 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 1];
     }
 
     static set rotationY(v: number) {
         TransformComponent.vf32[(80 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 1] = v;
     }
-static get rotationZ() {
+    static get rotationZ() {
         return TransformComponent.vf32[(80 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 2];
     }
 
@@ -207,18 +208,18 @@ static get rotationZ() {
         TransformComponent.vf32[(80 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 2] = v;
     }
 
-static get scale() {
-            return TransformComponent.vf32.subarray((92 / 4) + (112 / 4) * TransformComponent.MEM_CURSOR, (92 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 3)
+    static get scale() {
+        return TransformComponent.vf32.subarray((92 / 4) + (112 / 4) * TransformComponent.MEM_CURSOR, (92 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 3)
     }
-            
+
     static set scale(v: Vec3 | Float32Array) {
         TransformComponent.vf32.set(v, (92 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR);
     }
-        
+
     static cpy_scale(out: Vec3) {
         out.set(TransformComponent.vf32.subarray((92 / 4) + (112 / 4) * TransformComponent.MEM_CURSOR, (92 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 3));
     }
-        
+
     static get scaleX() {
         return TransformComponent.vf32[(92 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 0];
     }
@@ -226,14 +227,14 @@ static get scale() {
     static set scaleX(v: number) {
         TransformComponent.vf32[(92 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 0] = v;
     }
-static get scaleY() {
+    static get scaleY() {
         return TransformComponent.vf32[(92 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 1];
     }
 
     static set scaleY(v: number) {
         TransformComponent.vf32[(92 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 1] = v;
     }
-static get scaleZ() {
+    static get scaleZ() {
         return TransformComponent.vf32[(92 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 2];
     }
 
@@ -241,20 +242,20 @@ static get scaleZ() {
         TransformComponent.vf32[(92 / 4) + 112 / 4 * TransformComponent.MEM_CURSOR + 2] = v;
     }
 
-static get batch() {
-            return TransformComponent.vu8[104 + 112 * TransformComponent.MEM_CURSOR] === 1;
-        }
+    static get batch() {
+        return TransformComponent.vu8[104 + 112 * TransformComponent.MEM_CURSOR] === 1;
+    }
 
-        static set batch(v: boolean) {
-            TransformComponent.vu8[104 + 112 * TransformComponent.MEM_CURSOR] = v ? 1 : 0;
-        }
+    static set batch(v: boolean) {
+        TransformComponent.vu8[104 + 112 * TransformComponent.MEM_CURSOR] = v ? 1 : 0;
+    }
 
-static get _componentId() {
-            return TransformComponent.vf32[0 + 112 / 4 * TransformComponent.MEM_CURSOR]
-        } 
-            
-        static set _componentId(v: number) {
-            TransformComponent.vf32[0 + 112 / 4 * TransformComponent.MEM_CURSOR] = v;
-        }
+    static get _componentId() {
+        return TransformComponent.vf32[0 + 112 / 4 * TransformComponent.MEM_CURSOR]
+    }
+
+    static set _componentId(v: number) {
+        TransformComponent.vf32[0 + 112 / 4 * TransformComponent.MEM_CURSOR] = v;
+    }
 
 }

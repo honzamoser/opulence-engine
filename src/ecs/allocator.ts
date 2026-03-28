@@ -54,9 +54,6 @@ export class Allocator {
     if (this.cursor + newSize > this.heap.byteLength) {
       this.resize();
     }
-
-    // Whoever wrote this code i
-    // Find a place for the new allocation
     const newPtr = this.cursor;
     this.cursor += newSize;
 
